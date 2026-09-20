@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -73,12 +74,16 @@ class _WelcomePageState extends State<WelcomePage> {
   Future<void> _goToTips([String? name]) async {
     if (_step != _WelcomeStep.name) return;
     final nextName = (name ?? _name).trim();
+    if (nextName.isEmpty) return;
+
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _name = nextName;
       _tipIndex = 0;
       _step = _WelcomeStep.tips;
     });
-    await _game.setIdentity(name: nextName, age: _age);
+    // Не ждём диск — иначе UI может «зависнуть» на SharedPreferences.
+    unawaited(_game.setIdentity(name: nextName, age: _age));
   }
 
   void _ageBack() {
@@ -219,7 +224,7 @@ class _WelcomePageState extends State<WelcomePage> {
           key: const ValueKey('name-step'),
           initialName: _name,
           onChanged: (name) => _name = name,
-          onNext: _goToTips,
+          onNext: (name) => unawaited(_goToTips(name)),
         ),
         _ => const SizedBox.shrink(),
       },

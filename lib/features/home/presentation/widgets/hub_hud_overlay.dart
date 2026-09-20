@@ -5,7 +5,8 @@ import '../../../../core/profile/game_controller.dart';
 import '../../../../core/profile/player_rules.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// Живые данные поверх SVG: имя, стрик, балансы, сытость/настроение.
+/// Патчи поверх SVG: имя, стрик, цифры баланса и статусов.
+/// Иконки и рамки остаются из макета.
 class HubHudOverlay extends StatelessWidget {
   const HubHudOverlay({
     super.key,
@@ -20,72 +21,169 @@ class HubHudOverlay extends StatelessWidget {
   final double balanceTop;
   final VoidCallback? onCompleteTask;
 
+  static const _headerCream = Color(0xFFFCF9F6);
+  static const _cardCream = Color(0xFFFEF7E6);
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
         final p = controller.profile;
+        final name = p.name.isEmpty ? 'Друг' : p.name;
+
         return Stack(
           clipBehavior: Clip.none,
           children: [
+            // Закрываем только SVG-имя (логотип-лис остаётся в макете).
             Positioned(
               left: 58,
-              top: 68,
-              width: 150,
+              top: 58,
+              width: 155,
+              height: 36,
+              child: ColoredBox(color: _headerCream),
+            ),
+            Positioned(
+              left: 70,
+              top: 66,
+              width: 140,
+              height: 24,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.rubik(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    height: 1,
+                    color: AppColors.green,
+                  ),
+                ),
+              ),
+            ),
+            // Стрик: закрываем макетный бейдж целиком.
+            Positioned(
+              left: 220,
+              top: 60,
+              width: 165,
+              height: 36,
+              child: ColoredBox(color: _headerCream),
+            ),
+            Positioned(
+              left: 224,
+              top: 64,
+              child: _StreakBadge(days: p.streakDays),
+            ),
+            // Только цифры баланса — иконки из SVG.
+            Positioned(
+              left: showSavedCard ? 88 : 78,
+              top: balanceTop + 26,
+              width: showSavedCard ? 90 : 70,
               height: 28,
               child: ColoredBox(
-                color: const Color(0xFFFCF9F6),
+                color: _cardCream,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    p.name.isEmpty ? 'Друг' : p.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    '${p.availableBalance}',
                     style: GoogleFonts.rubik(
                       fontWeight: FontWeight.w700,
-                      fontSize: 18,
+                      fontSize: 22,
                       height: 1,
-                      color: AppColors.green,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (showSavedCard)
+              Positioned(
+                left: 276,
+                top: balanceTop + 26,
+                width: 90,
+                height: 28,
+                child: ColoredBox(
+                  color: const Color(0xFFEBF4EE),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${p.savedBalance}',
+                      style: GoogleFonts.rubik(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 22,
+                        height: 1,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            // Проценты и полоски — иконки/подписи из SVG.
+            Positioned(
+              left: 148,
+              top: 542,
+              width: 42,
+              height: 18,
+              child: ColoredBox(
+                color: Colors.white,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${p.satiety.round()}%',
+                    style: GoogleFonts.rubik(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      height: 1,
+                      color: const Color(0xFF1B6943),
                     ),
                   ),
                 ),
               ),
             ),
             Positioned(
-              left: 218,
-              top: 62,
-              child: _StreakBadge(days: p.streakDays),
-            ),
-            Positioned(
-              left: showSavedCard ? 14 : 22,
-              top: balanceTop,
-              width: showSavedCard ? 177 : 137,
-              height: 58,
-              child: _BalanceCard(
-                title: 'Доступно',
-                titleColor: const Color(0xFFCD5E2A),
-                value: p.availableBalance,
-              ),
-            ),
-            if (showSavedCard)
-              Positioned(
-                left: 202,
-                top: balanceTop,
-                width: 177,
-                height: 58,
-                child: _BalanceCard(
-                  title: 'Накоплено',
-                  titleColor: AppColors.green,
-                  value: p.savedBalance,
+              left: 325,
+              top: 542,
+              width: 42,
+              height: 18,
+              child: ColoredBox(
+                color: Colors.white,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${p.mood.round()}%',
+                    style: GoogleFonts.rubik(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      height: 1,
+                      color: const Color(0xFFCD5E2A),
+                    ),
+                  ),
                 ),
               ),
+            ),
             Positioned(
-              left: 12.5,
-              top: 534.5,
-              width: 368,
-              height: 55,
-              child: _StatsBar(satiety: p.satiety, mood: p.mood),
+              left: 25.5,
+              top: 567.5,
+              width: 164.5,
+              height: 9,
+              child: _MiniBar(
+                value: p.satiety / 100,
+                fill: const Color(0xFF1B6943),
+                border: const Color(0xFF1B6943),
+              ),
+            ),
+            Positioned(
+              left: 203,
+              top: 567.5,
+              width: 164.5,
+              height: 9,
+              child: _MiniBar(
+                value: p.mood / 100,
+                fill: const Color(0xFFFDD889),
+                border: const Color(0xFFDE984D),
+              ),
             ),
             if (onCompleteTask != null)
               Positioned(
@@ -113,21 +211,21 @@ class _StreakBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final flameScale = (1.0 + (days.clamp(0, 30) / 30) * 0.85).clamp(1.0, 1.85);
+    final flameScale = (1.0 + (days.clamp(0, 30) / 30) * 0.7).clamp(1.0, 1.7);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          constraints: const BoxConstraints(minWidth: 108),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          height: 25,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: const Color(0x1ACD5E2A),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0x8ACD5E2A)),
+            borderRadius: BorderRadius.circular(12.5),
+            border: Border.all(color: const Color(0x8ACD5E2A), width: 1),
           ),
           child: Text(
             PlayerRules.streakLabel(days),
-            textAlign: TextAlign.center,
             style: GoogleFonts.rubik(
               fontWeight: FontWeight.w600,
               fontSize: 11,
@@ -136,7 +234,7 @@ class _StreakBadge extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         Transform.scale(
           scale: flameScale,
           alignment: Alignment.bottomCenter,
@@ -151,151 +249,38 @@ class _StreakBadge extends StatelessWidget {
   }
 }
 
-class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({
-    required this.title,
-    required this.titleColor,
+class _MiniBar extends StatelessWidget {
+  const _MiniBar({
     required this.value,
+    required this.fill,
+    required this.border,
   });
 
-  final String title;
-  final Color titleColor;
-  final int value;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF7E6),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDC9A55), width: 0.9),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.rubik(
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                height: 1,
-                color: titleColor,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              '$value',
-              style: GoogleFonts.rubik(
-                fontWeight: FontWeight.w700,
-                fontSize: 22,
-                height: 1,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatsBar extends StatelessWidget {
-  const _StatsBar({required this.satiety, required this.mood});
-
-  final double satiety;
-  final double mood;
+  final double value;
+  final Color fill;
+  final Color border;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15.5),
-        border: Border.all(color: const Color(0xFF1B6943)),
+        borderRadius: BorderRadius.circular(4.5),
+        border: Border.all(color: border),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: _StatColumn(
-                label: 'Сытость',
-                value: satiety,
-                barColor: const Color(0xFF1B6943),
-                textColor: const Color(0xFF1B6943),
-              ),
+        padding: const EdgeInsets.all(1.5),
+        child: FractionallySizedBox(
+          widthFactor: value.clamp(0.0, 1.0),
+          alignment: Alignment.centerLeft,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(3),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _StatColumn(
-                label: 'Настроение',
-                value: mood,
-                barColor: const Color(0xFFE8A87C),
-                textColor: const Color(0xFFCD5E2A),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatColumn extends StatelessWidget {
-  const _StatColumn({
-    required this.label,
-    required this.value,
-    required this.barColor,
-    required this.textColor,
-  });
-
-  final String label;
-  final double value;
-  final Color barColor;
-  final Color textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = value.round().clamp(0, 100);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.rubik(
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-                height: 1,
-                color: textColor,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              '$pct%',
-              style: GoogleFonts.rubik(
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-                height: 1,
-                color: textColor,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: (value / 100).clamp(0.0, 1.0),
-            minHeight: 8,
-            backgroundColor: const Color(0xFFEDE8E2),
-            color: barColor,
           ),
         ),
-      ],
+      ),
     );
   }
 }

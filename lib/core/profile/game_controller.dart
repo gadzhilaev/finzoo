@@ -7,18 +7,16 @@ import 'player_rules.dart';
 /// Живое состояние игрока: стрик, баланс, сытость, настроение.
 class GameController extends ChangeNotifier {
   GameController({
-    required PlayerProfile profile,
+    required this.profile,
     PlayerProfileStore? store,
     DateTime Function()? now,
-  }) : _profile = profile,
-       _store = store ?? PlayerProfileStore(),
+  }) : _store = store ?? PlayerProfileStore(),
        _now = now ?? DateTime.now;
 
   final PlayerProfileStore _store;
   final DateTime Function() _now;
 
-  PlayerProfile _profile;
-  PlayerProfile get profile => _profile;
+  PlayerProfile profile;
 
   static Future<GameController> bootstrap() async {
     final store = PlayerProfileStore();
@@ -29,21 +27,21 @@ class GameController extends ChangeNotifier {
   }
 
   Future<void> _persist() async {
-    await _store.save(_profile);
+    await _store.save(profile);
     notifyListeners();
   }
 
   Future<void> onAppOpen() async {
     final now = _now();
-    var next = PlayerRules.applyStatsDecay(_profile, now);
+    var next = PlayerRules.applyStatsDecay(profile, now);
     next = PlayerRules.applyStreak(next, now);
     next = PlayerRules.applyParentAllowance(next, now);
-    _profile = next;
+    profile = next;
     await _persist();
   }
 
   Future<void> setIdentity({required String name, required int age}) async {
-    _profile = _profile.copyWith(name: name.trim(), age: age);
+    profile = profile.copyWith(name: name.trim(), age: age);
     await _persist();
   }
 
@@ -54,34 +52,34 @@ class GameController extends ChangeNotifier {
     required int goalPrice,
   }) async {
     final now = _now();
-    _profile = _profile.copyWith(
+    profile = profile.copyWith(
       name: name.trim(),
       age: age,
       goalTitle: goalTitle,
       goalPrice: goalPrice,
       onboardingDone: true,
-      availableBalance: _profile.availableBalance > 0
-          ? _profile.availableBalance
+      availableBalance: profile.availableBalance > 0
+          ? profile.availableBalance
           : PlayerRules.initialParentGift,
       satiety: 80,
       mood: 70,
       lastStatsAt: now.toIso8601String(),
     );
-    _profile = PlayerRules.applyStreak(_profile, now);
-    _profile = PlayerRules.applyParentAllowance(_profile, now);
+    profile = PlayerRules.applyStreak(profile, now);
+    profile = PlayerRules.applyParentAllowance(profile, now);
     await _persist();
   }
 
   Future<void> completeDailyTask() async {
     final now = _now();
     final day = PlayerRules.dayKey(now);
-    if (_profile.dailyTaskDoneDay == day) return;
+    if (profile.dailyTaskDoneDay == day) return;
 
-    _profile = _profile.copyWith(
+    profile = profile.copyWith(
       dailyTaskDoneDay: day,
-      availableBalance: _profile.availableBalance + PlayerRules.dailyTaskReward,
-      satiety: (_profile.satiety + 15).clamp(0, 100),
-      mood: (_profile.mood + 12).clamp(0, 100),
+      availableBalance: profile.availableBalance + PlayerRules.dailyTaskReward,
+      satiety: (profile.satiety + 15).clamp(0, 100),
+      mood: (profile.mood + 12).clamp(0, 100),
       lastStatsAt: now.toIso8601String(),
     );
     await _persist();
@@ -90,16 +88,16 @@ class GameController extends ChangeNotifier {
   /// Отложить часть «доступно» в накопления.
   Future<void> saveTowardGoal(int amount) async {
     if (amount <= 0) return;
-    final take = amount.clamp(0, _profile.availableBalance);
-    final room = (_profile.goalPrice - _profile.savedBalance).clamp(
+    final take = amount.clamp(0, profile.availableBalance);
+    final room = (profile.goalPrice - profile.savedBalance).clamp(
       0,
-      _profile.goalPrice,
+      profile.goalPrice,
     );
     final moved = take.clamp(0, room);
     if (moved <= 0) return;
-    _profile = _profile.copyWith(
-      availableBalance: _profile.availableBalance - moved,
-      savedBalance: _profile.savedBalance + moved,
+    profile = profile.copyWith(
+      availableBalance: profile.availableBalance - moved,
+      savedBalance: profile.savedBalance + moved,
     );
     await _persist();
   }

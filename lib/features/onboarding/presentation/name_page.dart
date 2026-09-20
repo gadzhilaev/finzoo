@@ -88,6 +88,7 @@ class _NameStepState extends State<NameStep> {
         const SizedBox(height: 15),
         OnboardingNextButton(
           onTap: () {
+            FocusManager.instance.primaryFocus?.unfocus();
             widget.onNext?.call(_controller.text.trim());
           },
         ),
