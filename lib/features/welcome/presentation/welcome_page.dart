@@ -5,9 +5,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/assets/app_assets.dart';
 import '../../onboarding/presentation/age_page.dart';
+import '../../onboarding/presentation/name_page.dart';
 import '../../onboarding/presentation/widgets/onboarding_canvas.dart';
+import '../../onboarding/presentation/widgets/onboarding_decor.dart';
 
-enum _WelcomeStep { intro, age }
+enum _WelcomeStep { intro, age, name }
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -18,30 +20,55 @@ class WelcomePage extends StatefulWidget {
 
 class _WelcomePageState extends State<WelcomePage> {
   _WelcomeStep _step = _WelcomeStep.intro;
+  int? _age;
+
+  /// Один экземпляр декора на весь онбординг — анимация не перезапускается.
+  final GlobalKey _decorKey = GlobalKey();
 
   void _goToAge() {
-    if (_step == _WelcomeStep.age) return;
+    if (_step != _WelcomeStep.intro) return;
     setState(() => _step = _WelcomeStep.age);
+  }
+
+  void _goToName(int age) {
+    if (_step != _WelcomeStep.age) return;
+    setState(() {
+      _age = age;
+      _step = _WelcomeStep.name;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final isAge = _step == _WelcomeStep.age;
+    final showSquirrel2 = _step != _WelcomeStep.intro;
 
     return OnboardingCanvas(
-      title: isAge
-          ? 'Сколько тебе лет ?'
-          : 'Привет! Построй свою\nфинансовую жизнь со мной',
-      characterAsset: isAge ? AppAssets.squirrel2 : AppAssets.squirrel,
-      characterWidth: isAge ? 253 : 252,
-      characterHeight: isAge ? 297 : 293,
-      gapAfterCharacter: isAge ? 50 : 33,
-      bottom: isAge
-          ? AgeStep(key: const ValueKey('age-step'), onNext: (_) {})
-          : Center(
-              key: const ValueKey('play-step'),
-              child: _PlayButton(onPressed: _goToAge),
-            ),
+      decor: TickerMode(enabled: true, child: OnboardingDecor(key: _decorKey)),
+      title: switch (_step) {
+        _WelcomeStep.intro => 'Привет! Построй свою\nфинансовую жизнь со мной',
+        _WelcomeStep.age => 'Сколько тебе лет ?',
+        _WelcomeStep.name => 'Как тебя зовут ?',
+      },
+      characterAsset: showSquirrel2 ? AppAssets.squirrel2 : AppAssets.squirrel,
+      characterWidth: showSquirrel2 ? 253 : 252,
+      characterHeight: showSquirrel2 ? 297 : 293,
+      gapAfterCharacter: showSquirrel2 ? 50 : 33,
+      bottom: switch (_step) {
+        _WelcomeStep.intro => Center(
+          key: const ValueKey('play-step'),
+          child: _PlayButton(onPressed: _goToAge),
+        ),
+        _WelcomeStep.age => AgeStep(
+          key: const ValueKey('age-step'),
+          onNext: _goToName,
+        ),
+        _WelcomeStep.name => NameStep(
+          key: const ValueKey('name-step'),
+          onNext: (name) {
+            debugPrint('onboarding: age=$_age name=$name');
+          },
+        ),
+      },
     );
   }
 }

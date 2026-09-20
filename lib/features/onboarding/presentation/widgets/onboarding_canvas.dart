@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/assets/app_assets.dart';
 import '../../../../core/layout/design_scale.dart';
 import '../../../../core/theme/app_colors.dart';
-import 'onboarding_decor.dart';
 
 /// Общий холст онбординга 393×852 с плавной сменой контента.
 class OnboardingCanvas extends StatelessWidget {
@@ -14,6 +13,7 @@ class OnboardingCanvas extends StatelessWidget {
     required this.title,
     required this.characterAsset,
     required this.bottom,
+    required this.decor,
     this.characterWidth = 252,
     this.characterHeight = 293,
     this.characterLeft = 94,
@@ -21,6 +21,9 @@ class OnboardingCanvas extends StatelessWidget {
     this.gapAfterCharacter = 33,
     this.transitionDuration = const Duration(milliseconds: 550),
   });
+
+  /// Декор передаётся снаружи (со своим GlobalKey), чтобы анимация не сбрасывалась.
+  final Widget decor;
 
   final String title;
   final String characterAsset;
@@ -35,81 +38,87 @@ class OnboardingCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomTop = characterTop + characterHeight + gapAfterCharacter;
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      body: SizedBox.expand(
-        child: FittedBox(
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            width: DesignScale.designWidth,
-            height: DesignScale.designHeight,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const OnboardingDecor(),
-                Positioned(
-                  top: 145,
-                  left: 94,
-                  child: SvgPicture.asset(
-                    AppAssets.logo2,
-                    width: 203,
-                    height: 60,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                Positioned(
-                  top: 224,
-                  left: 0,
-                  right: 0,
-                  child: _FadeSlideSwitcher(
-                    duration: transitionDuration,
-                    child: Text(
-                      title,
-                      key: ValueKey(title),
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.rubik(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 21,
-                        height: 1,
-                        letterSpacing: -0.52,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-                AnimatedPositioned(
-                  duration: transitionDuration,
-                  curve: Curves.easeInOutCubic,
-                  top: characterTop,
-                  left: characterLeft,
-                  child: _FadeSlideSwitcher(
-                    duration: transitionDuration,
+      backgroundColor: const Color(0xFFFEFCF4),
+      // Клавиатуру обрабатываем сами — иначе FittedBox обрезает поле.
+      resizeToAvoidBottomInset: false,
+      body: Transform.translate(
+        offset: Offset(0, -keyboard),
+        child: SizedBox.expand(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: DesignScale.designWidth,
+              height: DesignScale.designHeight,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(child: IgnorePointer(child: decor)),
+                  Positioned(
+                    top: 145,
+                    left: 94,
                     child: SvgPicture.asset(
-                      characterAsset,
-                      key: ValueKey(characterAsset),
-                      width: characterWidth,
-                      height: characterHeight,
+                      AppAssets.logo2,
+                      width: 203,
+                      height: 60,
                       fit: BoxFit.contain,
                     ),
                   ),
-                ),
-                AnimatedPositioned(
-                  duration: transitionDuration,
-                  curve: Curves.easeInOutCubic,
-                  top: bottomTop,
-                  left: 0,
-                  right: 0,
-                  child: _FadeSlideSwitcher(
-                    duration: transitionDuration,
-                    child: KeyedSubtree(
-                      key: ValueKey(bottom.runtimeType),
-                      child: bottom,
+                  Positioned(
+                    top: 224,
+                    left: 0,
+                    right: 0,
+                    child: _FadeSlideSwitcher(
+                      duration: transitionDuration,
+                      child: Text(
+                        title,
+                        key: ValueKey(title),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.rubik(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 21,
+                          height: 1,
+                          letterSpacing: -0.52,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  AnimatedPositioned(
+                    duration: transitionDuration,
+                    curve: Curves.easeInOutCubic,
+                    top: characterTop,
+                    left: characterLeft,
+                    child: _FadeSlideSwitcher(
+                      duration: transitionDuration,
+                      child: SvgPicture.asset(
+                        characterAsset,
+                        key: ValueKey(characterAsset),
+                        width: characterWidth,
+                        height: characterHeight,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  AnimatedPositioned(
+                    duration: transitionDuration,
+                    curve: Curves.easeInOutCubic,
+                    top: bottomTop,
+                    left: 0,
+                    right: 0,
+                    child: _FadeSlideSwitcher(
+                      duration: transitionDuration,
+                      child: KeyedSubtree(
+                        key: ValueKey(bottom.key ?? bottom.runtimeType),
+                        child: bottom,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -133,10 +142,7 @@ class _FadeSlideSwitcher extends StatelessWidget {
       layoutBuilder: (currentChild, previousChildren) {
         return Stack(
           alignment: Alignment.topCenter,
-          children: [
-            ...previousChildren,
-            ?currentChild,
-          ],
+          children: [...previousChildren, ?currentChild],
         );
       },
       transitionBuilder: (child, animation) {
