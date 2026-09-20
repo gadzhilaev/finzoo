@@ -7,4 +7,10 @@ abstract final class AppAssets {
   static const String playBlob = 'assets/images/play_blob.svg';
   static const String playTriangle = 'assets/images/play_triangle.svg';
   static const String strelka = 'assets/images/strelka.svg';
+  static const String intro1 = 'assets/images/intro_1.svg';
+  static const String intro2 = 'assets/images/intro_2.svg';
+  static const String intro3 = 'assets/images/intro_3.svg';
+  static const String introOutroVideo = 'assets/videos/intro_outro.mp4';
+
+  static const List<String> introScreens = [intro1, intro2, intro3];
 }
