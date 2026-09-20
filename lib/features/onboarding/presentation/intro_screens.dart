@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import 'widgets/intro_decor.dart';
 import 'widgets/intro_floating_icons.dart';
 
-/// Три ознакомительных экрана: SVG + живые иконки/полоски + плавная смена.
+/// Три ознакомительных экрана: chrome сверху/снизу статичен, контент листается.
 class IntroScreens extends StatefulWidget {
   const IntroScreens({
     super.key,
@@ -28,11 +28,36 @@ class IntroScreens extends StatefulWidget {
 
 class _IntroScreensState extends State<IntroScreens> {
   final GlobalKey _decorKey = GlobalKey();
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: widget.index.clamp(0, 2));
+  }
+
+  @override
+  void didUpdateWidget(covariant IntroScreens oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final next = widget.index.clamp(0, 2);
+    if (oldWidget.index != widget.index && _pageController.hasClients) {
+      _pageController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final index = widget.index.clamp(0, 2);
-    final asset = AppAssets.introScreens[index];
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -54,40 +79,20 @@ class _IntroScreensState extends State<IntroScreens> {
                     ),
                   ),
                 ),
-                // Контент экрана (без полосок) — плавно сменяется.
+                // Только внутренний контент листается — без fade/затемнения.
                 Positioned.fill(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 550),
-                    switchInCurve: Curves.easeInOutCubic,
-                    switchOutCurve: Curves.easeInOutCubic,
-                    layoutBuilder: (currentChild, previousChildren) {
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [...previousChildren, ?currentChild],
+                  child: PageView.builder(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: AppAssets.introScreens.length,
+                    itemBuilder: (context, pageIndex) {
+                      return _IntroPageContent(
+                        asset: AppAssets.introScreens[pageIndex],
+                        index: pageIndex,
                       );
                     },
-                    transitionBuilder: (child, animation) {
-                      final fade = CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeInOutCubic,
-                      );
-                      final slide = Tween<Offset>(
-                        begin: const Offset(0.04, 0),
-                        end: Offset.zero,
-                      ).animate(fade);
-                      return FadeTransition(
-                        opacity: fade,
-                        child: SlideTransition(position: slide, child: child),
-                      );
-                    },
-                    child: _IntroPageContent(
-                      key: ValueKey(asset),
-                      asset: asset,
-                      index: index,
-                    ),
                   ),
                 ),
-                // Полоски прогресса — поверх, не участвуют в смене экрана.
                 IntroProgressBars(activeIndex: index),
                 Positioned(
                   left: 24,
@@ -114,11 +119,7 @@ class _IntroScreensState extends State<IntroScreens> {
 }
 
 class _IntroPageContent extends StatelessWidget {
-  const _IntroPageContent({
-    super.key,
-    required this.asset,
-    required this.index,
-  });
+  const _IntroPageContent({required this.asset, required this.index});
 
   final String asset;
   final int index;
@@ -135,6 +136,10 @@ class _IntroPageContent extends StatelessWidget {
           width: DesignScale.designWidth,
           height: DesignScale.designHeight,
         ),
+        if (index == 0)
+          const Positioned.fill(
+            child: IgnorePointer(child: IntroMarchingDashes()),
+          ),
         IntroFloatingLayer(icons: IntroFloatingIcons.forIndex(index)),
       ],
     );

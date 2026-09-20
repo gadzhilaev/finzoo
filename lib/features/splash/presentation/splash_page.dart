@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/assets/app_assets.dart';
 import '../../../core/layout/design_scale.dart';
+import '../../../core/profile/game_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../welcome/presentation/welcome_page.dart';
 
@@ -19,16 +20,22 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    _goToWelcome();
+    _boot();
   }
 
-  Future<void> _goToWelcome() async {
-    await Future<void>.delayed(_splashDuration);
+  Future<void> _boot() async {
+    final started = DateTime.now();
+    final game = await GameController.bootstrap();
+    final elapsed = DateTime.now().difference(started);
+    final wait = _splashDuration - elapsed;
+    if (wait > Duration.zero) {
+      await Future<void>.delayed(wait);
+    }
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
       PageRouteBuilder<void>(
-        pageBuilder: (_, _, _) => const WelcomePage(),
+        pageBuilder: (_, _, _) => WelcomePage(game: game),
         transitionsBuilder: (_, animation, _, child) {
           return FadeTransition(opacity: animation, child: child);
         },

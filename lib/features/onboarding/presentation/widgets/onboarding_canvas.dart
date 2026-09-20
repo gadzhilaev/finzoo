@@ -14,6 +14,7 @@ class OnboardingCanvas extends StatelessWidget {
     required this.characterAsset,
     required this.bottom,
     required this.decor,
+    this.onBack,
     this.characterWidth = 252,
     this.characterHeight = 293,
     this.characterLeft = 94,
@@ -28,6 +29,7 @@ class OnboardingCanvas extends StatelessWidget {
   final String title;
   final String characterAsset;
   final Widget bottom;
+  final VoidCallback? onBack;
   final double characterWidth;
   final double characterHeight;
   final double characterLeft;
@@ -57,6 +59,12 @@ class OnboardingCanvas extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Positioned.fill(child: IgnorePointer(child: decor)),
+                  if (onBack != null)
+                    Positioned(
+                      left: 24,
+                      top: 65,
+                      child: _BackButton(onTap: onBack!),
+                    ),
                   Positioned(
                     top: 145,
                     left: 94,
@@ -119,6 +127,37 @@ class OnboardingCanvas extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 36,
+        height: 36,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Color(0xFF1B6943),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(
+              Icons.chevron_left_rounded,
+              color: Colors.white,
+              size: 28,
             ),
           ),
         ),

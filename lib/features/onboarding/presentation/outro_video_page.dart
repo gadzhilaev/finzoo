@@ -16,27 +16,43 @@ class OutroVideoPage extends StatefulWidget {
 }
 
 class _OutroVideoPageState extends State<OutroVideoPage> {
-  late final VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _finished = false;
+  bool _failed = false;
 
   @override
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initPlayer());
+  }
 
-    _controller = VideoPlayerController.asset(AppAssets.introOutroVideo)
-      ..initialize().then((_) {
-        if (!mounted) return;
-        setState(() {});
-        _controller.play();
-      });
+  Future<void> _initPlayer() async {
+    if (!mounted) return;
+    final controller = VideoPlayerController.asset(AppAssets.introOutroVideo);
+    _controller = controller;
+    controller.addListener(_onTick);
 
-    _controller.addListener(_onTick);
+    try {
+      await controller.initialize();
+      if (!mounted) return;
+      setState(() {});
+      await controller.play();
+    } catch (error, stack) {
+      debugPrint('outro video init failed: $error\n$stack');
+      if (!mounted) return;
+      setState(() => _failed = true);
+      // После hot restart канал плагина часто мёртв — не блокируем онбординг.
+      Future<void>.delayed(const Duration(milliseconds: 400), _complete);
+    }
   }
 
   void _onTick() {
-    if (_finished || !_controller.value.isInitialized) return;
-    final value = _controller.value;
+    final controller = _controller;
+    if (_finished || controller == null || !controller.value.isInitialized) {
+      return;
+    }
+    final value = controller.value;
     if (value.position >= value.duration && value.duration > Duration.zero) {
       _complete();
     }
@@ -50,30 +66,36 @@ class _OutroVideoPageState extends State<OutroVideoPage> {
 
   @override
   void dispose() {
-    _controller.removeListener(_onTick);
-    _controller.dispose();
+    final controller = _controller;
+    if (controller != null) {
+      controller.removeListener(_onTick);
+      controller.dispose();
+    }
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = _controller;
+    final ready = controller != null && controller.value.isInitialized;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
         onTap: _complete,
         behavior: HitTestBehavior.opaque,
         child: SizedBox.expand(
-          child: _controller.value.isInitialized
+          child: ready
               ? FittedBox(
                   fit: BoxFit.cover,
                   child: SizedBox(
-                    width: _controller.value.size.width,
-                    height: _controller.value.size.height,
-                    child: VideoPlayer(_controller),
+                    width: controller.value.size.width,
+                    height: controller.value.size.height,
+                    child: VideoPlayer(controller),
                   ),
                 )
-              : const ColoredBox(color: AppColors.cream),
+              : ColoredBox(color: _failed ? AppColors.cream : Colors.black),
         ),
       ),
     );

@@ -7,9 +7,16 @@ import 'widgets/onboarding_next_button.dart';
 
 /// Шаг «Как тебя зовут ?» — поле без стрелок + Далее.
 class NameStep extends StatefulWidget {
-  const NameStep({super.key, this.onNext});
+  const NameStep({
+    super.key,
+    this.initialName = '',
+    this.onNext,
+    this.onChanged,
+  });
 
+  final String initialName;
   final ValueChanged<String>? onNext;
+  final ValueChanged<String>? onChanged;
 
   @override
   State<NameStep> createState() => _NameStepState();
@@ -24,7 +31,7 @@ class _NameStepState extends State<NameStep> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
+    _controller = TextEditingController(text: widget.initialName);
     _focusNode = FocusNode();
   }
 
@@ -72,7 +79,10 @@ class _NameStepState extends State<NameStep> {
               hintText: 'Имя',
               hintStyle: fieldStyle.copyWith(color: _hintColor),
             ),
-            onChanged: (_) => setState(() {}),
+            onChanged: (value) {
+              widget.onChanged?.call(value);
+              setState(() {});
+            },
           ),
         ),
         const SizedBox(height: 15),

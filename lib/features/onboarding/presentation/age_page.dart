@@ -10,9 +10,11 @@ import 'widgets/onboarding_next_button.dart';
 
 /// Контент шага возраста — только стрелки, поле не редактируется.
 class AgeStep extends StatefulWidget {
-  const AgeStep({super.key, this.onNext});
+  const AgeStep({super.key, this.initialAge = 10, this.onNext, this.onChanged});
 
+  final int initialAge;
   final ValueChanged<int>? onNext;
+  final ValueChanged<int>? onChanged;
 
   @override
   State<AgeStep> createState() => _AgeStepState();
@@ -22,10 +24,18 @@ class _AgeStepState extends State<AgeStep> {
   static const _minAge = 1;
   static const _maxAge = 99;
 
-  int _age = 10;
+  late int _age;
+
+  @override
+  void initState() {
+    super.initState();
+    _age = widget.initialAge.clamp(_minAge, _maxAge);
+  }
 
   void _setAge(int value) {
-    setState(() => _age = value.clamp(_minAge, _maxAge));
+    final next = value.clamp(_minAge, _maxAge);
+    setState(() => _age = next);
+    widget.onChanged?.call(next);
   }
 
   @override

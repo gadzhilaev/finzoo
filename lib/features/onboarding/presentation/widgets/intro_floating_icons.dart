@@ -31,15 +31,26 @@ class IntroFloatingIcon {
 abstract final class IntroFloatingIcons {
   static const screen1 = <IntroFloatingIcon>[
     IntroFloatingIcon(
-      asset: 'assets/images/intro_icons/intro_1_clip6_148_832.svg',
-      x: 121,
-      y: 281,
-      width: 199,
-      height: 238,
-      phase: 0.2,
-      drift: 5,
-      pulse: 0.02,
-      speed: 0.8,
+      asset: 'assets/images/intro_icons/intro_1_carrot.svg',
+      x: 12,
+      y: 235,
+      width: 70,
+      height: 90,
+      phase: 1.1,
+      drift: 8,
+      pulse: 0.08,
+      speed: 1.2,
+    ),
+    IntroFloatingIcon(
+      asset: 'assets/images/intro_icons/intro_1_plus1000.svg',
+      x: 280,
+      y: 240,
+      width: 110,
+      height: 80,
+      phase: 0.4,
+      drift: 7,
+      pulse: 0.06,
+      speed: 1.05,
     ),
     IntroFloatingIcon(
       asset: 'assets/images/intro_icons/intro_1_clip4_148_832.svg',
@@ -47,7 +58,7 @@ abstract final class IntroFloatingIcons {
       y: 531,
       width: 41,
       height: 35,
-      phase: 1.1,
+      phase: 2.0,
       drift: 8,
       pulse: 0.08,
       speed: 1.2,
@@ -58,7 +69,7 @@ abstract final class IntroFloatingIcons {
       y: 533,
       width: 69,
       height: 65,
-      phase: 2.0,
+      phase: 0.7,
       drift: 7,
       pulse: 0.07,
       speed: 1.1,
@@ -69,7 +80,7 @@ abstract final class IntroFloatingIcons {
       y: 405,
       width: 41,
       height: 35,
-      phase: 0.7,
+      phase: 1.6,
       drift: 9,
       pulse: 0.09,
       speed: 1.3,
@@ -78,11 +89,12 @@ abstract final class IntroFloatingIcons {
 
   static const screen2 = <IntroFloatingIcon>[
     IntroFloatingIcon(
+      // Яблоко + морковка + миска + пунктирная полоса.
       asset: 'assets/images/intro_icons/intro_2_clip3_150_1063.svg',
-      x: 268,
-      y: 269,
-      width: 95,
-      height: 102,
+      x: 230,
+      y: 260,
+      width: 140,
+      height: 110,
       phase: 0.4,
       drift: 6,
       pulse: 0.05,
@@ -133,11 +145,12 @@ abstract final class IntroFloatingIcons {
       speed: 1.4,
     ),
     IntroFloatingIcon(
+      // Мяч + пунктирная полоса.
       asset: 'assets/images/intro_icons/intro_2_clip9_150_1063.svg',
-      x: 294,
-      y: 511,
-      width: 46,
-      height: 46,
+      x: 280,
+      y: 500,
+      width: 80,
+      height: 70,
       phase: 0.3,
       drift: 7,
       pulse: 0.07,
@@ -163,6 +176,17 @@ abstract final class IntroFloatingIcons {
       y: 290,
       width: 90,
       height: 230,
+      phase: 0.5,
+      drift: 8,
+      pulse: 0.04,
+      speed: 1.0,
+    ),
+    IntroFloatingIcon(
+      asset: 'assets/images/intro_icons/intro_3_letter.svg',
+      x: 20,
+      y: 300,
+      width: 120,
+      height: 120,
       phase: 0.5,
       drift: 8,
       pulse: 0.04,
@@ -254,6 +278,97 @@ class _IntroFloatingLayerState extends State<IntroFloatingLayer>
         ),
       ),
     );
+  }
+}
+
+/// Пунктирные оранжевые линии — «вагоны» едут непрерывно.
+class IntroMarchingDashes extends StatefulWidget {
+  const IntroMarchingDashes({super.key});
+
+  @override
+  State<IntroMarchingDashes> createState() => _IntroMarchingDashesState();
+}
+
+class _IntroMarchingDashesState extends State<IntroMarchingDashes>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return CustomPaint(
+          size: const Size(393, 852),
+          painter: _MarchingDashesPainter(offset: _controller.value * 14),
+        );
+      },
+    );
+  }
+}
+
+class _MarchingDashesPainter extends CustomPainter {
+  _MarchingDashesPainter({required this.offset});
+
+  final double offset;
+
+  static final _paint = Paint()
+    ..color = const Color(0xFFDF9548)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3
+    ..strokeCap = StrokeCap.round
+    ..isAntiAlias = true;
+
+  static final _right = Path()
+    ..moveTo(422.5, 453)
+    ..cubicTo(395.833, 461.167, 340, 483.315, 340, 507)
+    ..cubicTo(340, 588.5, 398, 576, 382, 636.5);
+
+  static final _left = Path()
+    ..moveTo(1.5, 525)
+    ..cubicTo(28.1667, 516.833, 84, 494.685, 84, 471)
+    ..cubicTo(84, 389.5, 26, 402, 42, 341.5);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    _drawDashed(canvas, _right);
+    _drawDashed(canvas, _left);
+  }
+
+  void _drawDashed(Canvas canvas, Path path) {
+    for (final metric in path.computeMetrics()) {
+      var distance = -offset;
+      const dash = 7.0;
+      const gap = 7.0;
+      while (distance < metric.length) {
+        final start = distance.clamp(0.0, metric.length).toDouble();
+        final end = (distance + dash).clamp(0.0, metric.length).toDouble();
+        if (end > start) {
+          canvas.drawPath(metric.extractPath(start, end), _paint);
+        }
+        distance += dash + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MarchingDashesPainter oldDelegate) {
+    return oldDelegate.offset != offset;
   }
 }
 

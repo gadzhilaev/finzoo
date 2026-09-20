@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/assets/app_assets.dart';
-import '../../home/presentation/home_placeholder_page.dart';
+import '../../../core/profile/game_controller.dart';
+import '../../home/presentation/book_page.dart';
+import '../../home/presentation/goals_page.dart';
+import '../../home/presentation/house_page.dart';
+import '../../home/presentation/street_page.dart';
 import '../../onboarding/presentation/age_page.dart';
 import '../../onboarding/presentation/intro_screens.dart';
 import '../../onboarding/presentation/name_page.dart';
@@ -12,44 +16,77 @@ import '../../onboarding/presentation/outro_video_page.dart';
 import '../../onboarding/presentation/widgets/onboarding_canvas.dart';
 import '../../onboarding/presentation/widgets/onboarding_decor.dart';
 
-enum _WelcomeStep { play, age, name, tips, video, home }
+enum _WelcomeStep {
+  play,
+  age,
+  name,
+  tips,
+  video,
+  home,
+  street,
+  house,
+  houseSaved,
+  book,
+}
 
 class WelcomePage extends StatefulWidget {
-  const WelcomePage({super.key});
+  const WelcomePage({super.key, required this.game});
+
+  final GameController game;
 
   @override
   State<WelcomePage> createState() => _WelcomePageState();
 }
 
 class _WelcomePageState extends State<WelcomePage> {
-  _WelcomeStep _step = _WelcomeStep.play;
+  late _WelcomeStep _step;
   int _tipIndex = 0;
-  int? _age;
-  String? _name;
+  late int _age;
+  late String _name;
 
-  /// Один экземпляр декора на шаги play/age/name.
   final GlobalKey _decorKey = GlobalKey();
+
+  GameController get _game => widget.game;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = _game.profile;
+    _age = p.age;
+    _name = p.name;
+    _step = p.onboardingDone ? _WelcomeStep.street : _WelcomeStep.play;
+  }
 
   void _goToAge() {
     if (_step != _WelcomeStep.play) return;
     setState(() => _step = _WelcomeStep.age);
   }
 
-  void _goToName(int age) {
-    if (_step != _WelcomeStep.age) return;
+  void _goToName([int? age]) {
+    if (_step != _WelcomeStep.age && _step != _WelcomeStep.tips) return;
     setState(() {
-      _age = age;
+      if (age != null) _age = age;
       _step = _WelcomeStep.name;
     });
   }
 
-  void _goToTips(String name) {
+  Future<void> _goToTips([String? name]) async {
     if (_step != _WelcomeStep.name) return;
+    final nextName = (name ?? _name).trim();
     setState(() {
-      _name = name;
+      _name = nextName;
       _tipIndex = 0;
       _step = _WelcomeStep.tips;
     });
+    await _game.setIdentity(name: nextName, age: _age);
+  }
+
+  void _ageBack() {
+    setState(() => _step = _WelcomeStep.play);
+  }
+
+  void _nameBack() {
+    setState(() => _step = _WelcomeStep.age);
   }
 
   void _tipBack() {
@@ -69,13 +106,31 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   void _goToVideo() {
-    debugPrint('onboarding done: age=$_age name=$_name');
     setState(() => _step = _WelcomeStep.video);
   }
 
   void _goToHome() {
     setState(() => _step = _WelcomeStep.home);
   }
+
+  Future<void> _goToStreet(GoalOption goal) async {
+    final price =
+        int.tryParse(goal.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+    await _game.completeOnboarding(
+      name: _name,
+      age: _age,
+      goalTitle: goal.title.replaceAll('\n', ' '),
+      goalPrice: price,
+    );
+    if (!mounted) return;
+    setState(() => _step = _WelcomeStep.street);
+  }
+
+  void _goToHouse() => setState(() => _step = _WelcomeStep.house);
+
+  void _goToHouseSaved() => setState(() => _step = _WelcomeStep.houseSaved);
+
+  void _goToBook() => setState(() => _step = _WelcomeStep.book);
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +150,34 @@ class _WelcomePageState extends State<WelcomePage> {
           key: const ValueKey('video'),
           onFinished: _goToHome,
         ),
-        _WelcomeStep.home => const HomePlaceholderPage(key: ValueKey('home')),
+        _WelcomeStep.home => GoalsPage(
+          key: const ValueKey('home'),
+          onGoalSelected: _goToStreet,
+        ),
+        _WelcomeStep.street => StreetPage(
+          key: const ValueKey('street'),
+          controller: _game,
+          onOpenHouse: _goToHouse,
+        ),
+        _WelcomeStep.house => HousePage(
+          key: const ValueKey('house'),
+          controller: _game,
+          onOpenStreet: () => setState(() => _step = _WelcomeStep.street),
+          onOpenBook: _goToBook,
+          onToggleSaved: _goToHouseSaved,
+        ),
+        _WelcomeStep.houseSaved => HousePage(
+          key: const ValueKey('house-saved'),
+          controller: _game,
+          savedExpanded: true,
+          onOpenStreet: () => setState(() => _step = _WelcomeStep.street),
+          onOpenBook: _goToBook,
+          onToggleSaved: _goToHouse,
+        ),
+        _WelcomeStep.book => BookPage(
+          key: const ValueKey('book'),
+          onOpenHouse: _goToHouse,
+        ),
         _ => _buildProfileSteps(),
       },
     );
@@ -107,6 +189,11 @@ class _WelcomePageState extends State<WelcomePage> {
     return OnboardingCanvas(
       key: const ValueKey('profile-steps'),
       decor: TickerMode(enabled: true, child: OnboardingDecor(key: _decorKey)),
+      onBack: switch (_step) {
+        _WelcomeStep.age => _ageBack,
+        _WelcomeStep.name => _nameBack,
+        _ => null,
+      },
       title: switch (_step) {
         _WelcomeStep.play => 'Привет! Построй свою\nфинансовую жизнь со мной',
         _WelcomeStep.age => 'Сколько тебе лет ?',
@@ -124,10 +211,14 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
         _WelcomeStep.age => AgeStep(
           key: const ValueKey('age-step'),
+          initialAge: _age,
+          onChanged: (age) => _age = age,
           onNext: _goToName,
         ),
         _WelcomeStep.name => NameStep(
           key: const ValueKey('name-step'),
+          initialName: _name,
+          onChanged: (name) => _name = name,
           onNext: _goToTips,
         ),
         _ => const SizedBox.shrink(),
@@ -136,7 +227,6 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 }
 
-/// Зелёная форма крутится бесконечно, треугольник на месте.
 class _PlayButton extends StatefulWidget {
   const _PlayButton({this.onPressed});
 
