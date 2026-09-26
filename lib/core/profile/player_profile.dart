@@ -16,6 +16,7 @@ class PlayerProfile {
     required this.lastStatsAt,
     required this.lastAllowanceWeek,
     required this.dailyTaskDoneDay,
+    this.inventory = const {},
   });
 
   factory PlayerProfile.fresh() => PlayerProfile(
@@ -34,6 +35,7 @@ class PlayerProfile {
     lastStatsAt: DateTime.now().toIso8601String(),
     lastAllowanceWeek: '',
     dailyTaskDoneDay: '',
+    inventory: const {},
   );
 
   final String name;
@@ -72,6 +74,11 @@ class PlayerProfile {
   /// День, когда выполнено задание дня.
   final String dailyTaskDoneDay;
 
+  /// Количество предметов дома: ключи `k0`…`k7`, `c0`…`c7`, `s0`…`s3`.
+  final Map<String, int> inventory;
+
+  int inventoryQty(String key) => inventory[key] ?? 0;
+
   int get remainingToGoal => (goalPrice - savedBalance).clamp(0, goalPrice);
 
   double get goalProgress {
@@ -95,6 +102,7 @@ class PlayerProfile {
     String? lastStatsAt,
     String? lastAllowanceWeek,
     String? dailyTaskDoneDay,
+    Map<String, int>? inventory,
   }) {
     return PlayerProfile(
       name: name ?? this.name,
@@ -112,6 +120,7 @@ class PlayerProfile {
       lastStatsAt: lastStatsAt ?? this.lastStatsAt,
       lastAllowanceWeek: lastAllowanceWeek ?? this.lastAllowanceWeek,
       dailyTaskDoneDay: dailyTaskDoneDay ?? this.dailyTaskDoneDay,
+      inventory: inventory ?? this.inventory,
     );
   }
 
@@ -131,9 +140,19 @@ class PlayerProfile {
     'lastStatsAt': lastStatsAt,
     'lastAllowanceWeek': lastAllowanceWeek,
     'dailyTaskDoneDay': dailyTaskDoneDay,
+    'inventory': inventory,
   };
 
   factory PlayerProfile.fromJson(Map<String, Object?> json) {
+    final rawInv = json['inventory'];
+    final inventory = <String, int>{};
+    if (rawInv is Map) {
+      for (final e in rawInv.entries) {
+        final v = e.value;
+        final n = v is int ? v : (v is num ? v.toInt() : int.tryParse('$v'));
+        if (n != null && n > 0) inventory['${e.key}'] = n;
+      }
+    }
     return PlayerProfile(
       name: json['name'] as String? ?? '',
       age: json['age'] as int? ?? 10,
@@ -151,6 +170,7 @@ class PlayerProfile {
           json['lastStatsAt'] as String? ?? DateTime.now().toIso8601String(),
       lastAllowanceWeek: json['lastAllowanceWeek'] as String? ?? '',
       dailyTaskDoneDay: json['dailyTaskDoneDay'] as String? ?? '',
+      inventory: inventory,
     );
   }
 }

@@ -46,6 +46,7 @@ abstract final class AppAssets {
   static const String games = 'assets/images/games.svg';
   static const String gamesBg = 'assets/images/games_bg.png';
   static const String messages = 'assets/images/messages.svg';
+  static const String rubleMark = 'assets/images/ruble_mark.svg';
 
   /// Слоты инвентаря на экране дома (из `Дом.svg`).
   static const List<String> houseInventory = [

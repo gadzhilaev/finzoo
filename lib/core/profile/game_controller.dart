@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'house_catalog.dart';
 import 'player_profile.dart';
 import 'player_profile_store.dart';
 import 'player_rules.dart';
@@ -103,4 +104,61 @@ class GameController extends ChangeNotifier {
     );
     await _persist();
   }
+
+  /// Купить слот дома. Еда — стопка (`quantity`); одежда/душ — максимум 1.
+  Future<bool> buyHouseItem({
+    required HouseItemCategory category,
+    required int index,
+    int quantity = 1,
+  }) async {
+    if (index < 0 || index >= HouseCatalog.countFor(category)) return false;
+    if (quantity <= 0) return false;
+
+    final key = HouseCatalog.key(category, index);
+    final qty = profile.inventoryQty(key);
+    final maxQty = HouseCatalog.maxQty(category);
+    final room = maxQty - qty;
+    if (room <= 0) return false;
+
+    final take = quantity.clamp(1, room);
+    final price = HouseCatalog.itemPrice * take;
+    if (profile.availableBalance < price) return false;
+
+    final next = Map<String, int>.from(profile.inventory);
+    next[key] = qty + take;
+    profile = profile.copyWith(
+      availableBalance: profile.availableBalance - price,
+      inventory: next,
+    );
+    await _persist();
+    return true;
+  }
+
+  /// Съесть 1 порцию еды: −1 из инвентаря, +сытость.
+  /// `false` если нет еды или белка уже сыта.
+  Future<bool> useKitchenItem(int index) async {
+    if (index < 0 || index >= HouseCatalog.kitchenCount) return false;
+    if (profile.satiety >= 100) return false;
+
+    final key = HouseCatalog.key(HouseItemCategory.kitchen, index);
+    final qty = profile.inventoryQty(key);
+    if (qty <= 0) return false;
+
+    final next = Map<String, int>.from(profile.inventory);
+    if (qty <= 1) {
+      next.remove(key);
+    } else {
+      next[key] = qty - 1;
+    }
+
+    profile = profile.copyWith(
+      inventory: next,
+      satiety: (profile.satiety + HouseCatalog.foodSatietyBoost).clamp(0, 100),
+      lastStatsAt: _now().toIso8601String(),
+    );
+    await _persist();
+    return true;
+  }
+
+  bool get isFullyFed => profile.satiety >= 100;
 }

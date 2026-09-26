@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:finzoo/core/profile/game_controller.dart';
+import 'package:finzoo/core/profile/house_catalog.dart';
 import 'package:finzoo/core/profile/player_profile.dart';
+import 'package:finzoo/core/profile/player_profile_store.dart';
 import 'package:finzoo/core/profile/player_rules.dart';
 
 void main() {
@@ -68,4 +71,92 @@ void main() {
       expect(next.lastAllowanceWeek.isNotEmpty, isTrue);
     });
   });
+
+  group('House inventory buy', () {
+    test('еду можно купить сразу несколько порций', () async {
+      final c = GameController(
+        profile: PlayerProfile.fresh().copyWith(availableBalance: 100),
+        store: _MemoryStore(),
+      );
+      expect(
+        await c.buyHouseItem(
+          category: HouseItemCategory.kitchen,
+          index: 0,
+          quantity: 3,
+        ),
+        isTrue,
+      );
+      expect(c.profile.inventoryQty('k0'), 3);
+      expect(c.profile.availableBalance, 70);
+    });
+
+    test('одежду можно купить только один раз', () async {
+      final c = GameController(
+        profile: PlayerProfile.fresh().copyWith(availableBalance: 100),
+        store: _MemoryStore(),
+      );
+      expect(
+        await c.buyHouseItem(category: HouseItemCategory.clothes, index: 1),
+        isTrue,
+      );
+      expect(c.profile.inventoryQty('c1'), 1);
+      expect(
+        await c.buyHouseItem(category: HouseItemCategory.clothes, index: 1),
+        isFalse,
+      );
+      expect(c.profile.inventoryQty('c1'), 1);
+      expect(c.profile.availableBalance, 90);
+    });
+
+    test('без денег покупка не проходит', () async {
+      final c = GameController(
+        profile: PlayerProfile.fresh().copyWith(availableBalance: 5),
+        store: _MemoryStore(),
+      );
+      expect(
+        await c.buyHouseItem(category: HouseItemCategory.shower, index: 0),
+        isFalse,
+      );
+      expect(c.profile.inventoryQty('s0'), 0);
+    });
+
+    test('применение еды повышает сытость и списывает порцию', () async {
+      final c = GameController(
+        profile: PlayerProfile.fresh().copyWith(
+          availableBalance: 50,
+          satiety: 70,
+          inventory: const {'k0': 2},
+        ),
+        store: _MemoryStore(),
+      );
+      expect(await c.useKitchenItem(0), isTrue);
+      expect(c.profile.inventoryQty('k0'), 1);
+      expect(c.profile.satiety, 70 + HouseCatalog.foodSatietyBoost);
+    });
+
+    test('при полной сытости еду применить нельзя', () async {
+      final c = GameController(
+        profile: PlayerProfile.fresh().copyWith(
+          satiety: 100,
+          inventory: const {'k0': 1},
+        ),
+        store: _MemoryStore(),
+      );
+      expect(c.isFullyFed, isTrue);
+      expect(await c.useKitchenItem(0), isFalse);
+      expect(c.profile.inventoryQty('k0'), 1);
+    });
+  });
+}
+
+class _MemoryStore extends PlayerProfileStore {
+  PlayerProfile? _saved;
+
+  @override
+  Future<PlayerProfile> load() async => _saved ?? PlayerProfile.fresh();
+
+  @override
+  Future<void> save(PlayerProfile profile) async {
+    _saved = profile;
+  }
 }
