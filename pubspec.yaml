@@ -25,8 +25,23 @@ flutter:
   assets:
     - assets/images/
     - assets/images/intro_icons/
+    - assets/images/book_icons/
     - assets/images/goals/
+    - assets/images/house_inv/
+    - assets/images/house_inv_clothes/
+    - assets/images/house_inv_shower/
     - assets/videos/
+  fonts:
+    - family: Rubik
+      fonts:
+        - asset: assets/fonts/Rubik-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Rubik-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Rubik-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Rubik-Bold.ttf
+          weight: 700
 
 flutter_native_splash:
   color: "#FEFCF4"

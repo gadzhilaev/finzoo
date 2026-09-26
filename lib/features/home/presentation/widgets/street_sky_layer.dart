@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-/// Солнце стоит, облака едут справа налево без наложения.
+import '../../../../core/assets/app_assets.dart';
+
+/// Облака из макета улицы: стартуют как в SVG и едут влево без пауз.
+/// Одинаковая скорость — дистанция между облаками как в макете.
 class StreetSkyLayer extends StatefulWidget {
   const StreetSkyLayer({super.key});
 
@@ -10,100 +15,109 @@ class StreetSkyLayer extends StatefulWidget {
 
 class _StreetSkyLayerState extends State<StreetSkyLayer>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+  late final Ticker _ticker;
+  Duration _elapsed = Duration.zero;
+
+  /// Родные позиции. Скорость общая, чтобы не схлопывались.
+  static const _speedPx = 18.0;
+  static const _cycle = 560.0;
 
   static const _clouds = <_CloudSpec>[
-    _CloudSpec(lane: 0, width: 110, height: 42, top: 132, speed: 1.0),
-    _CloudSpec(lane: 1, width: 88, height: 34, top: 178, speed: 0.72),
-    _CloudSpec(lane: 2, width: 100, height: 38, top: 208, speed: 1.25),
+    _CloudSpec(
+      asset: AppAssets.streetCloudRight,
+      homeX: 189,
+      homeY: 116,
+      width: 185,
+      height: 78,
+      fullCanvas: true,
+    ),
+    // Левое — из Downloads/облако.svg
+    _CloudSpec(
+      asset: AppAssets.streetCloudLeft,
+      homeX: -5,
+      homeY: 155,
+      width: 153,
+      height: 61,
+      fullCanvas: false,
+    ),
   ];
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 36),
-    )..repeat();
+    _ticker = createTicker((elapsed) {
+      setState(() => _elapsed = elapsed);
+    })..start();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ticker.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            const Positioned(
-              left: 72,
-              top: 118,
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFFCD788),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x66FFAE00),
-                        blurRadius: 18,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: SizedBox(width: 64, height: 64),
-                ),
-              ),
-            ),
-            for (final cloud in _clouds) _buildCloud(cloud),
-          ],
-        );
-      },
+    final seconds = _elapsed.inMicroseconds / 1e6;
+    final offset = (seconds * _speedPx) % _cycle;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        for (final cloud in _clouds) ...[
+          _cloudAt(cloud, cloud.homeX - offset),
+          _cloudAt(cloud, cloud.homeX - offset + _cycle),
+        ],
+      ],
     );
   }
 
-  Widget _buildCloud(_CloudSpec cloud) {
-    // Разные полосы: стартуют с разных фаз, едут влево по кругу.
-    const travel = 520.0;
-    final phase = cloud.lane / _clouds.length;
-    final t = (_controller.value * cloud.speed + phase) % 1.0;
-    final left = 400 - t * travel;
+  Widget _cloudAt(_CloudSpec cloud, double left) {
+    final picture = cloud.fullCanvas
+        ? OverflowBox(
+            maxWidth: 393,
+            maxHeight: 852,
+            alignment: Alignment.topLeft,
+            child: Transform.translate(
+              offset: Offset(-cloud.homeX, -cloud.homeY),
+              child: SvgPicture.asset(
+                cloud.asset,
+                width: 393,
+                height: 852,
+                fit: BoxFit.fill,
+              ),
+            ),
+          )
+        : SvgPicture.asset(
+            cloud.asset,
+            width: cloud.width,
+            height: cloud.height,
+            fit: BoxFit.fill,
+          );
 
     return Positioned(
       left: left,
-      top: cloud.top,
-      child: IgnorePointer(
-        child: Container(
-          width: cloud.width,
-          height: cloud.height,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(cloud.height),
-          ),
-        ),
-      ),
+      top: cloud.homeY,
+      width: cloud.width,
+      height: cloud.height,
+      child: IgnorePointer(child: picture),
     );
   }
 }
 
 class _CloudSpec {
   const _CloudSpec({
-    required this.lane,
+    required this.asset,
+    required this.homeX,
+    required this.homeY,
     required this.width,
     required this.height,
-    required this.top,
-    required this.speed,
+    required this.fullCanvas,
   });
 
-  final int lane;
+  final String asset;
+  final double homeX;
+  final double homeY;
   final double width;
   final double height;
-  final double top;
-  final double speed;
+  final bool fullCanvas;
 }

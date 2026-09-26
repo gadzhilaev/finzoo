@@ -1,28 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/theme/app_fonts.dart';
 
+import '../../../../core/assets/app_assets.dart';
 import '../../../../core/profile/game_controller.dart';
 import '../../../../core/profile/player_rules.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Патчи поверх SVG: имя, стрик, цифры баланса и статусов.
-/// Иконки и рамки остаются из макета.
+/// Иконки, рамки бейджа и огонь — из макета.
 class HubHudOverlay extends StatelessWidget {
   const HubHudOverlay({
     super.key,
     required this.controller,
     required this.showSavedCard,
     this.balanceTop = 221,
+    this.coverHeaderLabels = true,
+    this.showStreetHeaderIcons = false,
     this.onCompleteTask,
+    this.satietyPercentLeft = 148,
+    this.moodPercentLeft = 325,
+    this.statsPercentTop = 548,
   });
 
   final GameController controller;
   final bool showSavedCard;
   final double balanceTop;
+
+  /// Когда в SVG ещё остались «Магомед» / «5 дней» — закрываем их кремом.
+  /// На улице макет уже без этих подписей — ставим `false`.
+  final bool coverHeaderLabels;
+
+  /// Улица: логотип и огонь рисуем оверлеем (в SVG вырезаны).
+  final bool showStreetHeaderIcons;
   final VoidCallback? onCompleteTask;
 
+  final double satietyPercentLeft;
+  final double moodPercentLeft;
+  final double statsPercentTop;
+
   static const _headerCream = Color(0xFFFCF9F6);
-  static const _cardCream = Color(0xFFFEF7E6);
+
+  /// Высота карточек баланса в макете (улица и дом).
+  static const balanceCardHeight = 57.6234;
+
+  /// Зазор лого↔имя и бейдж↔огонёк.
+  static const headerGap = 8.0;
+
+  static TextStyle get _availableLabelStyle => AppFonts.rubik(
+        fontWeight: FontWeight.w600,
+        fontSize: 11,
+        height: 1,
+        color: const Color(0xFF5B4300),
+      );
+
+  static TextStyle get _savedLabelStyle => AppFonts.rubik(
+        fontWeight: FontWeight.w600,
+        fontSize: 11,
+        height: 1,
+        color: const Color(0xFF1B6943),
+      );
+
+  static TextStyle get _balanceAmountStyle => AppFonts.rubik(
+        fontWeight: FontWeight.w700,
+        fontSize: 22,
+        height: 1,
+        color: AppColors.textPrimary,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -35,130 +79,200 @@ class HubHudOverlay extends StatelessWidget {
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            // Закрываем только SVG-имя (логотип-лис остаётся в макете).
-            Positioned(
-              left: 58,
-              top: 58,
-              width: 155,
-              height: 36,
-              child: ColoredBox(color: _headerCream),
-            ),
-            Positioned(
-              left: 70,
-              top: 66,
-              width: 140,
-              height: 24,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.rubik(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    height: 1,
-                    color: AppColors.green,
-                  ),
-                ),
+            if (coverHeaderLabels)
+              const Positioned(
+                left: 40,
+                top: 58,
+                width: 170,
+                height: 36,
+                child: ColoredBox(color: _headerCream),
               ),
-            ),
-            // Стрик: закрываем макетный бейдж целиком.
-            Positioned(
-              left: 220,
-              top: 60,
-              width: 165,
-              height: 36,
-              child: ColoredBox(color: _headerCream),
-            ),
-            Positioned(
-              left: 224,
-              top: 64,
-              child: _StreakBadge(days: p.streakDays),
-            ),
-            // Только цифры баланса — иконки из SVG.
-            Positioned(
-              left: showSavedCard ? 88 : 78,
-              top: balanceTop + 26,
-              width: showSavedCard ? 90 : 70,
-              height: 28,
-              child: ColoredBox(
-                color: _cardCream,
+            // Логотип + имя: одна линия по центру, прижаты слева.
+            if (showStreetHeaderIcons)
+              Positioned(
+                left: 14,
+                top: 65.4,
+                width: 200,
+                height: 27,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      AppAssets.streetLogo,
+                      width: 24.32,
+                      height: 26.96,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(width: headerGap),
+                    Expanded(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.rubik(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                          height: 1,
+                          color: AppColors.green,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Positioned(
+                left: 50,
+                top: 65.4,
+                width: 165,
+                height: 27,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '${p.availableBalance}',
-                    style: GoogleFonts.rubik(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.rubik(
                       fontWeight: FontWeight.w700,
-                      fontSize: 22,
+                      fontSize: 18,
                       height: 1,
-                      color: AppColors.textPrimary,
+                      color: AppColors.green,
                     ),
                   ),
                 ),
+              ),
+            if (coverHeaderLabels)
+              const Positioned(
+                left: 232,
+                top: 70,
+                width: 95,
+                height: 20,
+                child: ColoredBox(color: Color(0xFFFCEFE8)),
+              ),
+            // Стрик + огонь прижаты справа; зазор как у лого↔имя.
+            if (showStreetHeaderIcons)
+              Positioned(
+                right: 14,
+                top: 65.4,
+                height: 28,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _StreakPill(label: PlayerRules.streakLabel(p.streakDays)),
+                    const SizedBox(width: headerGap),
+                    const _StreetFlameIcon(),
+                  ],
+                ),
+              )
+            else
+              Positioned(
+                left: 238,
+                top: 67.4,
+                width: 94,
+                height: 25,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    PlayerRules.streakLabel(p.streakDays),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppFonts.rubik(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      height: 1,
+                      color: const Color(0xFFCD5E2A),
+                    ),
+                  ),
+                ),
+              ),
+            // «Доступно» / «Накоплено» + сумма — по центру карточки вместе с иконкой.
+            Positioned(
+              left: showSavedCard ? 68 : 77,
+              top: balanceTop,
+              width: showSavedCard ? 108 : 78,
+              height: balanceCardHeight,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Доступно',
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.visible,
+                    style: _availableLabelStyle,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${p.availableBalance}',
+                    maxLines: 1,
+                    softWrap: false,
+                    style: _balanceAmountStyle,
+                  ),
+                ],
               ),
             ),
             if (showSavedCard)
               Positioned(
-                left: 276,
-                top: balanceTop + 26,
-                width: 90,
-                height: 28,
-                child: ColoredBox(
-                  color: const Color(0xFFEBF4EE),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '${p.savedBalance}',
-                      style: GoogleFonts.rubik(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 22,
-                        height: 1,
-                        color: AppColors.textPrimary,
-                      ),
+                left: 255,
+                top: balanceTop,
+                width: 110,
+                height: balanceCardHeight,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Накоплено',
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.visible,
+                      style: _savedLabelStyle,
                     ),
-                  ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${p.savedBalance}',
+                      maxLines: 1,
+                      softWrap: false,
+                      style: _balanceAmountStyle,
+                    ),
+                  ],
                 ),
               ),
-            // Проценты и полоски — иконки/подписи из SVG.
+            // % на одной линии с иконкой и подписью «Сытость» / «Настроение».
             Positioned(
-              left: 148,
-              top: 542,
+              left: satietyPercentLeft,
+              top: statsPercentTop,
               width: 42,
-              height: 18,
-              child: ColoredBox(
-                color: Colors.white,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '${p.satiety.round()}%',
-                    style: GoogleFonts.rubik(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      height: 1,
-                      color: const Color(0xFF1B6943),
-                    ),
+              height: 16,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${p.satiety.round()}%',
+                  style: AppFonts.rubik(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    height: 1,
+                    color: const Color(0xFF1B6943),
                   ),
                 ),
               ),
             ),
             Positioned(
-              left: 325,
-              top: 542,
+              left: moodPercentLeft,
+              top: statsPercentTop,
               width: 42,
-              height: 18,
-              child: ColoredBox(
-                color: Colors.white,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '${p.mood.round()}%',
-                    style: GoogleFonts.rubik(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      height: 1,
-                      color: const Color(0xFFCD5E2A),
-                    ),
+              height: 16,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${p.mood.round()}%',
+                  style: AppFonts.rubik(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    height: 1,
+                    color: const Color(0xFFCD5E2A),
                   ),
                 ),
               ),
@@ -204,47 +318,59 @@ class HubHudOverlay extends StatelessWidget {
   }
 }
 
-class _StreakBadge extends StatelessWidget {
-  const _StreakBadge({required this.days});
+class _StreakPill extends StatelessWidget {
+  const _StreakPill({required this.label});
 
-  final int days;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    final flameScale = (1.0 + (days.clamp(0, 30) / 30) * 0.7).clamp(1.0, 1.7);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          height: 25,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0x1ACD5E2A),
-            borderRadius: BorderRadius.circular(12.5),
-            border: Border.all(color: const Color(0x8ACD5E2A), width: 1),
+    return Container(
+      height: 25,
+      padding: const EdgeInsets.only(left: 10, right: 12),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0x1ACD5E2A),
+        borderRadius: BorderRadius.circular(12.5),
+        border: Border.all(color: const Color(0x8ACD5E2A)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 4,
+            height: 4,
+            decoration: const BoxDecoration(
+              color: Color(0xFFCD5E2A),
+              shape: BoxShape.circle,
+            ),
           ),
-          child: Text(
-            PlayerRules.streakLabel(days),
-            style: GoogleFonts.rubik(
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: AppFonts.rubik(
               fontWeight: FontWeight.w600,
               fontSize: 11,
               height: 1,
               color: const Color(0xFFCD5E2A),
             ),
           ),
-        ),
-        const SizedBox(width: 6),
-        Transform.scale(
-          scale: flameScale,
-          alignment: Alignment.bottomCenter,
-          child: const Icon(
-            Icons.local_fire_department_rounded,
-            color: Color(0xFFE85A00),
-            size: 22,
-          ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StreetFlameIcon extends StatelessWidget {
+  const _StreetFlameIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return SvgPicture.asset(
+      AppAssets.streetFlame,
+      width: 22,
+      height: 28,
+      fit: BoxFit.fill,
     );
   }
 }

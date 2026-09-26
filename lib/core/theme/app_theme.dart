@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
+import 'app_fonts.dart';
 
 abstract final class AppTheme {
   static ThemeData get light {
-    final textTheme = GoogleFonts.rubikTextTheme();
-
-    return ThemeData(
+    final base = ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.cream,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.green,
         surface: AppColors.cream,
       ),
-      textTheme: textTheme,
+      fontFamily: AppFonts.family,
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.cream,
         foregroundColor: AppColors.textPrimary,
@@ -26,6 +24,10 @@ abstract final class AppTheme {
           statusBarBrightness: Brightness.light,
         ),
       ),
+    );
+
+    return base.copyWith(
+      textTheme: base.textTheme.apply(fontFamily: AppFonts.family),
     );
   }
 }

@@ -8,10 +8,18 @@ import 'widgets/svg_scene_page.dart';
 
 /// Улица после выбора цели.
 class StreetPage extends StatelessWidget {
-  const StreetPage({super.key, required this.controller, this.onOpenHouse});
+  const StreetPage({
+    super.key,
+    required this.controller,
+    this.onOpenHouse,
+    this.onOpenMessages,
+    this.onOpenGames,
+  });
 
   final GameController controller;
   final VoidCallback? onOpenHouse;
+  final VoidCallback? onOpenMessages;
+  final VoidCallback? onOpenGames;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +32,8 @@ class StreetPage extends StatelessWidget {
           controller: controller,
           showSavedCard: false,
           balanceTop: 221,
+          coverHeaderLabels: false,
+          showStreetHeaderIcons: true,
           onCompleteTask: () => controller.completeDailyTask(),
         ),
       ],
@@ -34,6 +44,22 @@ class StreetPage extends StatelessWidget {
           width: 45,
           height: 45,
           onTap: () => onOpenHouse?.call(),
+        ),
+        // Сообщения (облачко).
+        SvgHitArea(
+          left: 328.5,
+          top: 387.5,
+          width: 44,
+          height: 44,
+          onTap: () => onOpenMessages?.call(),
+        ),
+        // Игры (джойстик).
+        SvgHitArea(
+          left: 328.5,
+          top: 447.5,
+          width: 44,
+          height: 44,
+          onTap: () => onOpenGames?.call(),
         ),
       ],
     );

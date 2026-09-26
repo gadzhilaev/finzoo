@@ -7,8 +7,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/assets/app_assets.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../home/presentation/book_page.dart';
+import '../../home/presentation/games_page.dart';
 import '../../home/presentation/goals_page.dart';
 import '../../home/presentation/house_page.dart';
+import '../../home/presentation/messages_page.dart';
 import '../../home/presentation/street_page.dart';
 import '../../onboarding/presentation/age_page.dart';
 import '../../onboarding/presentation/intro_screens.dart';
@@ -26,8 +28,9 @@ enum _WelcomeStep {
   home,
   street,
   house,
-  houseSaved,
   book,
+  games,
+  messages,
 }
 
 class WelcomePage extends StatefulWidget {
@@ -126,6 +129,7 @@ class _WelcomePageState extends State<WelcomePage> {
       age: _age,
       goalTitle: goal.title.replaceAll('\n', ' '),
       goalPrice: price,
+      goalImageAsset: goal.imageAsset,
     );
     if (!mounted) return;
     setState(() => _step = _WelcomeStep.street);
@@ -133,9 +137,13 @@ class _WelcomePageState extends State<WelcomePage> {
 
   void _goToHouse() => setState(() => _step = _WelcomeStep.house);
 
-  void _goToHouseSaved() => setState(() => _step = _WelcomeStep.houseSaved);
-
   void _goToBook() => setState(() => _step = _WelcomeStep.book);
+
+  void _goToStreetOnly() => setState(() => _step = _WelcomeStep.street);
+
+  void _goToGames() => setState(() => _step = _WelcomeStep.games);
+
+  void _goToMessages() => setState(() => _step = _WelcomeStep.messages);
 
   @override
   Widget build(BuildContext context) {
@@ -157,31 +165,33 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
         _WelcomeStep.home => GoalsPage(
           key: const ValueKey('home'),
-          onGoalSelected: _goToStreet,
+          onGoalConfirmed: _goToStreet,
         ),
         _WelcomeStep.street => StreetPage(
           key: const ValueKey('street'),
           controller: _game,
           onOpenHouse: _goToHouse,
+          onOpenMessages: _goToMessages,
+          onOpenGames: _goToGames,
         ),
         _WelcomeStep.house => HousePage(
           key: const ValueKey('house'),
           controller: _game,
-          onOpenStreet: () => setState(() => _step = _WelcomeStep.street),
+          onOpenStreet: _goToStreetOnly,
           onOpenBook: _goToBook,
-          onToggleSaved: _goToHouseSaved,
-        ),
-        _WelcomeStep.houseSaved => HousePage(
-          key: const ValueKey('house-saved'),
-          controller: _game,
-          savedExpanded: true,
-          onOpenStreet: () => setState(() => _step = _WelcomeStep.street),
-          onOpenBook: _goToBook,
-          onToggleSaved: _goToHouse,
         ),
         _WelcomeStep.book => BookPage(
           key: const ValueKey('book'),
           onOpenHouse: _goToHouse,
+        ),
+        _WelcomeStep.games => GamesPage(
+          key: const ValueKey('games'),
+          onBack: _goToStreetOnly,
+        ),
+        _WelcomeStep.messages => MessagesPage(
+          key: const ValueKey('messages'),
+          onBack: _goToStreetOnly,
+          onOpenBook: _goToBook,
         ),
         _ => _buildProfileSteps(),
       },

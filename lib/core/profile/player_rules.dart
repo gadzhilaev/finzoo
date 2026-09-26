@@ -109,7 +109,8 @@ abstract final class PlayerRules {
   }
 
   static String streakLabel(int days) {
-    if (days <= 0) return 'Начни серию';
+    // «1 день подряд» не бывает — серия только со 2-го дня.
+    if (days < 2) return 'Начни серию';
     return '$days ${_dayWord(days)} подряд';
   }
 

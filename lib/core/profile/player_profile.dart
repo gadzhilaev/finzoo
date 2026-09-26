@@ -8,6 +8,7 @@ class PlayerProfile {
     required this.savedBalance,
     required this.goalTitle,
     required this.goalPrice,
+    required this.goalImageAsset,
     required this.streakDays,
     required this.lastOpenDay,
     required this.satiety,
@@ -25,6 +26,7 @@ class PlayerProfile {
     savedBalance: 0,
     goalTitle: '',
     goalPrice: 0,
+    goalImageAsset: '',
     streakDays: 0,
     lastOpenDay: '',
     satiety: 80,
@@ -46,6 +48,9 @@ class PlayerProfile {
 
   final String goalTitle;
   final int goalPrice;
+
+  /// Картинка цели из `assets/images/goals/`.
+  final String goalImageAsset;
 
   /// Дни подряд с заходом в приложение.
   final int streakDays;
@@ -82,6 +87,7 @@ class PlayerProfile {
     int? savedBalance,
     String? goalTitle,
     int? goalPrice,
+    String? goalImageAsset,
     int? streakDays,
     String? lastOpenDay,
     double? satiety,
@@ -98,6 +104,7 @@ class PlayerProfile {
       savedBalance: savedBalance ?? this.savedBalance,
       goalTitle: goalTitle ?? this.goalTitle,
       goalPrice: goalPrice ?? this.goalPrice,
+      goalImageAsset: goalImageAsset ?? this.goalImageAsset,
       streakDays: streakDays ?? this.streakDays,
       lastOpenDay: lastOpenDay ?? this.lastOpenDay,
       satiety: satiety ?? this.satiety,
@@ -116,6 +123,7 @@ class PlayerProfile {
     'savedBalance': savedBalance,
     'goalTitle': goalTitle,
     'goalPrice': goalPrice,
+    'goalImageAsset': goalImageAsset,
     'streakDays': streakDays,
     'lastOpenDay': lastOpenDay,
     'satiety': satiety,
@@ -134,6 +142,7 @@ class PlayerProfile {
       savedBalance: json['savedBalance'] as int? ?? 0,
       goalTitle: json['goalTitle'] as String? ?? '',
       goalPrice: json['goalPrice'] as int? ?? 0,
+      goalImageAsset: json['goalImageAsset'] as String? ?? '',
       streakDays: json['streakDays'] as int? ?? 0,
       lastOpenDay: json['lastOpenDay'] as String? ?? '',
       satiety: (json['satiety'] as num?)?.toDouble() ?? 80,

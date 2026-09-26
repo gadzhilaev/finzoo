@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import 'widgets/intro_decor.dart';
 import 'widgets/intro_floating_icons.dart';
 
-/// Три ознакомительных экрана: chrome сверху/снизу статичен, контент листается.
+/// Четыре ознакомительных экрана: chrome сверху/снизу статичен, контент листается.
 class IntroScreens extends StatefulWidget {
   const IntroScreens({
     super.key,
@@ -22,6 +22,8 @@ class IntroScreens extends StatefulWidget {
   final VoidCallback onSkip;
   final VoidCallback onNext;
 
+  static int get _lastIndex => AppAssets.introScreens.length - 1;
+
   @override
   State<IntroScreens> createState() => _IntroScreensState();
 }
@@ -30,16 +32,20 @@ class _IntroScreensState extends State<IntroScreens> {
   final GlobalKey _decorKey = GlobalKey();
   late final PageController _pageController;
 
+  int get _maxIndex => IntroScreens._lastIndex;
+
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: widget.index.clamp(0, 2));
+    _pageController = PageController(
+      initialPage: widget.index.clamp(0, _maxIndex),
+    );
   }
 
   @override
   void didUpdateWidget(covariant IntroScreens oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final next = widget.index.clamp(0, 2);
+    final next = widget.index.clamp(0, _maxIndex);
     if (oldWidget.index != widget.index && _pageController.hasClients) {
       _pageController.animateToPage(
         next,
@@ -57,8 +63,6 @@ class _IntroScreensState extends State<IntroScreens> {
 
   @override
   Widget build(BuildContext context) {
-    final index = widget.index.clamp(0, 2);
-
     return Scaffold(
       backgroundColor: AppColors.cream,
       body: SizedBox.expand(
@@ -93,7 +97,10 @@ class _IntroScreensState extends State<IntroScreens> {
                     },
                   ),
                 ),
-                IntroProgressBars(activeIndex: index),
+                IntroProgressBars(
+                  activeIndex: widget.index.clamp(0, _maxIndex),
+                  count: AppAssets.introScreens.length,
+                ),
                 Positioned(
                   left: 24,
                   top: 65,
@@ -128,7 +135,7 @@ class _IntroPageContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
-      clipBehavior: Clip.none,
+      clipBehavior: Clip.hardEdge,
       children: [
         SvgPicture.asset(
           asset,
@@ -139,6 +146,10 @@ class _IntroPageContent extends StatelessWidget {
         if (index == 0)
           const Positioned.fill(
             child: IgnorePointer(child: IntroMarchingDashes()),
+          ),
+        if (index == 3)
+          const Positioned.fill(
+            child: IgnorePointer(child: IntroEdgeCircles()),
           ),
         IntroFloatingLayer(icons: IntroFloatingIcons.forIndex(index)),
       ],

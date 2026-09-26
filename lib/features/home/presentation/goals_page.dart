@@ -1,9 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/assets/app_assets.dart';
-import '../../../core/layout/design_scale.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../onboarding/presentation/widgets/onboarding_decor.dart';
 
@@ -13,149 +14,234 @@ class GoalOption {
     required this.price,
     required this.title,
     required this.imageAsset,
+    required this.imageLeft,
+    required this.imageTop,
+    required this.imageSize,
+    required this.priceLeft,
+    required this.priceTop,
+    required this.priceWidth,
   });
 
   final String price;
   final String title;
-
-  /// Путь к PNG в `assets/images/goals/`. Чтобы заменить картинку —
-  /// положи новый файл с тем же именем (или поменяй путь здесь).
   final String imageAsset;
+
+  /// Локальные координаты внутри карточки 192×226 — из `4 экран.svg`.
+  final double imageLeft;
+  final double imageTop;
+  final double imageSize;
+  final double priceLeft;
+  final double priceTop;
+  final double priceWidth;
 }
 
-/// Экран «На что ты хочешь накопить» — без статусбара, с живыми кругами.
-class GoalsPage extends StatelessWidget {
-  const GoalsPage({super.key, this.onGoalSelected});
+/// Экран «На что ты хочешь накопить» — 1:1 с макетом `4 экран.svg`.
+class GoalsPage extends StatefulWidget {
+  const GoalsPage({super.key, this.onGoalConfirmed});
 
-  final ValueChanged<GoalOption>? onGoalSelected;
+  final ValueChanged<GoalOption>? onGoalConfirmed;
 
+  /// Координаты из SVG: карточка origin (10|201, 217+row*199).
   static const goals = <GoalOption>[
     GoalOption(
       price: '15.000 ₽',
       title: 'Велосипед',
       imageAsset: AppAssets.goalBicycle,
+      imageLeft: 43.5,
+      imageTop: 54,
+      imageSize: 105,
+      priceLeft: 31,
+      priceTop: 44,
+      priceWidth: 69,
     ),
     GoalOption(
       price: '5000 ₽',
       title: 'Наушники',
       imageAsset: AppAssets.goalHeadphones,
+      imageLeft: 52,
+      imageTop: 69,
+      imageSize: 88,
+      priceLeft: 31,
+      priceTop: 43,
+      priceWidth: 65,
     ),
     GoalOption(
-      price: '65.000 ₽',
+      price: '60.000 ₽',
       title: 'Плейстейшн',
       imageAsset: AppAssets.goalPlaystation,
+      imageLeft: 52.5,
+      imageTop: 72,
+      imageSize: 87,
+      priceLeft: 32,
+      priceTop: 44,
+      priceWidth: 79,
     ),
     GoalOption(
-      price: '80.000 ₽',
-      title: 'Велосипед',
-      imageAsset: AppAssets.goalBicycle2,
+      price: '60.000 ₽',
+      title: 'Лодка',
+      imageAsset: AppAssets.goalBoat,
+      imageLeft: 43.5,
+      imageTop: 57,
+      imageSize: 105,
+      priceLeft: 31,
+      priceTop: 43,
+      priceWidth: 79,
     ),
     GoalOption(
       price: '10.000 ₽',
       title: 'Теннисная\nракетка',
       imageAsset: AppAssets.goalTennis,
+      imageLeft: 52,
+      imageTop: 68,
+      imageSize: 88,
+      priceLeft: 32,
+      priceTop: 42,
+      priceWidth: 79,
     ),
     GoalOption(
       price: '6000 ₽',
       title: 'Удочка',
       imageAsset: AppAssets.goalFishing,
+      imageLeft: 43.5,
+      imageTop: 59,
+      imageSize: 105,
+      priceLeft: 31,
+      priceTop: 42,
+      priceWidth: 65,
     ),
   ];
+
+  /// Макет Figma: 393 × 943.
+  static const designWidth = 393.0;
+  static const designHeight = 943.0;
+
+  static const cardW = 192.0;
+  static const cardH = 226.0;
+  static const cardLeftEven = 10.0;
+  static const cardLeftOdd = 201.0;
+  static const cardTop0 = 217.0;
+  static const cardRowStep = 199.0;
+
+  @override
+  State<GoalsPage> createState() => _GoalsPageState();
+}
+
+class _GoalsPageState extends State<GoalsPage> {
+  int? _selectedIndex;
+
+  void _confirm() {
+    final i = _selectedIndex;
+    if (i == null) return;
+    widget.onGoalConfirmed?.call(GoalsPage.goals[i]);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.cream,
-      body: SizedBox.expand(
-        child: FittedBox(
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            width: DesignScale.designWidth,
-            height: DesignScale.designHeight,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Positioned.fill(
-                  child: IgnorePointer(child: OnboardingDecor()),
-                ),
-                Positioned(
-                  top: 115,
-                  left: 94,
-                  child: SvgPicture.asset(
-                    AppAssets.logo2,
-                    width: 203,
-                    height: 60,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                Positioned(
-                  top: 186,
-                  left: 24,
-                  right: 24,
-                  child: Text(
-                    'На что ты хочешь накопить',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.rubik(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 21,
-                      height: 1.1,
-                      letterSpacing: -0.52,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 248,
-                  left: 24,
-                  right: 24,
-                  bottom: 24,
-                  child: Column(
-                    children: [
-                      for (var row = 0; row < 3; row++) ...[
-                        if (row > 0) const SizedBox(height: 12),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _GoalCard(
-                                  goal: goals[row * 2],
-                                  onTap: () =>
-                                      onGoalSelected?.call(goals[row * 2]),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _GoalCard(
-                                  goal: goals[row * 2 + 1],
-                                  onTap: () =>
-                                      onGoalSelected?.call(goals[row * 2 + 1]),
-                                ),
-                              ),
-                            ],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Весь макет 393×943 целиком, по центру — как SVG.
+          final scale = math.min(
+            constraints.maxWidth / GoalsPage.designWidth,
+            constraints.maxHeight / GoalsPage.designHeight,
+          );
+          final w = GoalsPage.designWidth * scale;
+          final h = GoalsPage.designHeight * scale;
+
+          return ColoredBox(
+            color: AppColors.cream,
+            child: Center(
+              child: SizedBox(
+                width: w,
+                height: h,
+                child: FittedBox(
+                  fit: BoxFit.fill,
+                  child: SizedBox(
+                    width: GoalsPage.designWidth,
+                    height: GoalsPage.designHeight,
+                    child: Stack(
+                      clipBehavior: Clip.hardEdge,
+                      children: [
+                        const Positioned.fill(
+                          child: IgnorePointer(child: OnboardingDecor()),
+                        ),
+                        // Логотип по центру.
+                        Positioned(
+                          top: 115,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: SvgPicture.asset(
+                              AppAssets.logoIntro,
+                              width: 153,
+                              height: 45,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 186,
+                          left: 24,
+                          right: 24,
+                          child: Text(
+                            'На что ты хочешь накопить?',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.rubik(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 21,
+                              height: 1.1,
+                              letterSpacing: -0.52,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        for (var i = 0; i < GoalsPage.goals.length; i++)
+                          Positioned(
+                            left: i.isEven
+                                ? GoalsPage.cardLeftEven
+                                : GoalsPage.cardLeftOdd,
+                            top:
+                                GoalsPage.cardTop0 +
+                                (i ~/ 2) * GoalsPage.cardRowStep,
+                            width: GoalsPage.cardW,
+                            height: GoalsPage.cardH,
+                            child: _GoalCard(
+                              goal: GoalsPage.goals[i],
+                              selected: _selectedIndex == i,
+                              onTap: () => setState(() => _selectedIndex = i),
+                            ),
+                          ),
+                        // «Ок» — из макета (объём + текст).
+                        Positioned(
+                          left: 244,
+                          top: 838,
+                          width: 120,
+                          height: 71.45,
+                          child: _OkButton(
+                            enabled: _selectedIndex != null,
+                            onTap: _confirm,
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 }
 
 class _GoalCard extends StatelessWidget {
-  const _GoalCard({required this.goal, this.onTap});
+  const _GoalCard({required this.goal, required this.selected, this.onTap});
 
   final GoalOption goal;
+  final bool selected;
   final VoidCallback? onTap;
-
-  static const _cardFill = Color(0xFFFEF7E6);
-  static const _cardStroke = Color(0xFFDE984D);
 
   @override
   Widget build(BuildContext context) {
@@ -163,42 +249,20 @@ class _GoalCard extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Stack(
-        clipBehavior: Clip.none,
+        clipBehavior: Clip.hardEdge,
         children: [
           Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _cardFill,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: _cardStroke, width: 1.2),
-              ),
+            child: SvgPicture.asset(
+              selected ? AppAssets.goalsCardSelected : AppAssets.goalsCard,
+              fit: BoxFit.fill,
             ),
           ),
+          // Картинка под ценой.
           Positioned(
-            top: 10,
-            left: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.green,
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Text(
-                goal.price,
-                style: GoogleFonts.rubik(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  height: 1,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 28,
-            left: 12,
-            right: 12,
-            bottom: 44,
+            left: goal.imageLeft,
+            top: goal.imageTop,
+            width: goal.imageSize,
+            height: goal.imageSize,
             child: Image.asset(
               goal.imageAsset,
               fit: BoxFit.contain,
@@ -208,13 +272,37 @@ class _GoalCard extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 8,
-            right: 8,
-            bottom: 10,
+            left: goal.priceLeft,
+            top: goal.priceTop,
+            width: goal.priceWidth,
+            height: 22,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.green,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Center(
+                child: Text(
+                  goal.price,
+                  maxLines: 1,
+                  style: GoogleFonts.rubik(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    height: 1,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 14,
+            right: 14,
+            bottom: 42,
             child: Text(
               goal.title,
-              textAlign: TextAlign.center,
               maxLines: 2,
+              textAlign: TextAlign.center,
               style: GoogleFonts.rubik(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
@@ -225,6 +313,31 @@ class _GoalCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OkButton extends StatelessWidget {
+  const _OkButton({required this.enabled, this.onTap});
+
+  final bool enabled;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: enabled ? 1 : 0.45,
+        child: SvgPicture.asset(
+          AppAssets.okButton,
+          width: 120,
+          height: 71.45,
+          fit: BoxFit.fill,
+        ),
       ),
     );
   }

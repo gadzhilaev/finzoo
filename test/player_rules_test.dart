@@ -4,11 +4,18 @@ import 'package:finzoo/core/profile/player_rules.dart';
 
 void main() {
   group('PlayerRules.streak', () {
-    test('первый заход — 1 день', () {
+    test('первый заход — 1 день внутри, на UI ещё не серия', () {
       final now = DateTime(2026, 9, 19, 10);
       final next = PlayerRules.applyStreak(PlayerProfile.fresh(), now);
       expect(next.streakDays, 1);
       expect(next.lastOpenDay, '2026-09-19');
+      expect(PlayerRules.streakLabel(1), 'Начни серию');
+    });
+
+    test('подпись серии только со 2-го дня', () {
+      expect(PlayerRules.streakLabel(0), 'Начни серию');
+      expect(PlayerRules.streakLabel(2), '2 дня подряд');
+      expect(PlayerRules.streakLabel(5), '5 дней подряд');
     });
 
     test('заход на следующий день увеличивает стрик', () {
@@ -29,6 +36,7 @@ void main() {
       );
       final next = PlayerRules.applyStreak(base, DateTime(2026, 9, 19));
       expect(next.streakDays, 1);
+      expect(PlayerRules.streakLabel(next.streakDays), 'Начни серию');
     });
   });
 

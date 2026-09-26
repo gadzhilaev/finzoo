@@ -10,12 +10,16 @@ class SvgScenePage extends StatelessWidget {
     required this.asset,
     required this.backgroundColor,
     this.hits = const [],
+    this.underlays = const [],
     this.overlays = const [],
   });
 
   final String asset;
   final Color backgroundColor;
   final List<SvgHitArea> hits;
+
+  /// Слой под SVG (например PNG-фон, который flutter_svg не рисует из pattern).
+  final List<Widget> underlays;
   final List<Widget> overlays;
 
   @override
@@ -32,6 +36,7 @@ class SvgScenePage extends StatelessWidget {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
+                ...underlays,
                 Positioned.fill(
                   child: SvgPicture.asset(
                     asset,

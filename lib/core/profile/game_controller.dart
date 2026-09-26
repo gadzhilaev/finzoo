@@ -50,6 +50,7 @@ class GameController extends ChangeNotifier {
     required int age,
     required String goalTitle,
     required int goalPrice,
+    required String goalImageAsset,
   }) async {
     final now = _now();
     profile = profile.copyWith(
@@ -57,6 +58,7 @@ class GameController extends ChangeNotifier {
       age: age,
       goalTitle: goalTitle,
       goalPrice: goalPrice,
+      goalImageAsset: goalImageAsset,
       onboardingDone: true,
       availableBalance: profile.availableBalance > 0
           ? profile.availableBalance

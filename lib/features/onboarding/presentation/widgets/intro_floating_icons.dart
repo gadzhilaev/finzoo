@@ -115,8 +115,8 @@ abstract final class IntroFloatingIcons {
       asset: 'assets/images/intro_icons/intro_2_clip5_150_1063.svg',
       x: 10,
       y: 440,
-      width: 51,
-      height: 48,
+      width: 55,
+      height: 110,
       phase: 2.2,
       drift: 8,
       pulse: 0.07,
@@ -194,11 +194,26 @@ abstract final class IntroFloatingIcons {
     ),
   ];
 
+  static const screen4 = <IntroFloatingIcon>[
+    IntroFloatingIcon(
+      asset: 'assets/images/intro_icons/intro_4_hands.svg',
+      x: 109,
+      y: 386,
+      width: 175,
+      height: 139,
+      phase: 0.6,
+      drift: 7,
+      pulse: 0.05,
+      speed: 1.0,
+    ),
+  ];
+
   static List<IntroFloatingIcon> forIndex(int index) {
     return switch (index) {
       0 => screen1,
       1 => screen2,
-      _ => screen3,
+      2 => screen3,
+      _ => screen4,
     };
   }
 }
@@ -274,6 +289,125 @@ class _IntroFloatingLayerState extends State<IntroFloatingLayer>
                 fit: BoxFit.fill,
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Круги у краёв 4-го экрана: пульс на месте, не уезжают внутрь экрана.
+class IntroEdgeCircles extends StatefulWidget {
+  const IntroEdgeCircles({super.key});
+
+  @override
+  State<IntroEdgeCircles> createState() => _IntroEdgeCirclesState();
+}
+
+class _IntroEdgeCirclesState extends State<IntroEdgeCircles>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final turn = _controller.value * 2 * math.pi;
+        return Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // Жёлтый + обводка слева (обрезаны краем).
+            _edgeCircle(
+              cx: -40.7541,
+              cy: 476.246,
+              r: 53.2459,
+              turn: turn,
+              phase: 1.1,
+              pulse: 0.045,
+              fill: const Color(0xFFFCD788),
+            ),
+            _edgeCircle(
+              cx: -28.9782,
+              cy: 476.246,
+              r: 52.4779,
+              turn: turn,
+              phase: 1.1,
+              pulse: 0.045,
+              stroke: Colors.black,
+              strokeWidth: 1.53594,
+            ),
+            // Маленький справа.
+            _edgeCircle(
+              cx: 395.005,
+              cy: 328.006,
+              r: 10.3253,
+              turn: turn,
+              phase: 2.2,
+              pulse: 0.08,
+              stroke: const Color(0xFF4B4A48),
+              strokeWidth: 1.40799,
+            ),
+            // Зелёный справа снизу.
+            _edgeCircle(
+              cx: 403.109,
+              cy: 673.109,
+              r: 25.1092,
+              turn: turn,
+              phase: 0.4,
+              pulse: 0.055,
+              fill: const Color(0xFF4B946A),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _edgeCircle({
+    required double cx,
+    required double cy,
+    required double r,
+    required double turn,
+    required double phase,
+    required double pulse,
+    Color? fill,
+    Color? stroke,
+    double strokeWidth = 0,
+  }) {
+    // Только дыхание + чуть по вертикали — от края не отъезжают.
+    final scale = 1 + math.sin(turn + phase) * pulse;
+    final dy = math.sin(turn * 0.7 + phase + 0.5) * 2.5;
+    final size = (r * 2 + strokeWidth) * scale;
+
+    return Positioned(
+      left: cx - size / 2,
+      top: cy - size / 2 + dy,
+      child: IgnorePointer(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: fill,
+            border: stroke == null
+                ? null
+                : Border.all(color: stroke, width: strokeWidth * scale),
           ),
         ),
       ),
@@ -372,11 +506,16 @@ class _MarchingDashesPainter extends CustomPainter {
   }
 }
 
-/// Полоски прогресса — живут отдельно от смены экрана, плавно морфятся.
+/// Полоски шага — только во Flutter, не из SVG-макета.
 class IntroProgressBars extends StatelessWidget {
-  const IntroProgressBars({super.key, required this.activeIndex});
+  const IntroProgressBars({
+    super.key,
+    required this.activeIndex,
+    this.count = 4,
+  });
 
   final int activeIndex;
+  final int count;
 
   static const _active = Color(0xFF1B6943);
   static const _idle = Color(0xFFD9D9D9);
@@ -384,7 +523,8 @@ class IntroProgressBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final index = activeIndex.clamp(0, 2);
+    final total = count.clamp(1, 8);
+    final index = activeIndex.clamp(0, total - 1);
 
     return Positioned(
       top: 74,
@@ -393,7 +533,7 @@ class IntroProgressBars extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          for (var i = 0; i < 3; i++) ...[
+          for (var i = 0; i < total; i++) ...[
             if (i > 0) const SizedBox(width: 5),
             AnimatedContainer(
               duration: _duration,
