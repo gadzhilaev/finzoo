@@ -10,10 +10,14 @@ class PetStatsPanel extends StatelessWidget {
     super.key,
     required this.controller,
     this.top = 528,
+    this.moodDeltaFlash,
   });
 
   final GameController controller;
   final double top;
+
+  /// Неблокирующий прирост настроения рядом со шкалой (после первого надевания).
+  final double? moodDeltaFlash;
 
   static const double height = 56;
 
@@ -123,13 +127,31 @@ class PetStatsPanel extends StatelessWidget {
                   child: InkWell(
                     onTap: () => _showTip(context, satiety: false),
                     borderRadius: BorderRadius.circular(8),
-                    child: _StatColumn(
-                      label: 'Настроение',
-                      percent: p.mood,
-                      fill: const Color(0xFFFDD889),
-                      border: const Color(0xFFDE984D),
-                      icon: Icons.sentiment_satisfied_alt_rounded,
-                      percentColor: const Color(0xFFCD5E2A),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        _StatColumn(
+                          label: 'Настроение',
+                          percent: p.mood,
+                          fill: const Color(0xFFFDD889),
+                          border: const Color(0xFFDE984D),
+                          icon: Icons.sentiment_satisfied_alt_rounded,
+                          percentColor: const Color(0xFFCD5E2A),
+                        ),
+                        if (moodDeltaFlash != null && moodDeltaFlash! > 0)
+                          Positioned(
+                            right: 0,
+                            top: -10,
+                            child: Text(
+                              '+${moodDeltaFlash!.round()}',
+                              style: AppFonts.rubik(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                                color: const Color(0xFF1B6943),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

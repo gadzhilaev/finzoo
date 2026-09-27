@@ -36,6 +36,12 @@ class HousePage extends StatefulWidget {
 class _HousePageState extends State<HousePage> {
   HouseItemCategory _category = HouseItemCategory.kitchen;
 
+  /// Размер превью предмета (каталог) в диалогах одежды.
+  static const double _dialogItemPreviewSize = 128;
+
+  /// Краткий неблокирующий прирост настроения у шкалы (после первого надевания).
+  double? _moodFlash;
+
   @override
   void initState() {
     super.initState();
@@ -189,7 +195,6 @@ class _HousePageState extends State<HousePage> {
     final shop = ShopCatalog.item(HouseItemCategory.clothes, index);
     final owned = widget.controller.profile.inventoryQty(shop.key) > 0;
     final equipped = widget.controller.profile.isEquipped(shop.key);
-    final wardrobe = WardrobeCatalog.byIndex(index);
 
     if (!owned) {
       await _confirmBuyClothes(index: index, asset: asset);
@@ -197,15 +202,8 @@ class _HousePageState extends State<HousePage> {
     }
 
     if (equipped) {
-      final ok = await _showHouseDialog(
-        title: 'Снять?',
-        body: '${shop.title} сейчас на Finzo.\n'
-            'Снятие не снижает настроение. Вещь останется у тебя.',
-        asset: asset,
-        confirmLabel: 'Снять',
-        showCancel: true,
-        previewWardrobeIndex: index,
-      );
+      final wardrobe = WardrobeCatalog.byIndex(index);
+      final ok = await _showUnequipDialog(wardrobe: wardrobe);
       if (ok != true) return;
       await widget.controller.unequipClothesKey(shop.key);
       return;
@@ -225,28 +223,23 @@ class _HousePageState extends State<HousePage> {
       asset: asset,
       confirmLabel: 'Надеть',
       showCancel: true,
-      previewWardrobeIndex: index,
-      previewTryOn: true,
+      previewItemKey: shop.key,
     );
     if (ok != true) return;
 
     final result = await widget.controller.equipClothes(index);
     if (!mounted) return;
     if (!result.ok) return;
+    _flashMoodIfNeeded(result);
+  }
 
-    if (result.firstBoost) {
-      final gain = result.moodGain.round();
-      await _showHouseDialog(
-        title: gain > 0 ? 'Finzo рад!' : 'Уже на максимуме',
-        body: gain > 0
-            ? 'Настроение +$gain. ${wardrobe.title} на Finzo.'
-            : '${wardrobe.title} надета. Настроение уже 100.',
-        asset: asset,
-        confirmLabel: 'Отлично',
-        showCancel: false,
-        previewWardrobeIndex: index,
-      );
-    }
+  void _flashMoodIfNeeded(EquipClothesResult result) {
+    if (!result.firstBoost || result.moodGain <= 0) return;
+    setState(() => _moodFlash = result.moodGain);
+    Future<void>.delayed(const Duration(milliseconds: 2200), () {
+      if (!mounted) return;
+      setState(() => _moodFlash = null);
+    });
   }
 
   Future<void> _confirmBuyClothes({
@@ -287,13 +280,11 @@ class _HousePageState extends State<HousePage> {
           'Категория: ${shop.bucketLabel}\n'
           '${shop.effectLabel}\n'
           'Цена: ${shop.price} ₽'
-          '${overHint != null ? '\n\n$overHint' : ''}\n\n'
-          'Примерка до покупки не сохраняется как владение.',
+          '${overHint != null ? '\n\n$overHint' : ''}',
       asset: asset,
       confirmLabel: 'Купить',
       showCancel: true,
-      previewWardrobeIndex: index,
-      previewTryOn: true,
+      previewItemKey: shop.key,
     );
     if (ok != true) return;
 
@@ -316,29 +307,17 @@ class _HousePageState extends State<HousePage> {
 
     final wearNow = await _showHouseDialog(
       title: 'Куплено!',
-      body: '${shop.title} теперь твоя.\nНадеть сейчас?',
+      body: '${shop.title} теперь твоя. Надеть сейчас?',
       asset: asset,
       confirmLabel: 'Надеть сейчас',
       showCancel: true,
       cancelLabel: 'Позже',
-      previewWardrobeIndex: index,
+      previewItemKey: shop.key,
     );
     if (wearNow == true) {
       final result = await widget.controller.equipClothes(index);
       if (!mounted) return;
-      if (result.firstBoost) {
-        final gain = result.moodGain.round();
-        await _showHouseDialog(
-          title: gain > 0 ? 'Finzo рад!' : 'Уже на максимуме',
-          body: gain > 0
-              ? 'Настроение +$gain.'
-              : 'Вещь надета. Настроение уже 100.',
-          asset: asset,
-          confirmLabel: 'Отлично',
-          showCancel: false,
-          previewWardrobeIndex: index,
-        );
-      }
+      _flashMoodIfNeeded(result);
     }
   }
 
@@ -500,6 +479,73 @@ class _HousePageState extends State<HousePage> {
     }
   }
 
+  /// Компактное снятие: только миниатюра предмета из каталога, без белки.
+  Future<bool?> _showUnequipDialog({required WardrobeItem wardrobe}) {
+    return showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: const Color(0xFFFEF7E6),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFF1B6943), width: 2),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  WardrobeCatalog.unequipTitle(wardrobe),
+                  textAlign: TextAlign.center,
+                  style: AppFonts.rubik(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: const Color(0xFF1B6943),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _ClothesItemPreview(asset: wardrobe.thumbAsset),
+                const SizedBox(height: 10),
+                Text(
+                  'Вещь останется у тебя.',
+                  textAlign: TextAlign.center,
+                  style: AppFonts.rubik(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    height: 1.25,
+                    color: const Color(0xFF4A4643),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _DialogButton(
+                        label: 'Отмена',
+                        filled: false,
+                        onTap: () => Navigator.pop(ctx, false),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _DialogButton(
+                        label: 'Снять',
+                        filled: true,
+                        onTap: () => Navigator.pop(ctx, true),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<bool?> _showHouseDialog({
     required String title,
     required String body,
@@ -509,8 +555,8 @@ class _HousePageState extends State<HousePage> {
     String cancelLabel = 'Отмена',
     Widget Function(void Function(VoidCallback) setLocal)? quantityBuilder,
     String Function()? totalBuilder,
-    int? previewWardrobeIndex,
-    bool previewTryOn = false,
+    /// Стабильный ID вещи (`c0`…`c7`) — превью предмета из каталога, без белки.
+    String? previewItemKey,
   }) {
     return showDialog<bool>(
       context: context,
@@ -518,18 +564,8 @@ class _HousePageState extends State<HousePage> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setLocal) {
-            final wardrobe = previewWardrobeIndex != null
-                ? WardrobeCatalog.byIndex(previewWardrobeIndex)
-                : null;
-            String? previewBody;
-            String? previewHead;
-            if (previewTryOn && wardrobe != null) {
-              if (wardrobe.slot == WardrobeSlot.body) {
-                previewBody = wardrobe.shopKey;
-              } else {
-                previewHead = wardrobe.shopKey;
-              }
-            }
+            final wardrobe = WardrobeCatalog.byKey(previewItemKey);
+            final previewAsset = wardrobe?.thumbAsset ?? asset;
 
             return Dialog(
               backgroundColor: const Color(0xFFFEF7E6),
@@ -552,46 +588,12 @@ class _HousePageState extends State<HousePage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (wardrobe != null)
-                      Column(
-                        children: [
-                          FinzoAvatar(
-                            profile: widget.controller.profile,
-                            width: 120,
-                            height: 140,
-                            previewBodyKey: previewBody ??
-                                (previewTryOn
-                                    ? null
-                                    : widget.controller.profile.equippedBodyKey),
-                            previewHeadKey: previewHead ??
-                                (previewTryOn
-                                    ? null
-                                    : widget.controller.profile.equippedHeadKey),
-                          ),
-                          if (previewTryOn)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Примерка',
-                                style: AppFonts.rubik(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 11,
-                                  color: const Color(0xFFDF9548),
-                                ),
-                              ),
-                            ),
-                        ],
-                      )
-                    else
-                      SizedBox(
-                        width: 72,
-                        height: 72,
-                        child: Image.asset(
-                          asset,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.medium,
-                        ),
-                      ),
+                    _ClothesItemPreview(
+                      asset: previewAsset,
+                      size: wardrobe != null
+                          ? _dialogItemPreviewSize
+                          : 72,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       body,
@@ -663,7 +665,11 @@ class _HousePageState extends State<HousePage> {
           coverHeaderLabels: false,
           showStreetHeaderIcons: true,
         ),
-        PetStatsPanel(controller: widget.controller, top: 528),
+        PetStatsPanel(
+          controller: widget.controller,
+          top: 528,
+          moodDeltaFlash: _moodFlash,
+        ),
         // Белка вырезана из фоновых SVG — один FinzoAvatar на всех вкладках дома.
         ListenableBuilder(
           listenable: widget.controller,
@@ -810,6 +816,32 @@ class _SleepButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Крупный превью предмета из каталога (без белки) для диалогов одежды.
+class _ClothesItemPreview extends StatelessWidget {
+  const _ClothesItemPreview({
+    required this.asset,
+    this.size = 128,
+  });
+
+  final String asset;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Image.asset(
+        asset,
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
       ),
     );
   }
@@ -1000,122 +1032,112 @@ class _HouseInventoryOverlay extends StatelessWidget {
     final wardrobe = category == HouseItemCategory.clothes
         ? WardrobeCatalog.byIndex(index)
         : null;
+    final thumbAsset = wardrobe?.thumbAsset ?? asset;
+    final semanticsLabel = wardrobe == null
+        ? null
+        : (!owned
+            ? '${wardrobe.title}, цена $price'
+            : (equipped
+                ? '${wardrobe.title}, надето'
+                : '${wardrobe.title}, надеть'));
 
     return Positioned(
       left: left,
       top: top,
       width: size,
       height: size,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onSlotTap(category, index, asset),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(
-              left: _imageInset,
-              top: _imageInset - 0.5,
-              width: size - _imageInset * 2,
-              height: size - _imageInset * 2,
-              child: wardrobe != null
-                  ? SvgPicture.asset(
-                      wardrobe.fullAsset,
-                      fit: BoxFit.contain,
-                    )
-                  : Image.asset(
-                      asset,
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.medium,
-                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+      child: Semantics(
+        button: true,
+        label: semanticsLabel,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => onSlotTap(category, index, asset),
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              Positioned(
+                left: _imageInset,
+                top: _imageInset - 0.5,
+                width: size - _imageInset * 2,
+                height: size - _imageInset * 2,
+                child: Image.asset(
+                  thumbAsset,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+              if (!owned)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3D3D3D).withValues(alpha: 0.44),
+                      borderRadius: BorderRadius.circular(8.18),
                     ),
-            ),
-            if (!owned)
-              Positioned.fill(
+                  ),
+                ),
+              Positioned(
+                left: badgeLeft - left,
+                top: badgeTop - top,
+                width: _badgeW,
+                height: _badgeH,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3D3D3D).withValues(alpha: 0.44),
-                    borderRadius: BorderRadius.circular(8.18),
-                  ),
-                ),
-              ),
-            if (equipped)
-              Positioned(
-                left: 4,
-                top: 4,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4B946A),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'Надето',
-                    style: AppFonts.rubik(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 8,
-                      color: Colors.white,
+                    color: equipped
+                        ? const Color(0xFF4B946A)
+                        : const Color(0xFFDF9548),
+                    borderRadius: BorderRadius.circular(6.07),
+                    border: Border.all(
+                      color: const Color(0xFFFDD889),
+                      width: 0.53,
                     ),
                   ),
-                ),
-              ),
-            Positioned(
-              left: badgeLeft - left,
-              top: badgeTop - top,
-              width: equipped ? _badgeW + 4 : _badgeW,
-              height: _badgeH,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: equipped
-                      ? const Color(0xFF4B946A)
-                      : const Color(0xFFDF9548),
-                  borderRadius: BorderRadius.circular(6.07),
-                  border: Border.all(
-                    color: const Color(0xFFFDD889),
-                    width: 0.53,
+                  child: Center(
+                    child: equipped
+                        ? const Icon(
+                            Icons.check_rounded,
+                            size: 10,
+                            color: Color(0xFFFCD788),
+                          )
+                        : owned
+                            ? Text(
+                                category == HouseItemCategory.clothes
+                                    ? 'Надеть'
+                                    : '${qty}x',
+                                style: AppFonts.rubik(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 7.5,
+                                  height: 1,
+                                  color: const Color(0xFFFCD788),
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$price',
+                                    style: AppFonts.rubik(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 8,
+                                      height: 1,
+                                      color: const Color(0xFFFCD788),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 1.5),
+                                  SvgPicture.asset(
+                                    AppAssets.rubleMark,
+                                    width: _rubleSize,
+                                    height: _rubleSize,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ],
+                              ),
                   ),
                 ),
-                child: Center(
-                  child: owned
-                      ? Text(
-                          equipped
-                              ? 'Снять'
-                              : (category == HouseItemCategory.clothes
-                                  ? 'Надеть'
-                                  : '${qty}x'),
-                          style: AppFonts.rubik(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 7.5,
-                            height: 1,
-                            color: const Color(0xFFFCD788),
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '$price',
-                              style: AppFonts.rubik(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 8,
-                                height: 1,
-                                color: const Color(0xFFFCD788),
-                              ),
-                            ),
-                            const SizedBox(width: 1.5),
-                            SvgPicture.asset(
-                              AppAssets.rubleMark,
-                              width: _rubleSize,
-                              height: _rubleSize,
-                              fit: BoxFit.contain,
-                            ),
-                          ],
-                        ),
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
