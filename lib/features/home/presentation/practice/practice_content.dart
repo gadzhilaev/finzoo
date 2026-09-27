@@ -23,8 +23,15 @@ class PracticeGoods {
 }
 
 abstract final class PracticeContent {
+  static int _level(int periodIndex) => periodIndex >= 3 ? 3 : periodIndex >= 2 ? 2 : 1;
+
   // —— Обед ——
   static const lunchBudget = 80;
+  static int lunchBudgetFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => lunchBudget,
+        2 => 70,
+        _ => 65,
+      };
   static const lunchItems = <PracticeGoods>[
     PracticeGoods(
       id: 'soup',
@@ -85,23 +92,74 @@ abstract final class PracticeContent {
   // —— План на день ——
   static const planBudget = 100;
   static const planNeedMin = 50;
+  static int planBudgetFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => planBudget,
+        2 => 120,
+        _ => 140,
+      };
+  static int planNeedMinFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => planNeedMin,
+        2 => 60,
+        _ => 80,
+      };
 
   // —— Копим ——
   static const dreamGoal = 90;
   static const dreamDays = 3;
   static const dreamIncome = 60;
   static const dreamNeed = 30;
+  static int dreamGoalFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => dreamGoal,
+        2 => 120,
+        _ => 150,
+      };
+  static int dreamDaysFor(int periodIndex) => _level(periodIndex) == 1 ? dreamDays : 4;
+  static int dreamIncomeFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => dreamIncome,
+        2 => 65,
+        _ => 75,
+      };
+  static int dreamNeedFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => dreamNeed,
+        2 => 30,
+        _ => 35,
+      };
 
   // —— Изменились планы ——
   static const changeFree = 40;
   static const changeSaved = 70;
   static const changeNeedCost = 55;
   static const changeGoalLeft = 80;
+  static int changeFreeFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => changeFree,
+        2 => 35,
+        _ => 30,
+      };
+  static int changeSavedFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => changeSaved,
+        2 => 70,
+        _ => 90,
+      };
+  static int changeNeedCostFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => changeNeedCost,
+        2 => 60,
+        _ => 75,
+      };
+  static int changeGoalLeftFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => changeGoalLeft,
+        2 => 90,
+        _ => 100,
+      };
 
   // —— Выгодная покупка ——
   static const dealBudget = 100;
   static const dealNeedRacket = 1;
   static const dealNeedBalls = 2;
+  static int dealBudgetFor(int periodIndex) => switch (_level(periodIndex)) {
+        1 => dealBudget,
+        2 => 90,
+        _ => 85,
+      };
 
   static const dealShopA = <PracticeGoods>[
     PracticeGoods(
@@ -156,6 +214,7 @@ abstract final class PracticeContent {
 
   // —— Чек ——
   static const receiptBudget = 100;
+  static int receiptBudgetFor(int periodIndex) => _level(periodIndex) == 1 ? receiptBudget : 95;
   static const receiptGear = <PracticeGoods>[
     PracticeGoods(
       id: 'rod',

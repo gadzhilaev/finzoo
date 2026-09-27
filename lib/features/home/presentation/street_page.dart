@@ -204,8 +204,8 @@ class _StreetBottomPanel extends StatelessWidget {
       builder: (context, _) {
         final p = controller.profile;
         final phase = p.periodPhase;
-        final done = PracticeCatalog.completedIds(p.parkCompletedIds);
-        final exercise = PracticeCatalog.nextIncomplete(p.parkCompletedIds);
+        final done = PracticeCatalog.completedIds(p.periodPracticeCompletedIds);
+        final exercise = PracticeCatalog.nextIncomplete(p.periodPracticeCompletedIds);
         final taskDone = p.periodTaskDone || done.isNotEmpty;
 
         // Ближе к панели показателей (top 528 + ~56 ≈ 592).
@@ -410,5 +410,4 @@ class _PrimaryBtn extends StatelessWidget {
     );
   }
 }
-
 

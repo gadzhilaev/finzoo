@@ -76,9 +76,10 @@ class _LunchPracticePageState extends State<LunchPracticePage> {
       if (_picked.contains(item.id)) {
         _picked.remove(item.id);
       } else {
-        if (_spent + item.price > PracticeContent.lunchBudget) {
+        if (_spent + item.price >
+            PracticeContent.lunchBudgetFor(widget.controller.profile.periodIndex)) {
           _hint =
-              'Не влезает в ${PracticeContent.lunchBudget} монет. Убери что-то с подноса.';
+              'Не влезает в ${PracticeContent.lunchBudgetFor(widget.controller.profile.periodIndex)} монет. Убери что-то с подноса.';
           return;
         }
         if (item.group == 'main') {
@@ -106,16 +107,17 @@ class _LunchPracticePageState extends State<LunchPracticePage> {
       });
       return;
     }
-    if (_spent > PracticeContent.lunchBudget) {
+    if (_spent > PracticeContent.lunchBudgetFor(widget.controller.profile.periodIndex)) {
       setState(() => _hint = 'Сверх бюджета — убери что-то с подноса.');
       return;
     }
     await widget.controller.markParkExerciseDone(PracticeCatalog.lunch);
     if (!mounted) return;
-    final left = PracticeContent.lunchBudget - _spent;
+    final budget = PracticeContent.lunchBudgetFor(widget.controller.profile.periodIndex);
+    final left = budget - _spent;
     setState(() {
       _result =
-          'Потратил $_spent из ${PracticeContent.lunchBudget}, осталось $left. '
+          'Потратил $_spent из $budget, осталось $left. '
           '${_picked.length > 2 ? 'Ещё и десерт — отлично при остатке.' : 'Обед готов.'}';
     });
   }
@@ -205,11 +207,12 @@ class _LunchPracticePageState extends State<LunchPracticePage> {
       );
     }
 
-    final left = PracticeContent.lunchBudget - _spent;
+    final budget = PracticeContent.lunchBudgetFor(widget.controller.profile.periodIndex);
+    final left = budget - _spent;
     return PracticeShell(
       title: 'Собери обед',
       subtitle:
-          'У тебя ${PracticeContent.lunchBudget} монет. Выбери блюдо и напиток для Finzo',
+          'У тебя $budget монет. Выбери блюдо и напиток для Finzo',
       onExit: widget.onDone,
       bottom: practicePrimaryBtn('Подать обед', _finish),
       child: Column(
@@ -481,35 +484,44 @@ class DayPlanPracticePage extends StatefulWidget {
 }
 
 class _DayPlanPracticePageState extends State<DayPlanPracticePage> {
-  int _need = PracticeContent.planNeedMin;
+  late int _need;
   int _want = 20;
   int _save = 20;
   String? _hint;
   String? _result;
 
+  int get _budget => PracticeContent.planBudgetFor(widget.controller.profile.periodIndex);
+  int get _minimumNeed => PracticeContent.planNeedMinFor(widget.controller.profile.periodIndex);
+
+  @override
+  void initState() {
+    super.initState();
+    _need = _minimumNeed;
+  }
+
   int get _sum => _need + _want + _save;
-  int get _left => PracticeContent.planBudget - _sum;
+  int get _left => _budget - _sum;
 
   void _clamp() {
-    if (_need < PracticeContent.planNeedMin) {
-      _need = PracticeContent.planNeedMin;
+    if (_need < _minimumNeed) {
+      _need = _minimumNeed;
     }
-    while (_sum > PracticeContent.planBudget && _want > 0) {
+    while (_sum > _budget && _want > 0) {
       _want--;
     }
-    while (_sum > PracticeContent.planBudget && _save > 0) {
+    while (_sum > _budget && _save > 0) {
       _save--;
     }
   }
 
   Future<void> _finish() async {
-    if (_need < PracticeContent.planNeedMin) {
+    if (_need < _minimumNeed) {
       setState(() =>
-          _hint = 'На нужное минимум ${PracticeContent.planNeedMin}.');
+          _hint = 'На нужное минимум $_minimumNeed.');
       return;
     }
-    if (_sum > PracticeContent.planBudget) {
-      setState(() => _hint = 'Сумма плана больше ${PracticeContent.planBudget}.');
+    if (_sum > _budget) {
+      setState(() => _hint = 'Сумма плана больше $_budget.');
       return;
     }
     await widget.controller.markParkExerciseDone(PracticeCatalog.dayPlan);
@@ -532,7 +544,7 @@ class _DayPlanPracticePageState extends State<DayPlanPracticePage> {
         child: PracticeResultPane(
           message: _result!,
           onRetry: () => setState(() {
-            _need = PracticeContent.planNeedMin;
+            _need = _minimumNeed;
             _want = 20;
             _save = 20;
             _result = null;
@@ -543,14 +555,14 @@ class _DayPlanPracticePageState extends State<DayPlanPracticePage> {
     }
     return PracticeShell(
       title: 'План на день',
-      subtitle: 'Всего ${PracticeContent.planBudget} · распределено $_sum · свободно $_left',
+      subtitle: 'Всего $_budget · распределено $_sum · свободно $_left',
       onExit: widget.onDone,
       bottom: practicePrimaryBtn('Подтвердить план', _finish),
       child: ListView(
         children: [
           FinzoMoodBanner(
             text: _hint ??
-                'Finzo: на нужное не меньше ${PracticeContent.planNeedMin}. Остаток можно не тратить.',
+                'Finzo: на нужное не меньше $_minimumNeed. Остаток можно не тратить.',
             happy: _hint == null,
           ),
           const SizedBox(height: 12),
@@ -563,11 +575,11 @@ class _DayPlanPracticePageState extends State<DayPlanPracticePage> {
                   asset: AppAssets.houseInventory[0],
                   onMinus: () => setState(() {
                     _need = (_need - 5)
-                        .clamp(PracticeContent.planNeedMin, PracticeContent.planBudget);
+                        .clamp(_minimumNeed, _budget);
                     _hint = null;
                   }),
                   onPlus: () => setState(() {
-                    _need = (_need + 5).clamp(0, PracticeContent.planBudget);
+                    _need = (_need + 5).clamp(0, _budget);
                     _clamp();
                     _hint = null;
                   }),
@@ -580,11 +592,11 @@ class _DayPlanPracticePageState extends State<DayPlanPracticePage> {
                   value: _want,
                   asset: AppAssets.houseInventory[4],
                   onMinus: () => setState(() {
-                    _want = (_want - 5).clamp(0, PracticeContent.planBudget);
+                    _want = (_want - 5).clamp(0, _budget);
                     _hint = null;
                   }),
                   onPlus: () => setState(() {
-                    _want = (_want + 5).clamp(0, PracticeContent.planBudget);
+                    _want = (_want + 5).clamp(0, _budget);
                     _clamp();
                     _hint = null;
                   }),
@@ -597,11 +609,11 @@ class _DayPlanPracticePageState extends State<DayPlanPracticePage> {
                   value: _save,
                   asset: AppAssets.goalBicycle,
                   onMinus: () => setState(() {
-                    _save = (_save - 5).clamp(0, PracticeContent.planBudget);
+                    _save = (_save - 5).clamp(0, _budget);
                     _hint = null;
                   }),
                   onPlus: () => setState(() {
-                    _save = (_save + 5).clamp(0, PracticeContent.planBudget);
+                    _save = (_save + 5).clamp(0, _budget);
                     _clamp();
                     _hint = null;
                   }),
@@ -717,8 +729,13 @@ class _DreamSavePracticePageState extends State<DreamSavePracticePage> {
   String? _hint;
   String? _result;
 
-  int get _free => PracticeContent.dreamIncome - PracticeContent.dreamNeed;
-  int get _toGoal => (PracticeContent.dreamGoal - _saved).clamp(0, PracticeContent.dreamGoal);
+  int get _period => widget.controller.profile.periodIndex;
+  int get _income => PracticeContent.dreamIncomeFor(_period);
+  int get _need => PracticeContent.dreamNeedFor(_period);
+  int get _goal => PracticeContent.dreamGoalFor(_period);
+  int get _days => PracticeContent.dreamDaysFor(_period);
+  int get _free => _income - _need;
+  int get _toGoal => (_goal - _saved).clamp(0, _goal);
 
   void _startDay() {
     _put = (_free / 2).round();
@@ -733,7 +750,7 @@ class _DreamSavePracticePageState extends State<DreamSavePracticePage> {
 
   Future<void> _confirmDay() async {
     if (_put < 0 || _put > _free) {
-      setState(() => _hint = 'Отложить можно от 0 до $_free (после нужного ${PracticeContent.dreamNeed}).');
+      setState(() => _hint = 'Отложить можно от 0 до $_free (после нужного $_need).');
       return;
     }
     final nextSaved = _saved + _put;
@@ -742,12 +759,12 @@ class _DreamSavePracticePageState extends State<DreamSavePracticePage> {
       _saved = nextSaved;
       _pocket = nextPocket;
     });
-    if (_day >= PracticeContent.dreamDays) {
+    if (_day >= _days) {
       await widget.controller.markParkExerciseDone(PracticeCatalog.dreamSave);
       if (!mounted) return;
       setState(() {
         _result =
-            'За ${PracticeContent.dreamDays} дня: в копилке $_saved из ${PracticeContent.dreamGoal} '
+            'За $_days дня: в копилке $_saved из $_goal '
             '(до цели $_toGoal), свободно на руках $_pocket. '
             '${_saved >= PracticeContent.dreamGoal ? 'Цель достигнута!' : 'Можно продолжить копить без обнуления.'}';
       });
@@ -757,7 +774,7 @@ class _DreamSavePracticePageState extends State<DreamSavePracticePage> {
       _day++;
       _startDay();
       _hint =
-          'Finzo: накоплено $_saved, на руках $_pocket. День $_day — снова доход ${PracticeContent.dreamIncome}.';
+          'Finzo: накоплено $_saved, на руках $_pocket. День $_day — снова доход $_income.';
     });
   }
 
@@ -784,14 +801,14 @@ class _DreamSavePracticePageState extends State<DreamSavePracticePage> {
     return PracticeShell(
       title: 'Копим на мечту',
       subtitle:
-          'День $_day / ${PracticeContent.dreamDays} · копилка $_saved / ${PracticeContent.dreamGoal} · руки $_pocket',
+          'День $_day / $_days · копилка $_saved / $_goal · руки $_pocket',
       onExit: widget.onDone,
       bottom: practicePrimaryBtn('Отложить $_put', _confirmDay),
       child: ListView(
         children: [
           FinzoMoodBanner(
             text: _hint ??
-                'Доход ${PracticeContent.dreamIncome}, нужное ${PracticeContent.dreamNeed}. Свободно $_free — реши, сколько в копилку.',
+                'Доход $_income, нужное $_need. Свободно $_free — реши, сколько в копилку.',
             happy: _hint == null,
           ),
           const SizedBox(height: 12),
@@ -826,7 +843,7 @@ class _DreamSavePracticePageState extends State<DreamSavePracticePage> {
                       ),
                       child: FractionallySizedBox(
                         heightFactor:
-                            (_saved / PracticeContent.dreamGoal).clamp(0.08, 1),
+                            (_saved / _goal).clamp(0.08, 1),
                         widthFactor: 1,
                         alignment: Alignment.bottomCenter,
                         child: Container(
@@ -886,18 +903,22 @@ class _PlanChangePracticePageState extends State<PlanChangePracticePage> {
   String? _hint;
   String? _result;
 
-  int get _need => PracticeContent.changeNeedCost;
+  int get _period => widget.controller.profile.periodIndex;
+  int get _need => PracticeContent.changeNeedCostFor(_period);
+  int get _free => PracticeContent.changeFreeFor(_period);
+  int get _saved => PracticeContent.changeSavedFor(_period);
+  int get _goalLeft => PracticeContent.changeGoalLeftFor(_period);
   int get _totalTake => _fromPocket + _fromSave;
-  int get _pocketLeft => PracticeContent.changeFree - _fromPocket;
-  int get _saveLeft => PracticeContent.changeSaved - _fromSave;
+  int get _pocketLeft => _free - _fromPocket;
+  int get _saveLeft => _saved - _fromSave;
   int get _goalAfter =>
-      PracticeContent.changeGoalLeft + _fromSave; // снятие отодвигает цель
+      _goalLeft + _fromSave; // снятие отодвигает цель
 
   @override
   void initState() {
     super.initState();
-    _fromPocket = PracticeContent.changeFree.clamp(0, _need);
-    _fromSave = (_need - _fromPocket).clamp(0, PracticeContent.changeSaved);
+    _fromPocket = _free.clamp(0, _need);
+    _fromSave = (_need - _fromPocket).clamp(0, _saved);
   }
 
   Future<void> _confirm() async {
@@ -906,8 +927,7 @@ class _PlanChangePracticePageState extends State<PlanChangePracticePage> {
           'Нужно набрать ровно $_need. Сейчас $_totalTake — поправь до подтверждения.');
       return;
     }
-    if (_fromPocket > PracticeContent.changeFree ||
-        _fromSave > PracticeContent.changeSaved) {
+    if (_fromPocket > _free || _fromSave > _saved) {
       setState(() => _hint = 'Нельзя снять больше, чем есть.');
       return;
     }
@@ -917,7 +937,7 @@ class _PlanChangePracticePageState extends State<PlanChangePracticePage> {
       _result =
           'Нужная трата $_need: с рук $_fromPocket (осталось $_pocketLeft), '
           'из копилки $_fromSave (осталось $_saveLeft). '
-          'До цели стало $_goalAfter вместо ${PracticeContent.changeGoalLeft}. '
+          'До цели стало $_goalAfter вместо $_goalLeft. '
           'Снятие на необходимое — разумный выбор, не ошибка.';
     });
   }
@@ -932,8 +952,8 @@ class _PlanChangePracticePageState extends State<PlanChangePracticePage> {
         child: PracticeResultPane(
           message: _result!,
           onRetry: () => setState(() {
-            _fromPocket = PracticeContent.changeFree.clamp(0, _need);
-            _fromSave = (_need - _fromPocket).clamp(0, PracticeContent.changeSaved);
+            _fromPocket = _free.clamp(0, _need);
+            _fromSave = (_need - _fromPocket).clamp(0, _saved);
             _result = null;
             _hint = null;
           }),
@@ -950,7 +970,7 @@ class _PlanChangePracticePageState extends State<PlanChangePracticePage> {
         children: [
           FinzoMoodBanner(
             text: _hint ??
-                'Появилась нужная трата $_need. Свободно ${PracticeContent.changeFree}, в копилке ${PracticeContent.changeSaved}.',
+                'Появилась нужная трата $_need. Свободно $_free, в копилке $_saved.',
             happy: _hint == null,
           ),
           const SizedBox(height: 12),
@@ -960,7 +980,7 @@ class _PlanChangePracticePageState extends State<PlanChangePracticePage> {
                 child: _ChangePill(
                   title: 'Свободно',
                   value: _pocketLeft,
-                  subtitle: 'было ${PracticeContent.changeFree}',
+                  subtitle: 'было $_free',
                   asset: AppAssets.rubleMark,
                   isSvg: true,
                 ),
@@ -990,11 +1010,11 @@ class _PlanChangePracticePageState extends State<PlanChangePracticePage> {
             label: 'Взять с рук',
             value: _fromPocket,
             onMinus: () => setState(() {
-              _fromPocket = (_fromPocket - 5).clamp(0, PracticeContent.changeFree);
+              _fromPocket = (_fromPocket - 5).clamp(0, _free);
               _hint = null;
             }),
             onPlus: () => setState(() {
-              _fromPocket = (_fromPocket + 5).clamp(0, PracticeContent.changeFree);
+              _fromPocket = (_fromPocket + 5).clamp(0, _free);
               _hint = null;
             }),
           ),
@@ -1002,11 +1022,11 @@ class _PlanChangePracticePageState extends State<PlanChangePracticePage> {
             label: 'Снять из копилки',
             value: _fromSave,
             onMinus: () => setState(() {
-              _fromSave = (_fromSave - 5).clamp(0, PracticeContent.changeSaved);
+              _fromSave = (_fromSave - 5).clamp(0, _saved);
               _hint = null;
             }),
             onPlus: () => setState(() {
-              _fromSave = (_fromSave + 5).clamp(0, PracticeContent.changeSaved);
+              _fromSave = (_fromSave + 5).clamp(0, _saved);
               _hint = null;
             }),
           ),
@@ -1088,6 +1108,9 @@ class _DealPracticePageState extends State<DealPracticePage> {
   String? _result;
   int _seed = 0;
 
+  int get _budget =>
+      PracticeContent.dealBudgetFor(widget.controller.profile.periodIndex);
+
   List<PracticeGoods> get _shopA => PracticeContent.dealShopA;
 
   List<PracticeGoods> get _shopB {
@@ -1145,8 +1168,8 @@ class _DealPracticePageState extends State<DealPracticePage> {
       if (_bag.contains(g.id)) {
         _bag.remove(g.id);
       } else {
-        if (_spent + g.price > PracticeContent.dealBudget) {
-          _hint = 'Не влезает в ${PracticeContent.dealBudget}.';
+        if (_spent + g.price > _budget) {
+          _hint = 'Не влезает в $_budget.';
           return;
         }
         _bag.add(g.id);
@@ -1162,7 +1185,7 @@ class _DealPracticePageState extends State<DealPracticePage> {
           'Нужны ракетка и ${PracticeContent.dealNeedBalls} мяча. Сейчас: $_rackets / $_balls.');
       return;
     }
-    if (_spent > PracticeContent.dealBudget) {
+    if (_spent > _budget) {
       setState(() => _hint = 'Сверх бюджета.');
       return;
     }
@@ -1197,7 +1220,7 @@ class _DealPracticePageState extends State<DealPracticePage> {
     }
     return PracticeShell(
       title: 'Выгодная покупка',
-      subtitle: 'Бюджет ${PracticeContent.dealBudget} · сумка $_spent · ракетка $_rackets · мячи $_balls',
+      subtitle: 'Бюджет $_budget · сумка $_spent · ракетка $_rackets · мячи $_balls',
       onExit: widget.onDone,
       bottom: practicePrimaryBtn('Сравнить итог', _finish),
       child: ListView(
@@ -1255,6 +1278,9 @@ class _ReceiptPracticePageState extends State<ReceiptPracticePage> {
   String? _result;
   int _seed = 0;
 
+  int get _budget =>
+      PracticeContent.receiptBudgetFor(widget.controller.profile.periodIndex);
+
   int get _honest => PracticeContent.receiptGear
       .where((g) => _gear.contains(g.id))
       .fold(0, (s, g) => s + g.price);
@@ -1281,7 +1307,7 @@ class _ReceiptPracticePageState extends State<ReceiptPracticePage> {
     setState(() {
       _result =
           'Чек очищен, оплата $_honest точная. '
-          'Осталось учебных ${PracticeContent.receiptBudget - _honest}. '
+          'Осталось учебных ${_budget - _honest}. '
           'Основной баланс не менялся.';
     });
   }
@@ -1310,7 +1336,7 @@ class _ReceiptPracticePageState extends State<ReceiptPracticePage> {
     return PracticeShell(
       title: 'Проверь чек',
       subtitle: switch (_step) {
-        0 => 'Снасти · бюджет ${PracticeContent.receiptBudget}',
+        0 => 'Снасти · бюджет $_budget',
         1 => 'Найди лишнее в чеке',
         _ => 'Оплата $_paid / $_honest',
       },
@@ -1330,7 +1356,7 @@ class _ReceiptPracticePageState extends State<ReceiptPracticePage> {
               setState(() => _hint = 'Возьми все нужные позиции.');
               return;
             }
-            if (_honest > PracticeContent.receiptBudget) {
+            if (_honest > _budget) {
               setState(() => _hint = 'Дороже бюджета — убери желание.');
               return;
             }

@@ -127,4 +127,12 @@ abstract final class PracticeCatalog {
     final done = completedIds(stored);
     return all.where((e) => !done.contains(e.id)).firstOrNull ?? all.first;
   }
+
+  /// Три понятных уровня: первый знакомит с механикой, далее условия
+  /// становятся теснее, но остаются решаемыми без калькулятора.
+  static int levelForPeriod(int periodIndex) {
+    if (periodIndex >= 3) return 3;
+    if (periodIndex >= 2) return 2;
+    return 1;
+  }
 }

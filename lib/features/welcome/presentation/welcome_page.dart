@@ -238,7 +238,9 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   void _goToBudget() => setState(() => _step = _WelcomeStep.budget);
 
   void _goToTask() {
-    final next = PracticeCatalog.nextIncomplete(_game.profile.parkCompletedIds);
+    final next = PracticeCatalog.nextIncomplete(
+      _game.profile.periodPracticeCompletedIds,
+    );
     setState(() {
       _parkFocusId = next.id;
       _parkSkipIntro = false;
@@ -311,6 +313,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           key: const ValueKey('house'),
           controller: _game,
           onOpenStreet: _goToStreetOnly,
+          onOpenMessages: _goToMessages,
           onOpenBook: _goToBook,
           onOpenResults: _goToResults,
         ),

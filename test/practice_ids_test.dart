@@ -1,4 +1,5 @@
 import 'package:finzoo/core/profile/economy.dart';
+import 'package:finzoo/core/profile/budget_plan.dart';
 import 'package:finzoo/core/profile/game_controller.dart';
 import 'package:finzoo/core/profile/player_profile.dart';
 import 'package:finzoo/core/profile/player_profile_store.dart';
@@ -38,5 +39,28 @@ void main() {
       PracticeCatalog.completedIds(c.profile.parkCompletedIds),
       equals({PracticeCatalog.lunch}),
     );
+    expect(c.profile.periodPracticeCompletedIds, {PracticeCatalog.lunch});
+  });
+
+  test('practice progress resets for the next game day but keeps history',
+      () async {
+    final c = GameController(
+      profile: PlayerProfile.fresh().copyWith(
+        onboardingDone: true,
+        availableBalance: 200,
+        periodIndex: 1,
+        periodPhase: PeriodPhase.results,
+        periodIncomeGranted: true,
+        periodIncomeAmount: EconomyRules.periodIncome,
+        parkCompletedIds: const [PracticeCatalog.lunch],
+        periodPracticeCompletedIds: const [PracticeCatalog.lunch],
+      ),
+      store: _Mem(),
+    );
+
+    expect(await c.startNextPeriod(), isTrue);
+    expect(c.profile.periodPracticeCompletedIds, isEmpty);
+    expect(c.profile.parkCompletedIds, contains(PracticeCatalog.lunch));
+    expect(PracticeCatalog.levelForPeriod(c.profile.periodIndex), 2);
   });
 }

@@ -34,6 +34,7 @@ class PlayerProfile {
     this.dayEndIntroShown = false,
     this.periodCareUses = 0,
     this.parkCompletedIds = const [],
+    this.periodPracticeCompletedIds = const [],
     this.boostedItemKeys = const [],
     this.seenMessageIds = const [],
     this.equippedBodyKey,
@@ -115,6 +116,11 @@ class PlayerProfile {
 
   /// Пройденные упражнения парка (можно повторять, прогресс хранится).
   final List<String> parkCompletedIds;
+
+  /// Упражнения, закрытые в текущем игровом дне.
+  /// Общая история остаётся в [parkCompletedIds], а этот список очищается
+  /// при старте следующего периода.
+  final List<String> periodPracticeCompletedIds;
 
   /// Одежда/уход, уже давшие бонус настроения (повторно не усиливают).
   final List<String> boostedItemKeys;
@@ -202,6 +208,7 @@ class PlayerProfile {
     bool? dayEndIntroShown,
     int? periodCareUses,
     List<String>? parkCompletedIds,
+    List<String>? periodPracticeCompletedIds,
     List<String>? boostedItemKeys,
     List<String>? seenMessageIds,
     String? equippedBodyKey,
@@ -243,6 +250,8 @@ class PlayerProfile {
       dayEndIntroShown: dayEndIntroShown ?? this.dayEndIntroShown,
       periodCareUses: periodCareUses ?? this.periodCareUses,
       parkCompletedIds: parkCompletedIds ?? this.parkCompletedIds,
+      periodPracticeCompletedIds:
+          periodPracticeCompletedIds ?? this.periodPracticeCompletedIds,
       boostedItemKeys: boostedItemKeys ?? this.boostedItemKeys,
       seenMessageIds: seenMessageIds ?? this.seenMessageIds,
       equippedBodyKey:
@@ -285,6 +294,7 @@ class PlayerProfile {
         'dayEndIntroShown': dayEndIntroShown,
         'periodCareUses': periodCareUses,
         'parkCompletedIds': parkCompletedIds,
+        'periodPracticeCompletedIds': periodPracticeCompletedIds,
         'boostedItemKeys': boostedItemKeys,
         'seenMessageIds': seenMessageIds,
         'equippedBodyKey': equippedBodyKey,
@@ -340,6 +350,8 @@ class PlayerProfile {
       return out;
     }
 
+    final periodPracticeIds = stringList('periodPracticeCompletedIds');
+
     return PlayerProfile(
       name: json['name'] as String? ?? '',
       age: json['age'] as int? ?? 10,
@@ -374,6 +386,10 @@ class PlayerProfile {
       dayEndIntroShown: json['dayEndIntroShown'] as bool? ?? false,
       periodCareUses: (json['periodCareUses'] as num?)?.toInt() ?? 0,
       parkCompletedIds: parkIds,
+      // Профили до дневного прогресса показывают уже закрытые задания
+      // завершёнными только в текущем дне; на следующем они начнутся заново.
+      periodPracticeCompletedIds:
+          periodPracticeIds.isNotEmpty ? periodPracticeIds : parkIds,
       boostedItemKeys: stringList('boostedItemKeys'),
       seenMessageIds: stringList('seenMessageIds'),
       equippedBodyKey: _nullableString(json['equippedBodyKey']),

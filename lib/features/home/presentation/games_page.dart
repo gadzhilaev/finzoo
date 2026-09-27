@@ -122,7 +122,11 @@ class _GamesPageState extends State<GamesPage> {
       listenable: widget.controller,
       builder: (context, _) {
         final done = PracticeCatalog.completedIds(
-          widget.controller.profile.parkCompletedIds,
+          widget.controller.profile.periodPracticeCompletedIds,
+        );
+        final allDone = done.length == PracticeCatalog.all.length;
+        final level = PracticeCatalog.levelForPeriod(
+          widget.controller.profile.periodIndex,
         );
 
         return Scaffold(
@@ -160,7 +164,9 @@ class _GamesPageState extends State<GamesPage> {
                     ],
                   ),
                   Text(
-                    'Давай потренируемся обращаться с деньгами',
+                    allDone
+                        ? 'Все задания на сегодня пройдены. Завтра будет уровень $level.'
+                        : 'Уровень $level · учимся обращаться с деньгами',
                     textAlign: TextAlign.center,
                     style: AppFonts.rubik(
                       fontWeight: FontWeight.w500,
@@ -188,6 +194,15 @@ class _GamesPageState extends State<GamesPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  if (allDone) ...[
+                    _PracticeDayCompleteCard(
+                      nextLevel: PracticeCatalog.levelForPeriod(
+                        widget.controller.profile.periodIndex + 1,
+                      ),
+                      onBack: widget.onBack,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Expanded(
                     child: ListView.separated(
                       itemCount: PracticeCatalog.all.length,
@@ -209,6 +224,50 @@ class _GamesPageState extends State<GamesPage> {
           ),
         );
       },
+    );
+  }
+}
+
+class _PracticeDayCompleteCard extends StatelessWidget {
+  const _PracticeDayCompleteCard({required this.nextLevel, this.onBack});
+
+  final int nextLevel;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5EC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF1B6943), width: 1.5),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.workspace_premium_rounded,
+              color: Color(0xFF1B6943), size: 30),
+          const SizedBox(height: 4),
+          Text('Отличная практика!',
+              style: AppFonts.rubik(fontWeight: FontWeight.w700, fontSize: 16,
+                  color: const Color(0xFF1B6943))),
+          const SizedBox(height: 4),
+          Text('Ты потренировал бюджет, накопления и покупки. '
+              'На следующем игровом дне откроется уровень $nextLevel: '
+              'меньше свободных монет и больше условий.',
+              textAlign: TextAlign.center,
+              style: AppFonts.rubik(fontWeight: FontWeight.w500, fontSize: 12,
+                  height: 1.3, color: const Color(0xFF4A4643))),
+          if (onBack != null) ...[
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_rounded),
+              label: const Text('Вернуться на улицу'),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

@@ -116,7 +116,7 @@ class GameController extends ChangeNotifier {
       availableBalance: forDialog && shot.contains('buy') ? 500 : 200,
       savedBalance: 50,
       goalTitle: 'Велосипед',
-      goalPrice: 3000,
+      goalPrice: 800,
       satiety: 90,
       mood: 80,
       periodIndex: 1,
@@ -142,6 +142,7 @@ class GameController extends ChangeNotifier {
     final now = _now();
     var next = PlayerRules.applyStatsDecay(profile, now);
     next = PlayerRules.applyStreak(next, now);
+    next = _migrateGoalPrice(next);
     // Старые профили: баланс уже есть → помечаем доход выданным, без второго начисления.
     // Пустой баланс и флаг не выдан → один грант периода.
     if (next.onboardingDone &&
@@ -163,6 +164,23 @@ class GameController extends ChangeNotifier {
     }
     profile = next;
     await _persist();
+  }
+
+  /// Старые профили выбирали цели до пересмотра экономики. Сохраняем уже
+  /// накопленное, но приводим стоимость именно этой цели к текущему каталогу.
+  PlayerProfile _migrateGoalPrice(PlayerProfile p) {
+    const prices = <String, int>{
+      'Велосипед': 800,
+      'Наушники': 300,
+      'Плейстейшн': 1200,
+      'Лодка': 1500,
+      'Теннисная ракетка': 500,
+      'Удочка': 400,
+    };
+    final title = p.goalTitle.replaceAll('\n', ' ').trim();
+    final price = prices[title];
+    if (price == null || price == p.goalPrice) return p;
+    return p.copyWith(goalPrice: price);
   }
 
   Future<void> setIdentity({required String name, required int age}) async {
@@ -566,8 +584,10 @@ class GameController extends ChangeNotifier {
     final ids = existing.contains(canonical)
         ? existing.toList()
         : [...existing, canonical];
+    final today = {...profile.periodPracticeCompletedIds, canonical}.toList();
     profile = profile.copyWith(
       parkCompletedIds: ids,
+      periodPracticeCompletedIds: today,
       periodTaskDone: true,
     );
     await _persist();
@@ -616,6 +636,7 @@ class GameController extends ChangeNotifier {
       periodTaskDone: false,
       periodTaskRewardGranted: false,
       periodCareUses: 0,
+      periodPracticeCompletedIds: const [],
     );
     profile = _grantPeriodIncome(profile);
     await _persist();
