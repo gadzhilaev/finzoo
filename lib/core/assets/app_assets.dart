@@ -43,6 +43,17 @@ abstract final class AppAssets {
   static const String bookLetter = 'assets/images/book_icons/book_letter.svg';
   static const String bookLeaf = 'assets/images/book_icons/book_leaf.svg';
   static const String bookCards = 'assets/images/book_icons/book_cards.svg';
+  static const String bookArrowRight =
+      'assets/images/book_icons/book_arrow_right.svg';
+  static const String bookSceneLetter =
+      'assets/images/book_icons/scene_letter.svg';
+  static const String bookSceneCurve =
+      'assets/images/book_icons/scene_curve.svg';
+  static const String bookSceneLeaf = 'assets/images/book_icons/scene_leaf.svg';
+  static const String bookSceneCards =
+      'assets/images/book_icons/scene_cards.svg';
+  static const String bookSceneFinzoLoupe =
+      'assets/images/book_icons/scene_finzo_loupe.svg';
   static const String games = 'assets/images/games.svg';
   static const String gamesBg = 'assets/images/games_bg.png';
   static const String messages = 'assets/images/messages.svg';
