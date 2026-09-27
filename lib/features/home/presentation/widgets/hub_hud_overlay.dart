@@ -240,65 +240,7 @@ class HubHudOverlay extends StatelessWidget {
                   ],
                 ),
               ),
-            // % на одной линии с иконкой и подписью «Сытость» / «Настроение».
-            Positioned(
-              left: satietyPercentLeft,
-              top: statsPercentTop,
-              width: 42,
-              height: 16,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  '${p.satiety.round()}%',
-                  style: AppFonts.rubik(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    height: 1,
-                    color: const Color(0xFF1B6943),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: moodPercentLeft,
-              top: statsPercentTop,
-              width: 42,
-              height: 16,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  '${p.mood.round()}%',
-                  style: AppFonts.rubik(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    height: 1,
-                    color: const Color(0xFFCD5E2A),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 25.5,
-              top: 567.5,
-              width: 164.5,
-              height: 9,
-              child: _MiniBar(
-                value: p.satiety / 100,
-                fill: const Color(0xFF1B6943),
-                border: const Color(0xFF1B6943),
-              ),
-            ),
-            Positioned(
-              left: 203,
-              top: 567.5,
-              width: 164.5,
-              height: 9,
-              child: _MiniBar(
-                value: p.mood / 100,
-                fill: const Color(0xFFFDD889),
-                border: const Color(0xFFDE984D),
-              ),
-            ),
+            // Сытость/настроение — в PetStatsPanel (единая панель).
             if (onCompleteTask != null)
               Positioned(
                 left: 54,
@@ -371,42 +313,6 @@ class _StreetFlameIcon extends StatelessWidget {
       width: 22,
       height: 28,
       fit: BoxFit.fill,
-    );
-  }
-}
-
-class _MiniBar extends StatelessWidget {
-  const _MiniBar({
-    required this.value,
-    required this.fill,
-    required this.border,
-  });
-
-  final double value;
-  final Color fill;
-  final Color border;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4.5),
-        border: Border.all(color: border),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(1.5),
-        child: FractionallySizedBox(
-          widthFactor: value.clamp(0.0, 1.0),
-          alignment: Alignment.centerLeft,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: fill,
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -52,10 +52,14 @@ class SvgScenePage extends StatelessWidget {
                     top: hit.top,
                     width: hit.width,
                     height: hit.height,
-                    child: GestureDetector(
-                      onTap: hit.onTap,
-                      behavior: HitTestBehavior.opaque,
-                      child: const SizedBox.expand(),
+                    child: Semantics(
+                      button: true,
+                      label: hit.semanticsLabel,
+                      child: GestureDetector(
+                        onTap: hit.onTap,
+                        behavior: HitTestBehavior.opaque,
+                        child: const SizedBox.expand(),
+                      ),
                     ),
                   ),
               ],
@@ -74,6 +78,7 @@ class SvgHitArea {
     required this.width,
     required this.height,
     required this.onTap,
+    this.semanticsLabel,
   });
 
   final double left;
@@ -81,4 +86,5 @@ class SvgHitArea {
   final double width;
   final double height;
   final VoidCallback onTap;
+  final String? semanticsLabel;
 }
