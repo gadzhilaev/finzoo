@@ -1,19 +1,7 @@
 import 'player_profile.dart';
 
-/// Правила экономики и «жизни» белки.
+/// Правила стрика и «жизни» белки (без авто-начислений валюты).
 abstract final class PlayerRules {
-  /// Первый подарок от родителей после регистрации.
-  static const initialParentGift = 650;
-
-  /// Карманные раз в неделю.
-  static const weeklyAllowance = 300;
-
-  /// Бонус за ежедневный заход (кроме первого дня стрика).
-  static const dailyLoginBonus = 25;
-
-  /// Награда за «Задание дня».
-  static const dailyTaskReward = 50;
-
   /// Сытость падает быстрее настроения.
   static const satietyDecayPerHour = 2.5;
   static const moodDecayPerHour = 1.2;
@@ -23,14 +11,6 @@ abstract final class PlayerRules {
     final m = local.month.toString().padLeft(2, '0');
     final d = local.day.toString().padLeft(2, '0');
     return '${local.year}-$m-$d';
-  }
-
-  static String weekKey(DateTime dt) {
-    final local = dt.toLocal();
-    // Простая неделя: год + номер недели ISO-ish через days since epoch.
-    final days = local.difference(DateTime(local.year)).inDays;
-    final week = (days / 7).floor() + 1;
-    return '${local.year}-W${week.toString().padLeft(2, '0')}';
   }
 
   static DateTime? parseDay(String key) {
@@ -44,6 +24,7 @@ abstract final class PlayerRules {
     );
   }
 
+  /// Стрик для UI; деньги не начисляет (доход — только за период).
   static PlayerProfile applyStreak(PlayerProfile profile, DateTime now) {
     final today = dayKey(now);
     if (profile.lastOpenDay == today) return profile;
@@ -63,16 +44,9 @@ abstract final class PlayerRules {
       }
     }
 
-    var balance = profile.availableBalance;
-    // Бонус за продолжение стрика со 2-го дня.
-    if (streak > 1 && profile.lastOpenDay.isNotEmpty) {
-      balance += dailyLoginBonus;
-    }
-
     return profile.copyWith(
       streakDays: streak,
       lastOpenDay: today,
-      availableBalance: balance,
     );
   }
 
@@ -94,22 +68,7 @@ abstract final class PlayerRules {
     );
   }
 
-  static PlayerProfile applyParentAllowance(
-    PlayerProfile profile,
-    DateTime now,
-  ) {
-    if (!profile.onboardingDone) return profile;
-    final week = weekKey(now);
-    if (profile.lastAllowanceWeek == week) return profile;
-
-    return profile.copyWith(
-      lastAllowanceWeek: week,
-      availableBalance: profile.availableBalance + weeklyAllowance,
-    );
-  }
-
   static String streakLabel(int days) {
-    // «1 день подряд» не бывает — серия только со 2-го дня.
     if (days < 2) return 'Начни серию';
     return '$days ${_dayWord(days)} подряд';
   }
@@ -122,5 +81,86 @@ abstract final class PlayerRules {
       return 'дня';
     }
     return 'дней';
+  }
+
+  /// Текст сравнения плана и факта (для сохранения в профиле).
+  static String buildPeriodSummary({
+    required int periodIndex,
+    required int planNecessary,
+    required int planWants,
+    required int planSavings,
+    required int spentNecessary,
+    required int spentWants,
+    required int factSavings,
+    required int remainingBalance,
+    int careUses = 0,
+    double satiety = 50,
+  }) {
+    final verdict = periodVerdict(
+      planNecessary: planNecessary,
+      planWants: planWants,
+      planSavings: planSavings,
+      spentNecessary: spentNecessary,
+      spentWants: spentWants,
+      factSavings: factSavings,
+      careUses: careUses,
+      satiety: satiety,
+    );
+    return 'День $periodIndex. $verdict '
+        'Остаток $remainingBalance ₽ переносится дальше.';
+  }
+
+  /// Один короткий вывод для экрана итогов (без повтора цифр плана/факта).
+  static String periodVerdict({
+    required int planNecessary,
+    required int planWants,
+    required int planSavings,
+    required int spentNecessary,
+    required int spentWants,
+    required int factSavings,
+    int careUses = 0,
+    double satiety = 50,
+  }) {
+    final totalActions =
+        spentNecessary + spentWants + factSavings + careUses;
+    final overNec = planNecessary > 0 && spentNecessary > planNecessary;
+    final overWant = planWants > 0 && spentWants > planWants;
+    final metNeedByBuy = spentNecessary > 0;
+    final metNeedByStock = careUses > 0;
+    final hungry = satiety < 40;
+
+    if (totalActions == 0) {
+      return 'Сегодня вы почти ничего не делали — это нормально. '
+          'Можно просто отдохнуть и начать новый день.';
+    }
+    if (overNec || overWant) {
+      return 'План по тратам превышен — завтра '
+          'оставь больше на нужное или откажись от лишнего.';
+    }
+    if (hungry && !metNeedByBuy && !metNeedByStock) {
+      return 'Finzo всё ещё голоден. Завтра не забудь про еду или запасы.';
+    }
+    if (metNeedByStock && spentNecessary == 0) {
+      return 'Finzo поел из запасов — умный ход! '
+          'Так можно экономить карманные.';
+    }
+    if (metNeedByBuy || metNeedByStock) {
+      if (factSavings >= planSavings && planSavings > 0) {
+        return 'Нужное закрыто, и копилка пополнилась — хороший день.';
+      }
+      if (factSavings > 0) {
+        return 'Нужное закрыто, и немного отложили — так тоже хорошо.';
+      }
+      return 'Нужное для Finzo закрыто. В копилку можно отложить в другой раз.';
+    }
+    if (factSavings > 0 && spentNecessary == 0 && careUses == 0) {
+      return 'В копилку отложили, а про еду и уход сегодня не заботились. '
+          'Завтра вспомни про нужное.';
+    }
+    if (spentWants > 0 && spentNecessary == 0 && careUses == 0) {
+      return 'Были желания, а нужное для Finzo не закрыли. '
+          'Завтра начни с еды или ухода.';
+    }
+    return 'День прошёл по-своему. Завтра можно сделать иначе.';
   }
 }
