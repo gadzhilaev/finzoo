@@ -62,6 +62,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   late String _name;
   late String _petName;
   int _starterLook = 0;
+  _WelcomeStep? _messagesReturnStep;
   String? _parkFocusId;
   bool _parkSkipIntro = false;
   bool _bookStartToc = false;
@@ -257,7 +258,16 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
     _step = _WelcomeStep.games;
   });
 
-  void _goToMessages() => setState(() => _step = _WelcomeStep.messages);
+  void _goToMessagesFrom(_WelcomeStep origin) => setState(() {
+    _messagesReturnStep = origin;
+    _step = _WelcomeStep.messages;
+  });
+
+  void _leaveMessages() {
+    final origin = _messagesReturnStep;
+    _messagesReturnStep = null;
+    setState(() => _step = origin ?? _WelcomeStep.street);
+  }
 
   void _goToBudget() => setState(() => _step = _WelcomeStep.budget);
 
@@ -366,13 +376,12 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           key: const ValueKey('street'),
           controller: _game,
           onOpenHouse: _goToHouse,
-          onOpenMessages: _goToMessages,
+          onOpenMessages: () => _goToMessagesFrom(_WelcomeStep.street),
           onOpenGames: _goToGames,
           onOpenBudget: _goToBudget,
           onOpenTask: _goToTask,
           onOpenResults: _goToResults,
           onChooseNextGoal: _goToGoalPicker,
-          onOpenHelp: _goToBook,
         ),
         _WelcomeStep.budget => BudgetPlanPage(
           key: const ValueKey('budget'),
@@ -408,9 +417,10 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           key: const ValueKey('house'),
           controller: _game,
           onOpenStreet: _goToStreetOnly,
-          onOpenMessages: _goToMessages,
+          onOpenMessages: () => _goToMessagesFrom(_WelcomeStep.house),
           onOpenBook: _goToBook,
           onOpenResults: _goToResults,
+          onChooseNextGoal: _goToGoalPicker,
         ),
         _WelcomeStep.book => BookPage(
           key: const ValueKey('book'),
@@ -437,7 +447,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
         _WelcomeStep.messages => MessagesPage(
           key: const ValueKey('messages'),
           controller: _game,
-          onBack: _goToStreetOnly,
+          onBack: _leaveMessages,
           onOpenBook: _goToBook,
           onOpenHouse: _goToHouse,
           onOpenGames: _goToGames,

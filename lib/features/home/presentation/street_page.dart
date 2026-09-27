@@ -24,7 +24,6 @@ class StreetPage extends StatelessWidget {
     this.onOpenTask,
     this.onOpenResults,
     this.onChooseNextGoal,
-    this.onOpenHelp,
   });
 
   final GameController controller;
@@ -35,7 +34,6 @@ class StreetPage extends StatelessWidget {
   final VoidCallback? onOpenTask;
   final VoidCallback? onOpenResults;
   final VoidCallback? onChooseNextGoal;
-  final VoidCallback? onOpenHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -84,38 +82,6 @@ class StreetPage extends StatelessWidget {
           onOpenGames: onOpenGames,
           onOpenTask: onOpenTask,
           onOpenResults: onOpenResults,
-        ),
-        Positioned(
-          left: 14,
-          top: 106,
-          child: Semantics(
-            button: true,
-            label: 'Помощь',
-            child: Material(
-              color: Colors.white,
-              shape: const CircleBorder(
-                side: BorderSide(color: Color(0xFF1B6943), width: 1.5),
-              ),
-              child: InkWell(
-                onTap: onOpenHelp,
-                customBorder: const CircleBorder(),
-                child: const SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Center(
-                    child: Text(
-                      '?',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1B6943),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
         ),
       ],
       hits: [

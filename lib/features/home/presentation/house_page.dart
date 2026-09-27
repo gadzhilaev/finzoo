@@ -23,6 +23,7 @@ class HousePage extends StatefulWidget {
     this.onOpenMessages,
     this.onOpenBook,
     this.onOpenResults,
+    this.onChooseNextGoal,
   });
 
   final GameController controller;
@@ -30,6 +31,7 @@ class HousePage extends StatefulWidget {
   final VoidCallback? onOpenMessages;
   final VoidCallback? onOpenBook;
   final VoidCallback? onOpenResults;
+  final VoidCallback? onChooseNextGoal;
 
   @override
   State<HousePage> createState() => _HousePageState();
@@ -122,7 +124,11 @@ class _HousePageState extends State<HousePage> {
   }
 
   void _openSavedSheet() {
-    showSavingsBottomSheet(context, widget.controller);
+    showSavingsBottomSheet(
+      context,
+      widget.controller,
+      onChooseNextGoal: widget.onChooseNextGoal,
+    );
   }
 
   void _selectCategory(HouseItemCategory next) {
@@ -130,10 +136,10 @@ class _HousePageState extends State<HousePage> {
   }
 
   String get _asset => switch (_category) {
-        HouseItemCategory.kitchen => AppAssets.house,
-        HouseItemCategory.clothes => AppAssets.houseClothes,
-        HouseItemCategory.shower => AppAssets.houseShower,
-      };
+    HouseItemCategory.kitchen => AppAssets.house,
+    HouseItemCategory.clothes => AppAssets.houseClothes,
+    HouseItemCategory.shower => AppAssets.houseShower,
+  };
 
   Future<void> _onSleepTap() async {
     final p = widget.controller.profile;
@@ -158,8 +164,11 @@ class _HousePageState extends State<HousePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.nightlight_round,
-                  color: Color(0xFF1B6943), size: 36),
+              const Icon(
+                Icons.nightlight_round,
+                color: Color(0xFF1B6943),
+                size: 36,
+              ),
               const SizedBox(height: 10),
               Text(
                 'Закончить день?',
@@ -174,9 +183,9 @@ class _HousePageState extends State<HousePage> {
               Text(
                 p.dayEndIntroShown
                     ? 'Можно закончить день в любой момент — '
-                        'необязательно тратить все деньги или отвечать на всё.'
+                          'необязательно тратить все деньги или отвечать на всё.'
                     : 'Посмотрим, на что ушли деньги. '
-                        'Потом можно сразу начать новый игровой день.',
+                          'Потом можно сразу начать новый игровой день.',
                 textAlign: TextAlign.center,
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w500,
@@ -261,13 +270,14 @@ class _HousePageState extends State<HousePage> {
       return;
     }
 
-    final alreadyBoosted =
-        widget.controller.profile.boostedItemKeys.contains(shop.key);
+    final alreadyBoosted = widget.controller.profile.boostedItemKeys.contains(
+      shop.key,
+    );
     final moodRoom = (100 - widget.controller.profile.mood).clamp(0, 5);
     final body = alreadyBoosted
         ? '${shop.title}\nНадеть бесплатно. Бонус настроения уже был.'
         : '${shop.title}\nПри первом надевании: +${moodRoom.toStringAsFixed(0)} к настроению'
-            '${moodRoom < 5 ? ' (до максимума)' : ''}.';
+              '${moodRoom < 5 ? ' (до максимума)' : ''}.';
 
     final ok = await _showHouseDialog(
       title: 'Надеть?',
@@ -328,7 +338,8 @@ class _HousePageState extends State<HousePage> {
     final overHint = widget.controller.overPlanHint(shop.bucket, shop.price);
     final ok = await _showHouseDialog(
       title: 'Купить?',
-      body: '${shop.title}\n'
+      body:
+          '${shop.title}\n'
           'Категория: ${shop.bucketLabel}\n'
           '${shop.effectLabel}\n'
           'Цена: ${shop.price} ₽'
@@ -408,7 +419,8 @@ class _HousePageState extends State<HousePage> {
 
     var quantity = 1;
     final overHint = widget.controller.overPlanHint(shop.bucket, shop.price);
-    final bodyBase = '${shop.title}\n'
+    final bodyBase =
+        '${shop.title}\n'
         'Категория: ${shop.bucketLabel}\n'
         'Эффект: ${shop.effectLabel}\n'
         'Цена: ${shop.price} ₽'
@@ -468,7 +480,8 @@ class _HousePageState extends State<HousePage> {
 
     final ok = await _showHouseDialog(
       title: 'Применить?',
-      body: '${shop.title}\n'
+      body:
+          '${shop.title}\n'
           'Категория: ${shop.bucketLabel}\n'
           'Результат: ${shop.effectLabel}',
       asset: asset,
@@ -607,6 +620,7 @@ class _HousePageState extends State<HousePage> {
     String cancelLabel = 'Отмена',
     Widget Function(void Function(VoidCallback) setLocal)? quantityBuilder,
     String Function()? totalBuilder,
+
     /// Стабильный ID вещи (`c0`…`c7`) — превью предмета из каталога, без белки.
     String? previewItemKey,
   }) {
@@ -642,9 +656,7 @@ class _HousePageState extends State<HousePage> {
                     const SizedBox(height: 12),
                     _ClothesItemPreview(
                       asset: previewAsset,
-                      size: wardrobe != null
-                          ? _dialogItemPreviewSize
-                          : 72,
+                      size: wardrobe != null ? _dialogItemPreviewSize : 72,
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -753,8 +765,8 @@ class _HousePageState extends State<HousePage> {
           builder: (context, _) {
             final phase = widget.controller.profile.periodPhase;
             return _SleepButton(
-              visible: phase == PeriodPhase.playing ||
-                  phase == PeriodPhase.results,
+              visible:
+                  phase == PeriodPhase.playing || phase == PeriodPhase.results,
               onTap: _onSleepTap,
             );
           },
@@ -861,8 +873,11 @@ class _SleepButton extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.nightlight_round,
-                    color: Color(0xFF1B6943), size: 20),
+                const Icon(
+                  Icons.nightlight_round,
+                  color: Color(0xFF1B6943),
+                  size: 20,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Закончить день',
@@ -883,10 +898,7 @@ class _SleepButton extends StatelessWidget {
 
 /// Крупный превью предмета из каталога (без белки) для диалогов одежды.
 class _ClothesItemPreview extends StatelessWidget {
-  const _ClothesItemPreview({
-    required this.asset,
-    this.size = 128,
-  });
+  const _ClothesItemPreview({required this.asset, this.size = 128});
 
   final String asset;
   final double size;
@@ -1021,7 +1033,7 @@ class _HouseInventoryOverlay extends StatelessWidget {
   final GameController controller;
   final HouseItemCategory category;
   final void Function(HouseItemCategory category, int index, String asset)
-      onSlotTap;
+  onSlotTap;
 
   static const _frames8 = <(double left, double top, double size)>[
     (38.5, 670.5, 64.4),
@@ -1061,11 +1073,7 @@ class _HouseInventoryOverlay extends StatelessWidget {
         return Stack(
           children: [
             for (var i = 0; i < items.length && i < frames.length; i++)
-              _slot(
-                index: i,
-                asset: items[i],
-                frame: frames[i],
-              ),
+              _slot(index: i, asset: items[i], frame: frames[i]),
           ],
         );
       },
@@ -1096,10 +1104,10 @@ class _HouseInventoryOverlay extends StatelessWidget {
     final semanticsLabel = wardrobe == null
         ? null
         : (!owned
-            ? '${wardrobe.title}, цена $price'
-            : (equipped
-                ? '${wardrobe.title}, надето'
-                : '${wardrobe.title}, надеть'));
+              ? '${wardrobe.title}, цена $price'
+              : (equipped
+                    ? '${wardrobe.title}, надето'
+                    : '${wardrobe.title}, надеть'));
 
     return Positioned(
       left: left,
@@ -1160,39 +1168,39 @@ class _HouseInventoryOverlay extends StatelessWidget {
                             color: Color(0xFFFCD788),
                           )
                         : owned
-                            ? Text(
-                                category == HouseItemCategory.clothes
-                                    ? 'Надеть'
-                                    : '${qty}x',
+                        ? Text(
+                            category == HouseItemCategory.clothes
+                                ? 'Надеть'
+                                : '${qty}x',
+                            style: AppFonts.rubik(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 7.5,
+                              height: 1,
+                              color: const Color(0xFFFCD788),
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '$price',
                                 style: AppFonts.rubik(
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 7.5,
+                                  fontSize: 8,
                                   height: 1,
                                   color: const Color(0xFFFCD788),
                                 ),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    '$price',
-                                    style: AppFonts.rubik(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 8,
-                                      height: 1,
-                                      color: const Color(0xFFFCD788),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 1.5),
-                                  SvgPicture.asset(
-                                    AppAssets.rubleMark,
-                                    width: _rubleSize,
-                                    height: _rubleSize,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ],
                               ),
+                              const SizedBox(width: 1.5),
+                              SvgPicture.asset(
+                                AppAssets.rubleMark,
+                                width: _rubleSize,
+                                height: _rubleSize,
+                                fit: BoxFit.contain,
+                              ),
+                            ],
+                          ),
                   ),
                 ),
               ),

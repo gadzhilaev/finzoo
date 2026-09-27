@@ -21,10 +21,8 @@ Future<void> showSavingsDialog(
   }
   final result = await showDialog<SavingsMoveResult>(
     context: context,
-    builder: (ctx) => SavingsDialog(
-      controller: controller,
-      startWithdraw: startWithdraw,
-    ),
+    builder: (ctx) =>
+        SavingsDialog(controller: controller, startWithdraw: startWithdraw),
   );
   if (result == null || !context.mounted) return;
   if (result.ok && controller.profile.isGoalComplete) {
@@ -111,24 +109,31 @@ Future<bool> _showGoalCompleteDialog(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.celebration_rounded,
-                color: Color(0xFFDF9548), size: 50),
+            const Icon(
+              Icons.celebration_rounded,
+              color: Color(0xFFDF9548),
+              size: 50,
+            ),
             const SizedBox(height: 10),
-            Text('Цель достигнута!',
-                style: AppFonts.rubik(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 20,
-                  color: const Color(0xFF1B6943),
-                )),
+            Text(
+              'Цель достигнута!',
+              style: AppFonts.rubik(
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
+                color: const Color(0xFF1B6943),
+              ),
+            ),
             const SizedBox(height: 8),
-            Text('Ты накопил(а) на «$title». Получи цель и выбери следующую.',
-                textAlign: TextAlign.center,
-                style: AppFonts.rubik(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                  height: 1.35,
-                  color: const Color(0xFF4A4643),
-                )),
+            Text(
+              'Ты накопил(а) на «$title». Получи цель и выбери следующую.',
+              textAlign: TextAlign.center,
+              style: AppFonts.rubik(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                height: 1.35,
+                color: const Color(0xFF4A4643),
+              ),
+            ),
             const SizedBox(height: 18),
             SizedBox(
               width: double.infinity,
@@ -141,11 +146,16 @@ Future<bool> _showGoalCompleteDialog(
                   backgroundColor: const Color(0xFF4B946A),
                   minimumSize: const Size.fromHeight(46),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: Text('Получить и выбрать цель',
-                    style: AppFonts.rubik(
-                        fontWeight: FontWeight.w700, color: Colors.white)),
+                child: Text(
+                  'Получить и выбрать цель',
+                  style: AppFonts.rubik(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],
@@ -315,8 +325,9 @@ class _MoneyLine extends StatelessWidget {
 
 Future<void> showSavingsBottomSheet(
   BuildContext context,
-  GameController controller,
-) {
+  GameController controller, {
+  VoidCallback? onChooseNextGoal,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -326,7 +337,11 @@ Future<void> showSavingsBottomSheet(
     ),
     builder: (ctx) {
       final p = controller.profile;
-      final goalImage = _goalImageAsset(p.goalImageAsset, p.goalTitle, p.goalPrice);
+      final goalImage = _goalImageAsset(
+        p.goalImageAsset,
+        p.goalTitle,
+        p.goalPrice,
+      );
       return Padding(
         padding: EdgeInsets.fromLTRB(
           20,
@@ -358,10 +373,8 @@ Future<void> showSavingsBottomSheet(
                     width: 56,
                     height: 56,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => const SizedBox(
-                      width: 56,
-                      height: 56,
-                    ),
+                    errorBuilder: (_, _, _) =>
+                        const SizedBox(width: 56, height: 56),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -404,7 +417,11 @@ Future<void> showSavingsBottomSheet(
             FilledButton(
               onPressed: () {
                 Navigator.pop(ctx);
-                showSavingsDialog(context, controller);
+                showSavingsDialog(
+                  context,
+                  controller,
+                  onChooseNextGoal: onChooseNextGoal,
+                );
               },
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF4B946A),
@@ -414,7 +431,7 @@ Future<void> showSavingsBottomSheet(
                 ),
               ),
               child: Text(
-                'Отложить',
+                p.isGoalComplete ? 'Получить цель' : 'Отложить',
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -423,10 +440,17 @@ Future<void> showSavingsBottomSheet(
             ),
             const SizedBox(height: 10),
             OutlinedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                showSavingsDialog(context, controller, startWithdraw: true);
-              },
+              onPressed: p.isGoalComplete
+                  ? null
+                  : () {
+                      Navigator.pop(ctx);
+                      showSavingsDialog(
+                        context,
+                        controller,
+                        startWithdraw: true,
+                        onChooseNextGoal: onChooseNextGoal,
+                      );
+                    },
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF1B6943),
                 side: const BorderSide(color: Color(0xFF1B6943), width: 1.5),
@@ -510,8 +534,11 @@ class _SavingsDialogState extends State<SavingsDialog> {
   @override
   Widget build(BuildContext context) {
     final p = widget.controller.profile;
-    final goalImage =
-        _goalImageAsset(p.goalImageAsset, p.goalTitle, p.goalPrice);
+    final goalImage = _goalImageAsset(
+      p.goalImageAsset,
+      p.goalTitle,
+      p.goalPrice,
+    );
     final amount = _amount;
     final remainAvailable = _withdraw
         ? p.availableBalance + amount
@@ -631,9 +658,9 @@ class _SavingsDialogState extends State<SavingsDialog> {
                 Text(
                   _withdraw
                       ? 'Останется доступно $remainAvailable ₽\n'
-                          'В копилке будет $piggyAfter ₽'
+                            'В копилке будет $piggyAfter ₽'
                       : 'Останется $remainAvailable ₽\n'
-                          'В копилке будет $piggyAfter ₽',
+                            'В копилке будет $piggyAfter ₽',
                   textAlign: TextAlign.center,
                   style: AppFonts.rubik(
                     fontWeight: FontWeight.w600,
