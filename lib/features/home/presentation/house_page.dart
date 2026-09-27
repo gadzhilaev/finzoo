@@ -739,18 +739,27 @@ class _HousePageState extends State<HousePage> {
           listenable: widget.controller,
           builder: (context, _) {
             // Лапы на коврике: зона бывшей baked-белки ≈ (138,321)–(286,494).
-            return Positioned(
-              left: 120,
-              top: 288,
-              width: 156,
-              height: 182,
-              child: IgnorePointer(
-                child: FinzoAvatar(
-                  profile: widget.controller.profile,
+            return Stack(
+              children: [
+                Positioned(
+                  left: 120,
+                  top: 288,
                   width: 156,
                   height: 182,
+                  child: IgnorePointer(
+                    child: FinzoAvatar(
+                      profile: widget.controller.profile,
+                      width: 156,
+                      height: 182,
+                    ),
+                  ),
                 ),
-              ),
+                Positioned(
+                  left: 125,
+                  top: 270,
+                  child: FinzoGrowthChip(profile: widget.controller.profile),
+                ),
+              ],
             );
           },
         ),

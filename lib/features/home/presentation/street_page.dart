@@ -60,18 +60,27 @@ class StreetPage extends StatelessWidget {
         ListenableBuilder(
           listenable: controller,
           builder: (context, _) {
-            return Positioned(
-              left: 118,
-              top: 318,
-              width: 150,
-              height: 175,
-              child: IgnorePointer(
-                child: FinzoAvatar(
-                  profile: controller.profile,
+            return Stack(
+              children: [
+                Positioned(
+                  left: 118,
+                  top: 318,
                   width: 150,
                   height: 175,
+                  child: IgnorePointer(
+                    child: FinzoAvatar(
+                      profile: controller.profile,
+                      width: 150,
+                      height: 175,
+                    ),
+                  ),
                 ),
-              ),
+                Positioned(
+                  left: 123,
+                  top: 299,
+                  child: FinzoGrowthChip(profile: controller.profile),
+                ),
+              ],
             );
           },
         ),
