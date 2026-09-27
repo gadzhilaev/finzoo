@@ -664,25 +664,26 @@ class _HousePageState extends State<HousePage> {
           showStreetHeaderIcons: true,
         ),
         PetStatsPanel(controller: widget.controller, top: 528),
-        if (_category == HouseItemCategory.clothes)
-          ListenableBuilder(
-            listenable: widget.controller,
-            builder: (context, _) {
-              return Positioned(
-                left: 105,
-                top: 210,
-                width: 180,
-                height: 210,
-                child: IgnorePointer(
-                  child: FinzoAvatar(
-                    profile: widget.controller.profile,
-                    width: 180,
-                    height: 210,
-                  ),
+        // Белка вырезана из фоновых SVG — один FinzoAvatar на всех вкладках дома.
+        ListenableBuilder(
+          listenable: widget.controller,
+          builder: (context, _) {
+            // Лапы на коврике: зона бывшей baked-белки ≈ (138,321)–(286,494).
+            return Positioned(
+              left: 120,
+              top: 288,
+              width: 156,
+              height: 182,
+              child: IgnorePointer(
+                child: FinzoAvatar(
+                  profile: widget.controller.profile,
+                  width: 156,
+                  height: 182,
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
+        ),
         _HouseInventoryOverlay(
           controller: widget.controller,
           category: _category,
