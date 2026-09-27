@@ -1,0 +1,75 @@
+{
+  "canvas": {
+    "w": 151,
+    "h": 177
+  },
+  "base": "assets/images/wardrobe/finzo_base.svg",
+  "items": [
+    {
+      "index": 0,
+      "title": "Свитер",
+      "slot": "body",
+      "full": "assets/images/wardrobe/full_sweater.svg",
+      "layer": "assets/images/wardrobe/layer_sweater.svg",
+      "layerOk": true
+    },
+    {
+      "index": 1,
+      "title": "Футболка",
+      "slot": "body",
+      "full": "assets/images/wardrobe/full_tee.svg",
+      "layer": "assets/images/wardrobe/layer_tee.svg",
+      "layerOk": true
+    },
+    {
+      "index": 2,
+      "title": "Платье",
+      "slot": "body",
+      "full": "assets/images/wardrobe/full_dress.svg",
+      "layer": "assets/images/wardrobe/layer_dress.svg",
+      "layerOk": true
+    },
+    {
+      "index": 3,
+      "title": "Очки",
+      "slot": "head",
+      "full": "assets/images/wardrobe/full_goggles.svg",
+      "layer": null,
+      "layerOk": false,
+      "designer": "Нужен слой очков без тела"
+    },
+    {
+      "index": 4,
+      "title": "Бант",
+      "slot": "head",
+      "full": "assets/images/wardrobe/full_bow.svg",
+      "layer": "assets/images/wardrobe/layer_bow.svg",
+      "layerOk": true
+    },
+    {
+      "index": 5,
+      "title": "Худи",
+      "slot": "body",
+      "full": "assets/images/wardrobe/full_hoodie.svg",
+      "layer": "assets/images/wardrobe/layer_hoodie.svg",
+      "layerOk": true
+    },
+    {
+      "index": 6,
+      "title": "Шляпа",
+      "slot": "head",
+      "full": "assets/images/wardrobe/full_hat.svg",
+      "layer": null,
+      "layerOk": false,
+      "designer": "Нужен слой шляпы без тела (цвет совпадает с мехом)"
+    },
+    {
+      "index": 7,
+      "title": "Костюм",
+      "slot": "body",
+      "full": "assets/images/wardrobe/full_suit.svg",
+      "layer": "assets/images/wardrobe/layer_suit.svg",
+      "layerOk": true
+    }
+  ]
+}
