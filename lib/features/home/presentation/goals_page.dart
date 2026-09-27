@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/assets/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../onboarding/presentation/widgets/onboarding_decor.dart';
 
 /// Цель накопления — картинка лежит в [imageAsset].
 class GoalOption {
@@ -163,9 +162,6 @@ class _GoalsPageState extends State<GoalsPage> {
                     child: Stack(
                       clipBehavior: Clip.hardEdge,
                       children: [
-                        const Positioned.fill(
-                          child: IgnorePointer(child: OnboardingDecor()),
-                        ),
                         // Логотип по центру.
                         Positioned(
                           top: 115,

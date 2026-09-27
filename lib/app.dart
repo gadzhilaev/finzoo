@@ -11,7 +11,7 @@ class FinzooApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Finzoo',
+      title: 'Finzo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       home: AnnotatedRegion<SystemUiOverlayStyle>(

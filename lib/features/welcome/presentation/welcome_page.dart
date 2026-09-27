@@ -5,12 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/assets/app_assets.dart';
+import '../../../core/profile/budget_plan.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../home/presentation/book_page.dart';
+import '../../home/presentation/budget_plan_page.dart';
+import '../../home/presentation/financial_task_page.dart';
 import '../../home/presentation/games_page.dart';
 import '../../home/presentation/goals_page.dart';
 import '../../home/presentation/house_page.dart';
 import '../../home/presentation/messages_page.dart';
+import '../../home/presentation/practice/practice_catalog.dart';
+import '../../home/presentation/period_results_page.dart';
 import '../../home/presentation/street_page.dart';
 import '../../onboarding/presentation/age_page.dart';
 import '../../onboarding/presentation/intro_screens.dart';
@@ -31,6 +36,9 @@ enum _WelcomeStep {
   book,
   games,
   messages,
+  budget,
+  task,
+  results,
 }
 
 class WelcomePage extends StatefulWidget {
@@ -42,11 +50,15 @@ class WelcomePage extends StatefulWidget {
   State<WelcomePage> createState() => _WelcomePageState();
 }
 
-class _WelcomePageState extends State<WelcomePage> {
+class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   late _WelcomeStep _step;
   int _tipIndex = 0;
   late int _age;
   late String _name;
+  String? _parkFocusId;
+  bool _parkSkipIntro = false;
+  bool _bookStartToc = false;
+  int? _bookStartPage;
 
   final GlobalKey _decorKey = GlobalKey();
 
@@ -55,10 +67,72 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final p = _game.profile;
     _age = p.age;
     _name = p.name;
-    _step = p.onboardingDone ? _WelcomeStep.street : _WelcomeStep.play;
+    const shot = String.fromEnvironment('UI_SHOT');
+    if (shot == 'house' ||
+        shot == 'available' ||
+        shot == 'saved' ||
+        shot == 'sleep' ||
+        shot == 'savings') {
+      _step = _WelcomeStep.house;
+    } else if (shot.startsWith('play_')) {
+      // play_practice_lunch / play_park_bike → сразу задание
+      _step = _WelcomeStep.games;
+      _parkFocusId = PracticeCatalog.resolveOpenId(shot.substring('play_'.length));
+      _parkSkipIntro = true;
+    } else if (shot == 'games' ||
+        shot.startsWith('park_') ||
+        shot.startsWith('practice_')) {
+      _step = _WelcomeStep.games;
+      if (shot.startsWith('park_') || shot.startsWith('practice_')) {
+        _parkFocusId = PracticeCatalog.resolveOpenId(shot);
+      }
+    } else if (shot == 'book' ||
+        shot == 'book_toc' ||
+        shot == 'book_rule' ||
+        shot.startsWith('book_')) {
+      _step = _WelcomeStep.book;
+      if (shot == 'book_toc') {
+        _bookStartToc = true;
+      } else if (shot == 'book_rule') {
+        _bookStartPage = 1;
+      } else if (shot == 'book_last') {
+        _bookStartPage = 999; // clamp to last in BookPage
+      } else if (RegExp(r'^book_\d+$').hasMatch(shot)) {
+        final n = int.tryParse(shot.substring('book_'.length));
+        if (n != null && n >= 1) _bookStartPage = n - 1;
+      }
+    } else if (shot == 'budget') {
+      _step = _WelcomeStep.budget;
+    } else if (shot == 'task') {
+      _step = _WelcomeStep.task;
+    } else if (shot == 'results') {
+      _step = _WelcomeStep.results;
+    } else if (!p.onboardingDone) {
+      _step = _WelcomeStep.play;
+    } else if (p.periodPhase == PeriodPhase.results) {
+      _step = _WelcomeStep.results;
+    } else if (p.needsBudgetPlan) {
+      _step = _WelcomeStep.budget;
+    } else {
+      _step = _WelcomeStep.street;
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_game.syncStats());
+    }
   }
 
   void _goToAge() {
@@ -132,18 +206,53 @@ class _WelcomePageState extends State<WelcomePage> {
       goalImageAsset: goal.imageAsset,
     );
     if (!mounted) return;
-    setState(() => _step = _WelcomeStep.street);
+    setState(() => _step = _WelcomeStep.budget);
   }
 
   void _goToHouse() => setState(() => _step = _WelcomeStep.house);
 
   void _goToBook() => setState(() => _step = _WelcomeStep.book);
 
-  void _goToStreetOnly() => setState(() => _step = _WelcomeStep.street);
+  void _goToStreetOnly() {
+    final p = _game.profile;
+    if (p.periodPhase == PeriodPhase.results) {
+      setState(() => _step = _WelcomeStep.results);
+    } else if (p.needsBudgetPlan) {
+      setState(() => _step = _WelcomeStep.budget);
+    } else {
+      setState(() => _step = _WelcomeStep.street);
+    }
+  }
 
-  void _goToGames() => setState(() => _step = _WelcomeStep.games);
+  void _goToGames() => setState(() {
+        _parkFocusId = null;
+        _parkSkipIntro = false;
+        _step = _WelcomeStep.games;
+      });
 
   void _goToMessages() => setState(() => _step = _WelcomeStep.messages);
+
+  void _goToBudget() => setState(() => _step = _WelcomeStep.budget);
+
+  void _goToTask() {
+    final next = PracticeCatalog.nextIncomplete(_game.profile.parkCompletedIds);
+    setState(() {
+      _parkFocusId = next.id;
+      _parkSkipIntro = false;
+      _step = _WelcomeStep.games;
+    });
+  }
+
+  void _clearParkFocus() {
+    if (_parkFocusId == null && !_parkSkipIntro) return;
+    setState(() {
+      _parkFocusId = null;
+      _parkSkipIntro = false;
+    });
+  }
+
+  void _goToResults() => setState(() => _step = _WelcomeStep.results);
+
 
   @override
   Widget build(BuildContext context) {
@@ -173,25 +282,65 @@ class _WelcomePageState extends State<WelcomePage> {
           onOpenHouse: _goToHouse,
           onOpenMessages: _goToMessages,
           onOpenGames: _goToGames,
+          onOpenBudget: _goToBudget,
+          onOpenTask: _goToTask,
+          onOpenResults: _goToResults,
+        ),
+        _WelcomeStep.budget => BudgetPlanPage(
+          key: const ValueKey('budget'),
+          controller: _game,
+          onConfirmed: _goToStreetOnly,
+          onBack: _game.profile.canPlayPeriod
+              ? () => setState(() => _step = _WelcomeStep.street)
+              : null,
+        ),
+        _WelcomeStep.task => FinancialTaskPage(
+          key: const ValueKey('task'),
+          controller: _game,
+          onDone: _goToStreetOnly,
+        ),
+        _WelcomeStep.results => PeriodResultsPage(
+          key: const ValueKey('results'),
+          controller: _game,
+          onNextPeriod: () => setState(() => _step = _WelcomeStep.budget),
         ),
         _WelcomeStep.house => HousePage(
           key: const ValueKey('house'),
           controller: _game,
           onOpenStreet: _goToStreetOnly,
           onOpenBook: _goToBook,
+          onOpenResults: _goToResults,
         ),
         _WelcomeStep.book => BookPage(
           key: const ValueKey('book'),
           onOpenHouse: _goToHouse,
+          startAtToc: _bookStartToc,
+          startPage: _bookStartPage,
+          onOpenParkGame: (id) => setState(() {
+            _parkFocusId = PracticeCatalog.resolveOpenId(id);
+            _parkSkipIntro = false;
+            _step = _WelcomeStep.games;
+          }),
         ),
         _WelcomeStep.games => GamesPage(
-          key: const ValueKey('games'),
-          onBack: _goToStreetOnly,
+          key: ValueKey('games-${_parkFocusId ?? 'map'}'),
+          controller: _game,
+          onBack: () {
+            _clearParkFocus();
+            _goToStreetOnly();
+          },
+          autoOpenExerciseId: _parkFocusId,
+          skipIntro: _parkSkipIntro,
+          onAutoOpenConsumed: _clearParkFocus,
         ),
         _WelcomeStep.messages => MessagesPage(
           key: const ValueKey('messages'),
+          controller: _game,
           onBack: _goToStreetOnly,
           onOpenBook: _goToBook,
+          onOpenHouse: _goToHouse,
+          onOpenGames: _goToGames,
+          onOpenBudget: _goToBudget,
         ),
         _ => _buildProfileSteps(),
       },
