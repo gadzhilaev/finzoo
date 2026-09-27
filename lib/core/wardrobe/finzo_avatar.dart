@@ -6,9 +6,12 @@ import 'wardrobe_catalog.dart';
 
 /// Finzo с надетым комплектом (одежда + головной убор).
 ///
-/// Одна поза дома и на улице. Не складывает два полных SVG белки:
-/// — один слот → полный вариант вещи;
-/// — оба слота → база + прозрачные слои (если слой готов).
+/// Единый способ для дома и улицы:
+/// — ничего: [WardrobeCatalog.baseAsset];
+/// — только одежда / только аксессуар: целый исходный SVG вещи;
+/// — оба слота: целый SVG одежды + векторный слой аксессуара.
+///
+/// Не складывает две полные белки и не использует растровые вырезки.
 class FinzoAvatar extends StatelessWidget {
   const FinzoAvatar({
     super.key,
@@ -24,7 +27,7 @@ class FinzoAvatar extends StatelessWidget {
   final double width;
   final double height;
 
-  /// Примерка до покупки — не пишется в профиль.
+  /// Превью — подменяет слот; второй слот из профиля.
   final String? previewBodyKey;
   final String? previewHeadKey;
   final BoxFit fit;
@@ -34,18 +37,16 @@ class FinzoAvatar extends StatelessWidget {
     final body = WardrobeCatalog.byKey(previewBodyKey ?? profile.equippedBodyKey);
     final head = WardrobeCatalog.byKey(previewHeadKey ?? profile.equippedHeadKey);
 
-    return SizedBox(
-      width: width,
-      height: height,
-      child: FittedBox(
-        fit: fit,
-        child: SizedBox(
-          width: WardrobeCatalog.canvasW,
-          height: WardrobeCatalog.canvasH,
-          child: _compose(body: body, head: head),
-        ),
+    final child = FittedBox(
+      fit: fit,
+      child: SizedBox(
+        width: WardrobeCatalog.canvasW,
+        height: WardrobeCatalog.canvasH,
+        child: _compose(body: body, head: head),
       ),
     );
+
+    return SizedBox(width: width, height: height, child: child);
   }
 
   Widget _compose({WardrobeItem? body, WardrobeItem? head}) {
@@ -53,67 +54,30 @@ class FinzoAvatar extends StatelessWidget {
       return _svg(WardrobeCatalog.baseAsset);
     }
 
-    // Только одежда — полный чистый кадр.
     if (body != null && head == null) {
       return _svg(body.fullAsset);
     }
 
-    // Только головной убор.
     if (body == null && head != null) {
-      if (head.layerReady && head.layerAsset != null) {
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            _svg(WardrobeCatalog.baseAsset),
-            _svg(head.layerAsset!),
-          ],
-        );
-      }
-      // Очки/шляпа без слоя: один полный кадр (не поверх другой белки).
       return _svg(head.fullAsset);
     }
 
-    // Оба слота.
     final bodyItem = body!;
     final headItem = head!;
 
-    if (bodyItem.layerReady &&
-        bodyItem.layerAsset != null &&
-        headItem.layerReady &&
-        headItem.layerAsset != null) {
+    if (headItem.accessoryLayerReady &&
+        headItem.accessoryLayerAsset != null) {
       return Stack(
         fit: StackFit.expand,
-        children: [
-          _svg(WardrobeCatalog.baseAsset),
-          _svg(bodyItem.layerAsset!),
-          _svg(headItem.layerAsset!),
-        ],
-      );
-    }
-
-    // Есть слой одежды, головной убор без слоя — показываем одежду честно.
-    if (bodyItem.layerReady && bodyItem.layerAsset != null) {
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          _svg(WardrobeCatalog.baseAsset),
-          _svg(bodyItem.layerAsset!),
-        ],
-      );
-    }
-
-    // Есть слой головы, одежда без слоя — полный кадр одежды + слой головы.
-    if (headItem.layerReady && headItem.layerAsset != null) {
-      return Stack(
-        fit: StackFit.expand,
+        clipBehavior: Clip.none,
         children: [
           _svg(bodyItem.fullAsset),
-          _svg(headItem.layerAsset!),
+          _svg(headItem.accessoryLayerAsset!),
         ],
       );
     }
 
-    // Оба без комбинируемых слоёв — только одежда (не два полных кадра).
+    // Слой не готов — не прячем слот молча подменой и не кладём вторую белку.
     return _svg(bodyItem.fullAsset);
   }
 
@@ -124,6 +88,7 @@ class FinzoAvatar extends StatelessWidget {
       height: WardrobeCatalog.canvasH,
       fit: BoxFit.fill,
       placeholderBuilder: (_) => const SizedBox.expand(),
+      alignment: Alignment.center,
     );
   }
 }

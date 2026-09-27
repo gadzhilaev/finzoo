@@ -63,12 +63,12 @@ abstract final class ShopCatalog {
 
   static const clothesTitles = <String>[
     'Свитер',
-    'Футболка',
+    'Одежда',
     'Платье',
     'Очки',
     'Бант',
     'Худи',
-    'Шляпа',
+    'Цилиндр',
     'Костюм',
   ];
 

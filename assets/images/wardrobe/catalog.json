@@ -1,75 +1,77 @@
 {
-  "canvas": {
-    "w": 151,
-    "h": 177
-  },
+  "canvas": { "w": 151, "h": 177 },
   "base": "assets/images/wardrobe/finzo_base.svg",
   "items": [
     {
       "index": 0,
       "title": "Свитер",
       "slot": "body",
+      "source": "Group 110",
       "full": "assets/images/wardrobe/full_sweater.svg",
-      "layer": "assets/images/wardrobe/layer_sweater.svg",
-      "layerOk": true
+      "thumb": "assets/images/house_inv_clothes/item_0.png"
     },
     {
       "index": 1,
-      "title": "Футболка",
+      "title": "Одежда",
       "slot": "body",
+      "source": "Group 104",
       "full": "assets/images/wardrobe/full_tee.svg",
-      "layer": "assets/images/wardrobe/layer_tee.svg",
-      "layerOk": true
+      "thumb": "assets/images/house_inv_clothes/item_1.png"
     },
     {
       "index": 2,
       "title": "Платье",
       "slot": "body",
+      "source": "Group 111",
       "full": "assets/images/wardrobe/full_dress.svg",
-      "layer": "assets/images/wardrobe/layer_dress.svg",
-      "layerOk": true
+      "thumb": "assets/images/house_inv_clothes/item_2.png"
     },
     {
       "index": 3,
       "title": "Очки",
       "slot": "head",
+      "source": "Group 102",
       "full": "assets/images/wardrobe/full_goggles.svg",
-      "layer": null,
-      "layerOk": false,
-      "designer": "Нужен слой очков без тела"
+      "thumb": "assets/images/house_inv_clothes/item_3.png",
+      "accessoryLayer": null,
+      "accessoryLayerOk": false,
+      "designer": "Нужен векторный слой оправы/линз без тела: в Group 102 оправа смешана с контуром #605E5A"
     },
     {
       "index": 4,
       "title": "Бант",
       "slot": "head",
+      "source": "Group 103",
       "full": "assets/images/wardrobe/full_bow.svg",
-      "layer": "assets/images/wardrobe/layer_bow.svg",
-      "layerOk": true
+      "thumb": "assets/images/house_inv_clothes/item_4.png",
+      "accessoryLayer": "assets/images/wardrobe/layer_bow.svg",
+      "accessoryLayerOk": true
     },
     {
       "index": 5,
       "title": "Худи",
       "slot": "body",
+      "source": "Group 106",
       "full": "assets/images/wardrobe/full_hoodie.svg",
-      "layer": "assets/images/wardrobe/layer_hoodie.svg",
-      "layerOk": true
+      "thumb": "assets/images/house_inv_clothes/item_5.png"
     },
     {
       "index": 6,
-      "title": "Шляпа",
+      "title": "Цилиндр",
       "slot": "head",
+      "source": "Group 108",
       "full": "assets/images/wardrobe/full_hat.svg",
-      "layer": null,
-      "layerOk": false,
-      "designer": "Нужен слой шляпы без тела (цвет совпадает с мехом)"
+      "thumb": "assets/images/house_inv_clothes/item_6.png",
+      "accessoryLayer": "assets/images/wardrobe/layer_hat.svg",
+      "accessoryLayerOk": true
     },
     {
       "index": 7,
       "title": "Костюм",
       "slot": "body",
+      "source": "Group 112",
       "full": "assets/images/wardrobe/full_suit.svg",
-      "layer": "assets/images/wardrobe/layer_suit.svg",
-      "layerOk": true
+      "thumb": "assets/images/house_inv_clothes/item_7.png"
     }
   ]
 }
