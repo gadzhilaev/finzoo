@@ -11,6 +11,7 @@ import 'wardrobe_catalog.dart';
 /// — только одежда / только аксессуар: целый исходный SVG вещи;
 /// — оба слота: целый SVG одежды + векторный слой аксессуара.
 ///
+/// Горизонталь: ось туловища ([WardrobeCatalog.bodyAnchorX]), не bbox с хвостом.
 /// Не складывает две полные белки и не использует растровые вырезки.
 class FinzoAvatar extends StatelessWidget {
   const FinzoAvatar({
@@ -21,6 +22,7 @@ class FinzoAvatar extends StatelessWidget {
     this.previewBodyKey,
     this.previewHeadKey,
     this.fit = BoxFit.contain,
+    this.alignBodyAxis = true,
   });
 
   final PlayerProfile profile;
@@ -31,6 +33,9 @@ class FinzoAvatar extends StatelessWidget {
   final String? previewBodyKey;
   final String? previewHeadKey;
   final BoxFit fit;
+
+  /// Сдвигать так, чтобы ось тела была в центре [width], хвост справа.
+  final bool alignBodyAxis;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +51,24 @@ class FinzoAvatar extends StatelessWidget {
       ),
     );
 
-    return SizedBox(width: width, height: height, child: child);
+    if (!alignBodyAxis) {
+      return SizedBox(width: width, height: height, child: child);
+    }
+
+    final dx = WardrobeCatalog.bodyAxisOffsetX(
+      displayWidth: width,
+      displayHeight: height,
+    );
+
+    // Без ClipRect: хвост может выйти за правый край бокса (сцена Clip.none).
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Transform.translate(
+        offset: Offset(dx, 0),
+        child: child,
+      ),
+    );
   }
 
   Widget _compose({WardrobeItem? body, WardrobeItem? head}) {

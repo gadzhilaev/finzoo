@@ -11,6 +11,10 @@ abstract final class WardrobeCatalog {
   static const canvasW = 151.0;
   static const canvasH = 177.0;
 
+  /// Ось головы/туловища в координатах viewBox (хвост справа не учитывается).
+  /// Общая для базы, всей одежды и аксессуаров — поза одна.
+  static const bodyAnchorX = 50.0;
+
   static const baseAsset = 'assets/images/wardrobe/finzo_base.svg';
 
   /// Порядок = [ShopCatalog.clothesTitles] / индексы `c0…c7`.
@@ -100,6 +104,22 @@ abstract final class WardrobeCatalog {
   }
 
   static String keyForIndex(int index) => 'c$index';
+
+  /// Сдвиг, чтобы [bodyAnchorX] оказался в центре области шириной [displayWidth]
+  /// при масштабе contain по холсту (высота не влияет на горизонталь).
+  static double bodyAxisOffsetX({
+    required double displayWidth,
+    required double displayHeight,
+  }) {
+    final scale = _containScale(displayWidth, displayHeight);
+    return (canvasW / 2 - bodyAnchorX) * scale;
+  }
+
+  static double _containScale(double w, double h) {
+    final sx = w / canvasW;
+    final sy = h / canvasH;
+    return sx < sy ? sx : sy;
+  }
 
   /// Заголовок окна снятия: «Снять очки?»
   static String unequipTitle(WardrobeItem item) {
