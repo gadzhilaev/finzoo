@@ -91,9 +91,7 @@ class GameController extends ChangeNotifier {
   /// Профиль для `--dart-define=UI_SHOT=wardrobe_*` (экипировка / диалоги).
   @visibleForTesting
   static PlayerProfile wardrobeShotProfile(String shot) {
-    final inv = <String, int>{
-      for (var i = 0; i < 8; i++) 'c$i': 1,
-    };
+    final inv = <String, int>{for (var i = 0; i < 8; i++) 'c$i': 1};
     var body = 'c0'; // свитер
     var head = 'c3'; // очки
     if (shot.contains('tee_bow') || shot.contains('tee+bow')) {
@@ -196,16 +194,46 @@ class GameController extends ChangeNotifier {
     await _persist();
   }
 
+  Future<void> setPetIdentity({
+    required String petName,
+    String? starterBodyKey,
+    String? starterHeadKey,
+  }) async {
+    profile = profile.copyWith(
+      petName: petName.trim().isEmpty ? 'Finzo' : petName.trim(),
+      starterBodyKey: starterBodyKey,
+      starterHeadKey: starterHeadKey,
+    );
+    await _persist();
+  }
+
+  Future<void> setAccessibility({
+    bool? animationsEnabled,
+    bool? soundsEnabled,
+  }) async {
+    profile = profile.copyWith(
+      animationsEnabled: animationsEnabled,
+      soundsEnabled: soundsEnabled,
+    );
+    await _persist();
+  }
+
   Future<void> completeOnboarding({
     required String name,
     required int age,
     required String goalTitle,
     required int goalPrice,
     required String goalImageAsset,
+    String petName = 'Finzo',
+    String? starterBodyKey,
+    String? starterHeadKey,
   }) async {
     final now = _now();
     profile = profile.copyWith(
       name: name.trim(),
+      petName: petName.trim().isEmpty ? 'Finzo' : petName.trim(),
+      starterBodyKey: starterBodyKey,
+      starterHeadKey: starterHeadKey,
       age: age,
       goalTitle: goalTitle,
       goalPrice: goalPrice,
@@ -248,10 +276,7 @@ class GameController extends ChangeNotifier {
     }
     if (draft.total > profile.availableBalance) return false;
 
-    profile = profile.copyWith(
-      plan: draft,
-      periodPhase: PeriodPhase.playing,
-    );
+    profile = profile.copyWith(plan: draft, periodPhase: PeriodPhase.playing);
     await _persist();
     return true;
   }
@@ -296,7 +321,10 @@ class GameController extends ChangeNotifier {
   /// Перевод в накопления (факт периода).
   Future<SavingsMoveResult> saveTowardGoal(int amount) async {
     if (amount <= 0) {
-      return const SavingsMoveResult(ok: false, message: 'Введи сумму больше 0.');
+      return const SavingsMoveResult(
+        ok: false,
+        message: 'Введи сумму больше 0.',
+      );
     }
     if (profile.periodPhase != PeriodPhase.playing) {
       return const SavingsMoveResult(
@@ -307,8 +335,7 @@ class GameController extends ChangeNotifier {
     if (amount > profile.availableBalance) {
       return SavingsMoveResult(
         ok: false,
-        message:
-            'Не хватает денег. Доступно ${profile.availableBalance} ₽.',
+        message: 'Не хватает денег. Доступно ${profile.availableBalance} ₽.',
       );
     }
     final room = (profile.goalPrice - profile.savedBalance).clamp(
@@ -316,10 +343,7 @@ class GameController extends ChangeNotifier {
       profile.goalPrice,
     );
     if (room <= 0) {
-      return const SavingsMoveResult(
-        ok: false,
-        message: 'Цель уже накоплена!',
-      );
+      return const SavingsMoveResult(ok: false, message: 'Цель уже накоплена!');
     }
     final moved = amount.clamp(0, room);
     if (moved <= 0) {
@@ -330,6 +354,7 @@ class GameController extends ChangeNotifier {
       availableBalance: profile.availableBalance - moved,
       savedBalance: profile.savedBalance + moved,
       factSavings: profile.factSavings + moved,
+      transactionHistory: _record('Отложили $moved ₽ в копилку.'),
     );
     await _persist();
     return SavingsMoveResult(
@@ -343,7 +368,10 @@ class GameController extends ChangeNotifier {
   /// Снятие с накоплений обратно в доступно (с подтверждением в UI).
   Future<SavingsMoveResult> withdrawFromSavings(int amount) async {
     if (amount <= 0) {
-      return const SavingsMoveResult(ok: false, message: 'Введи сумму больше 0.');
+      return const SavingsMoveResult(
+        ok: false,
+        message: 'Введи сумму больше 0.',
+      );
     }
     if (amount > profile.savedBalance) {
       return SavingsMoveResult(
@@ -356,6 +384,7 @@ class GameController extends ChangeNotifier {
       availableBalance: profile.availableBalance + amount,
       savedBalance: profile.savedBalance - amount,
       factSavings: (profile.factSavings - amount).clamp(0, 1 << 30),
+      transactionHistory: _record('Сняли $amount ₽ из копилки.'),
     );
     await _persist();
     return SavingsMoveResult(
@@ -383,6 +412,7 @@ class GameController extends ChangeNotifier {
       goalPrice: 0,
       goalImageAsset: '',
       completedGoalTitles: [...profile.completedGoalTitles, title],
+      transactionHistory: _record('Получили цель «$title».'),
     );
     await _persist();
     return GoalClaimResult(
@@ -402,6 +432,9 @@ class GameController extends ChangeNotifier {
       goalPrice: price,
       goalImageAsset: imageAsset,
       savedBalance: 0,
+      transactionHistory: _record(
+        'Выбрали цель «${title.trim()}» за $price ₽.',
+      ),
     );
     await _persist();
   }
@@ -433,6 +466,7 @@ class GameController extends ChangeNotifier {
       mood: 78,
       lastStatsAt: _now().toIso8601String(),
       periodIndex: 5,
+      growthPoints: 12,
       periodPhase: PeriodPhase.playing,
       periodIncomeGranted: true,
       periodIncomeAmount: EconomyRules.periodIncome,
@@ -497,6 +531,7 @@ class GameController extends ChangeNotifier {
       inventory: next,
       spentNecessary: spentNec,
       spentWants: spentWant,
+      transactionHistory: _record('Купили «${shop.title}» за $price ₽.'),
     );
     await _persist();
     return true;
@@ -542,6 +577,7 @@ class GameController extends ChangeNotifier {
       mood: (profile.mood + shop.moodDelta).clamp(0, 100),
       lastStatsAt: _now().toIso8601String(),
       periodCareUses: profile.periodCareUses + 1,
+      transactionHistory: _record('Finzo съел «${shop.title}».'),
     );
     await _persist();
     return true;
@@ -577,6 +613,7 @@ class GameController extends ChangeNotifier {
       mood: (profile.mood + shop.moodDelta).clamp(0, 100),
       lastStatsAt: _now().toIso8601String(),
       periodCareUses: profile.periodCareUses + 1,
+      transactionHistory: _record('Использовали «${shop.title}» для ухода.'),
     );
     await _persist();
     return true;
@@ -610,6 +647,7 @@ class GameController extends ChangeNotifier {
       boostedItemKeys: boosted,
       equippedBodyKey: item.slot == WardrobeSlot.body ? shop.key : null,
       equippedHeadKey: item.slot == WardrobeSlot.head ? shop.key : null,
+      transactionHistory: _record('Надели «${shop.title}».'),
     );
     await _persist();
     return EquipClothesResult(
@@ -630,6 +668,9 @@ class GameController extends ChangeNotifier {
     profile = profile.copyWith(
       clearEquippedBody: slot == WardrobeSlot.body,
       clearEquippedHead: slot == WardrobeSlot.head,
+      transactionHistory: _record(
+        'Сняли ${slot == WardrobeSlot.body ? 'одежду' : 'головной аксессуар'}.',
+      ),
     );
     await _persist();
     return true;
@@ -666,8 +707,9 @@ class GameController extends ChangeNotifier {
     await _persist();
   }
 
-  Future<void> markParkExerciseDone(String id) async {
-    if (id.isEmpty) return;
+  /// Возвращает `true`, когда за первое прохождение начислена награда.
+  Future<bool> markParkExerciseDone(String id) async {
+    if (id.isEmpty) return false;
     // Пишем practice_*. Старые park_* в профиле не приравниваем к новым.
     const openAliases = {
       'budget_split': 'practice_day_plan',
@@ -685,6 +727,7 @@ class GameController extends ChangeNotifier {
     };
     final canonical = openAliases[id] ?? id;
     final existing = profile.parkCompletedIds.toSet();
+    final isFirstCompletion = !existing.contains(canonical);
     final ids = existing.contains(canonical)
         ? existing.toList()
         : [...existing, canonical];
@@ -693,14 +736,21 @@ class GameController extends ChangeNotifier {
       parkCompletedIds: ids,
       periodPracticeCompletedIds: today,
       periodTaskDone: true,
+      availableBalance: isFirstCompletion
+          ? profile.availableBalance + EconomyRules.taskReward
+          : profile.availableBalance,
+      transactionHistory: isFirstCompletion
+          ? _record('Практика пройдена: +${EconomyRules.taskReward} ₽.')
+          : profile.transactionHistory,
     );
     await _persist();
+    return isFirstCompletion;
   }
 
   Future<bool> finishPeriod() async {
     if (profile.periodPhase != PeriodPhase.playing) return false;
-    final plan = profile.plan ??
-        const BudgetPlan(necessary: 0, wants: 0, savings: 0);
+    final plan =
+        profile.plan ?? const BudgetPlan(necessary: 0, wants: 0, savings: 0);
 
     final summary = PlayerRules.buildPeriodSummary(
       periodIndex: profile.periodIndex,
@@ -714,11 +764,21 @@ class GameController extends ChangeNotifier {
       careUses: profile.periodCareUses,
       satiety: profile.satiety,
     );
+    final growthGain = PlayerRules.growthPointsForPeriod(
+      planNecessary: plan.necessary,
+      planWants: plan.wants,
+      planSavings: plan.savings,
+      spentNecessary: profile.spentNecessary,
+      spentWants: profile.spentWants,
+      factSavings: profile.factSavings,
+      careUses: profile.periodCareUses,
+    );
 
     profile = profile.copyWith(
       periodPhase: PeriodPhase.results,
       lastPeriodSummary: summary,
       periodHistory: [summary, ...profile.periodHistory].take(30).toList(),
+      growthPoints: profile.growthPoints + growthGain,
     );
     await _persist();
     return true;
@@ -768,6 +828,11 @@ class GameController extends ChangeNotifier {
         '($planned ₽). Можно купить, если хватает денег — '
         'вечером увидишь сравнение.';
   }
+
+  List<String> _record(String text) => [
+    'День ${profile.periodIndex} · $text',
+    ...profile.transactionHistory,
+  ].take(60).toList();
 }
 
 /// In-memory store for UI_SHOT wardrobe sessions (не пишет в SharedPreferences).

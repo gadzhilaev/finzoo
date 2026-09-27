@@ -61,20 +61,70 @@ void main() {
 
   group('Рост Finzo', () {
     test('первые пять игровых дней открывают три видимые стадии', () {
-      expect(PlayerProfile.fresh().copyWith(periodIndex: 1).growthStage,
-          PetGrowthStage.little);
-      expect(PlayerProfile.fresh().copyWith(periodIndex: 3).growthStage,
-          PetGrowthStage.growing);
-      final adult = PlayerProfile.fresh().copyWith(periodIndex: 5);
+      expect(
+        PlayerProfile.fresh().copyWith(growthPoints: 0).growthStage,
+        PetGrowthStage.little,
+      );
+      expect(
+        PlayerProfile.fresh().copyWith(growthPoints: 6).growthStage,
+        PetGrowthStage.growing,
+      );
+      final adult = PlayerProfile.fresh().copyWith(growthPoints: 12);
       expect(adult.growthStage, PetGrowthStage.confident);
       expect(adult.growthVisualScale, 1);
     });
+
+    test('очки роста зависят от заботы, плана и накоплений', () {
+      expect(
+        PlayerRules.growthPointsForPeriod(
+          planNecessary: 100,
+          planWants: 50,
+          planSavings: 40,
+          spentNecessary: 90,
+          spentWants: 40,
+          factSavings: 40,
+          careUses: 0,
+        ),
+        4,
+      );
+      expect(
+        PlayerRules.growthPointsForPeriod(
+          planNecessary: 100,
+          planWants: 50,
+          planSavings: 40,
+          spentNecessary: 0,
+          spentWants: 80,
+          factSavings: 0,
+          careUses: 0,
+        ),
+        0,
+      );
+    });
+  });
+
+  test('питомец, стартовый образ и настройки сохраняются в профиле', () {
+    final profile = PlayerProfile.fresh().copyWith(
+      petName: 'Искорка',
+      starterBodyKey: 'c0',
+      starterHeadKey: 'c4',
+      animationsEnabled: false,
+      soundsEnabled: true,
+    );
+    final restored = PlayerProfile.fromJson(profile.toJson());
+    expect(restored.petName, 'Искорка');
+    expect(restored.starterBodyKey, 'c0');
+    expect(restored.starterHeadKey, 'c4');
+    expect(restored.animationsEnabled, isFalse);
+    expect(restored.soundsEnabled, isTrue);
   });
 
   group('Economy', () {
     test('один доход периода меньше суммы всех товаров', () {
       expect(EconomyRules.periodIncome, 420);
-      expect(ShopCatalog.totalOneOfEach, greaterThan(EconomyRules.periodIncome));
+      expect(
+        ShopCatalog.totalOneOfEach,
+        greaterThan(EconomyRules.periodIncome),
+      );
     });
   });
 
@@ -123,10 +173,7 @@ void main() {
         await c.buyHouseItem(category: HouseItemCategory.kitchen, index: 0),
         isTrue,
       );
-      expect(
-        c.profile.availableBalance,
-        before - ShopCatalog.kitchenPrices[0],
-      );
+      expect(c.profile.availableBalance, before - ShopCatalog.kitchenPrices[0]);
       expect(c.profile.spentNecessary, ShopCatalog.kitchenPrices[0]);
     });
 
@@ -212,25 +259,28 @@ void main() {
       expect(await c.startNextPeriod(), isTrue);
       expect(c.profile.periodIndex, 2);
       expect(c.profile.periodPhase, PeriodPhase.planning);
-      expect(
-        c.profile.availableBalance,
-        leftover + EconomyRules.periodIncome,
-      );
+      expect(c.profile.availableBalance, leftover + EconomyRules.periodIncome);
       expect(c.profile.periodIncomeGranted, isTrue);
       expect(c.profile.plan, isNull);
       expect(c.profile.periodTaskDone, isFalse);
       expect(c.profile.periodHistory, hasLength(1));
     });
 
-    test('демо-профиль открывает пятый день и все практики в истории', () async {
-      final c = GameController(profile: PlayerProfile.fresh(), store: _MemoryStore());
-      await c.loadDemoProfile();
-      expect(c.profile.onboardingDone, isTrue);
-      expect(c.profile.periodIndex, 5);
-      expect(c.profile.growthStage, PetGrowthStage.confident);
-      expect(c.profile.periodHistory, isNotEmpty);
-      expect(c.profile.parkCompletedIds, hasLength(6));
-    });
+    test(
+      'демо-профиль открывает пятый день и все практики в истории',
+      () async {
+        final c = GameController(
+          profile: PlayerProfile.fresh(),
+          store: _MemoryStore(),
+        );
+        await c.loadDemoProfile();
+        expect(c.profile.onboardingDone, isTrue);
+        expect(c.profile.periodIndex, 5);
+        expect(c.profile.growthStage, PetGrowthStage.confident);
+        expect(c.profile.periodHistory, isNotEmpty);
+        expect(c.profile.parkCompletedIds, hasLength(6));
+      },
+    );
 
     test('сохранение профиля переживает перезапуск', () async {
       final store = _MemoryStore();
@@ -267,10 +317,7 @@ void main() {
           goalPrice: 500,
         ),
       );
-      final c = GameController(
-        profile: await store.load(),
-        store: store,
-      );
+      final c = GameController(profile: await store.load(), store: store);
       await c.onAppOpen();
       expect(c.profile.periodIndex, 1);
       expect(c.profile.availableBalance, 950);
@@ -318,10 +365,7 @@ void main() {
 
     test('применение еды повышает сытость', () async {
       final c = await _playingController();
-      c.profile = c.profile.copyWith(
-        satiety: 70,
-        inventory: const {'k0': 2},
-      );
+      c.profile = c.profile.copyWith(satiety: 70, inventory: const {'k0': 2});
       expect(await c.useKitchenItem(0), isTrue);
       expect(c.profile.inventoryQty('k0'), 1);
       expect(
@@ -332,10 +376,7 @@ void main() {
 
     test('при полной сытости еду нельзя', () async {
       final c = await _playingController();
-      c.profile = c.profile.copyWith(
-        satiety: 100,
-        inventory: const {'k0': 1},
-      );
+      c.profile = c.profile.copyWith(satiety: 100, inventory: const {'k0': 1});
       expect(await c.useKitchenItem(0), isFalse);
     });
   });

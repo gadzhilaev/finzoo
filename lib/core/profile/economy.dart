@@ -7,10 +7,9 @@ abstract final class EconomyRules {
   static const periodIncome = 420;
   static const periodIncomeLabel = 'Карманные от родителей';
 
-  /// Награда за учебное задание больше не денежная (навык в UI).
-  /// Константа оставлена для совместимости старых тестов/доков.
-  @Deprecated('Учебные задания не дают валюту')
-  static const taskReward = 0;
+  /// Разовая награда за первое успешное прохождение практики.
+  /// Учебные суммы внутри задания остаются виртуальными и не списываются.
+  static const taskReward = 20;
 
   /// Стартовый баланс при онбординге = доход первого периода (не 650+300).
   static const onboardingBalance = periodIncome;
@@ -91,48 +90,44 @@ abstract final class ShopCatalog {
   static ShopItem item(HouseItemCategory category, int index) {
     return switch (category) {
       HouseItemCategory.kitchen => ShopItem(
-          category: category,
-          index: index,
-          title: kitchenTitles[index],
-          price: kitchenPrices[index],
-          bucket: BudgetBucket.necessary,
-          satietyDelta: 12 + (index % 3) * 2,
-          moodDelta: index == 4 || index == 5 || index == 3 ? 4.0 : 0.0,
-          effectLabel: index == 4 || index == 5
-              ? 'Сытость +${12 + (index % 3) * 2}%, настроение +4%'
-              : 'Сытость +${12 + (index % 3) * 2}%',
-        ),
+        category: category,
+        index: index,
+        title: kitchenTitles[index],
+        price: kitchenPrices[index],
+        bucket: BudgetBucket.necessary,
+        satietyDelta: 12 + (index % 3) * 2,
+        moodDelta: index == 4 || index == 5 || index == 3 ? 4.0 : 0.0,
+        effectLabel: index == 4 || index == 5
+            ? 'Сытость +${12 + (index % 3) * 2}%, настроение +4%'
+            : 'Сытость +${12 + (index % 3) * 2}%',
+      ),
       HouseItemCategory.clothes => ShopItem(
-          category: category,
-          index: index,
-          title: clothesTitles[index],
-          price: clothesPrices[index],
-          bucket: BudgetBucket.wants,
-          satietyDelta: 0,
-          moodDelta: 5.0,
-          effectLabel: 'При первом надевании: +5 к настроению',
-        ),
+        category: category,
+        index: index,
+        title: clothesTitles[index],
+        price: clothesPrices[index],
+        bucket: BudgetBucket.wants,
+        satietyDelta: 0,
+        moodDelta: 5.0,
+        effectLabel: 'При первом надевании: +5 к настроению',
+      ),
       HouseItemCategory.shower => ShopItem(
-          category: category,
-          index: index,
-          title: showerTitles[index],
-          price: showerPrices[index],
-          bucket: BudgetBucket.necessary,
-          satietyDelta: 0,
-          moodDelta: 8.0 + index,
-          effectLabel: 'Настроение +${8 + index}%, свежесть',
-        ),
+        category: category,
+        index: index,
+        title: showerTitles[index],
+        price: showerPrices[index],
+        bucket: BudgetBucket.necessary,
+        satietyDelta: 0,
+        moodDelta: 8.0 + index,
+        effectLabel: 'Настроение +${8 + index}%, свежесть',
+      ),
     };
   }
 
   static int priceOf(HouseItemCategory category, int index) =>
       item(category, index).price;
 
-  static int maxAffordable(
-    HouseItemCategory category,
-    int index,
-    int balance,
-  ) {
+  static int maxAffordable(HouseItemCategory category, int index, int balance) {
     final price = priceOf(category, index);
     if (balance < price) return 0;
     if (category != HouseItemCategory.kitchen) return 1;

@@ -44,10 +44,7 @@ abstract final class PlayerRules {
       }
     }
 
-    return profile.copyWith(
-      streakDays: streak,
-      lastOpenDay: today,
-    );
+    return profile.copyWith(streakDays: streak, lastOpenDay: today);
   }
 
   static PlayerProfile applyStatsDecay(PlayerProfile profile, DateTime now) {
@@ -121,8 +118,7 @@ abstract final class PlayerRules {
     int careUses = 0,
     double satiety = 50,
   }) {
-    final totalActions =
-        spentNecessary + spentWants + factSavings + careUses;
+    final totalActions = spentNecessary + spentWants + factSavings + careUses;
     final overNec = planNecessary > 0 && spentNecessary > planNecessary;
     final overWant = planWants > 0 && spentWants > planWants;
     final metNeedByBuy = spentNecessary > 0;
@@ -162,5 +158,29 @@ abstract final class PlayerRules {
           'Завтра начни с еды или ухода.';
     }
     return 'День прошёл по-своему. Завтра можно сделать иначе.';
+  }
+
+  /// Рост зависит от серии финансовых решений, а не от номера дня.
+  /// За закрытое нужное даём 2 очка, за план без превышения — 1,
+  /// за регулярные накопления — ещё 1. Стадии: 0–5, 6–11, 12+.
+  static int growthPointsForPeriod({
+    required int planNecessary,
+    required int planWants,
+    required int planSavings,
+    required int spentNecessary,
+    required int spentWants,
+    required int factSavings,
+    required int careUses,
+  }) {
+    var points = 0;
+    if (spentNecessary > 0 || careUses > 0) points += 2;
+    final followsPlan =
+        (planNecessary == 0 || spentNecessary <= planNecessary) &&
+        (planWants == 0 || spentWants <= planWants);
+    if (followsPlan) points += 1;
+    if (factSavings > 0 && (planSavings == 0 || factSavings >= planSavings)) {
+      points += 1;
+    }
+    return points;
   }
 }

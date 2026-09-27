@@ -5,22 +5,23 @@ enum PetGrowthStage { little, growing, confident }
 
 extension PetGrowthStageText on PetGrowthStage {
   String get title => switch (this) {
-        PetGrowthStage.little => 'Малыш Finzo',
-        PetGrowthStage.growing => 'Растущий Finzo',
-        PetGrowthStage.confident => 'Самостоятельный Finzo',
-      };
+    PetGrowthStage.little => 'Малыш Finzo',
+    PetGrowthStage.growing => 'Растущий Finzo',
+    PetGrowthStage.confident => 'Самостоятельный Finzo',
+  };
 
   String get description => switch (this) {
-        PetGrowthStage.little => 'Учится заботиться о себе вместе с тобой.',
-        PetGrowthStage.growing => 'Уже умеет планировать день и копить.',
-        PetGrowthStage.confident => 'Уверенно делает финансовый выбор.',
-      };
+    PetGrowthStage.little => 'Учится заботиться о себе вместе с тобой.',
+    PetGrowthStage.growing => 'Уже умеет планировать день и копить.',
+    PetGrowthStage.confident => 'Уверенно делает финансовый выбор.',
+  };
 }
 
 /// Сохранённый профиль игрока Finzoo.
 class PlayerProfile {
   const PlayerProfile({
     required this.name,
+    this.petName = 'Finzo',
     required this.age,
     required this.onboardingDone,
     required this.availableBalance,
@@ -36,6 +37,8 @@ class PlayerProfile {
     required this.lastAllowanceWeek,
     required this.dailyTaskDoneDay,
     this.inventory = const {},
+    this.starterBodyKey,
+    this.starterHeadKey,
     this.periodIndex = 0,
     this.periodPhase = PeriodPhase.planning,
     this.periodIncomeAmount = 0,
@@ -52,6 +55,8 @@ class PlayerProfile {
     this.periodHistory = const [],
     this.dayEndIntroShown = false,
     this.periodCareUses = 0,
+    this.growthPoints = 0,
+    this.transactionHistory = const [],
     this.parkCompletedIds = const [],
     this.periodPracticeCompletedIds = const [],
     this.boostedItemKeys = const [],
@@ -60,28 +65,31 @@ class PlayerProfile {
     this.equippedHeadKey,
     this.practiceTipShown = false,
     this.completedGoalTitles = const [],
+    this.animationsEnabled = true,
+    this.soundsEnabled = false,
   });
 
   factory PlayerProfile.fresh() => PlayerProfile(
-        name: '',
-        age: 10,
-        onboardingDone: false,
-        availableBalance: 0,
-        savedBalance: 0,
-        goalTitle: '',
-        goalPrice: 0,
-        goalImageAsset: '',
-        streakDays: 0,
-        lastOpenDay: '',
-        satiety: 80,
-        mood: 70,
-        lastStatsAt: DateTime.now().toIso8601String(),
-        lastAllowanceWeek: '',
-        dailyTaskDoneDay: '',
-        inventory: const {},
-      );
+    name: '',
+    age: 10,
+    onboardingDone: false,
+    availableBalance: 0,
+    savedBalance: 0,
+    goalTitle: '',
+    goalPrice: 0,
+    goalImageAsset: '',
+    streakDays: 0,
+    lastOpenDay: '',
+    satiety: 80,
+    mood: 70,
+    lastStatsAt: DateTime.now().toIso8601String(),
+    lastAllowanceWeek: '',
+    dailyTaskDoneDay: '',
+    inventory: const {},
+  );
 
   final String name;
+  final String petName;
   final int age;
   final bool onboardingDone;
 
@@ -106,6 +114,10 @@ class PlayerProfile {
   final String dailyTaskDoneDay;
 
   final Map<String, int> inventory;
+
+  /// Бесплатный стартовый образ создаваемого питомца.
+  final String? starterBodyKey;
+  final String? starterHeadKey;
 
   /// Номер текущего периода (1…). 0 = ещё не начат.
   final int periodIndex;
@@ -140,6 +152,12 @@ class PlayerProfile {
   /// Сколько раз за день применили еду/уход из запасов (не покупка).
   final int periodCareUses;
 
+  /// Очки развития: начисляются за качественно прожитые игровые дни.
+  final int growthPoints;
+
+  /// Последние объяснённые финансовые операции, новые сверху.
+  final List<String> transactionHistory;
+
   /// Пройденные упражнения парка (можно повторять, прогресс хранится).
   final List<String> parkCompletedIds;
 
@@ -166,6 +184,9 @@ class PlayerProfile {
   /// Уже полученные цели. Нужны для истории и взрослого экрана.
   final List<String> completedGoalTitles;
 
+  final bool animationsEnabled;
+  final bool soundsEnabled;
+
   int inventoryQty(String key) => inventory[key] ?? 0;
 
   bool isEquipped(String key) =>
@@ -182,17 +203,17 @@ class PlayerProfile {
       goalPrice > 0 && savedBalance >= goalPrice && goalTitle.isNotEmpty;
 
   PetGrowthStage get growthStage {
-    if (periodIndex >= 5) return PetGrowthStage.confident;
-    if (periodIndex >= 3) return PetGrowthStage.growing;
+    if (growthPoints >= 12) return PetGrowthStage.confident;
+    if (growthPoints >= 6) return PetGrowthStage.growing;
     return PetGrowthStage.little;
   }
 
   /// Визуальный рост сохраняет одну и ту же композицию одежды и аксессуаров.
   double get growthVisualScale => switch (growthStage) {
-        PetGrowthStage.little => 0.82,
-        PetGrowthStage.growing => 0.91,
-        PetGrowthStage.confident => 1.0,
-      };
+    PetGrowthStage.little => 0.82,
+    PetGrowthStage.growing => 0.91,
+    PetGrowthStage.confident => 1.0,
+  };
 
   /// Всё, что можно распределить в плане (без копилки).
   int get distributableBudget => availableBalance;
@@ -221,6 +242,7 @@ class PlayerProfile {
 
   PlayerProfile copyWith({
     String? name,
+    String? petName,
     int? age,
     bool? onboardingDone,
     int? availableBalance,
@@ -236,6 +258,10 @@ class PlayerProfile {
     String? lastAllowanceWeek,
     String? dailyTaskDoneDay,
     Map<String, int>? inventory,
+    String? starterBodyKey,
+    String? starterHeadKey,
+    bool clearStarterBody = false,
+    bool clearStarterHead = false,
     int? periodIndex,
     PeriodPhase? periodPhase,
     int? periodIncomeAmount,
@@ -253,6 +279,8 @@ class PlayerProfile {
     List<String>? periodHistory,
     bool? dayEndIntroShown,
     int? periodCareUses,
+    int? growthPoints,
+    List<String>? transactionHistory,
     List<String>? parkCompletedIds,
     List<String>? periodPracticeCompletedIds,
     List<String>? boostedItemKeys,
@@ -263,9 +291,12 @@ class PlayerProfile {
     bool clearEquippedHead = false,
     bool? practiceTipShown,
     List<String>? completedGoalTitles,
+    bool? animationsEnabled,
+    bool? soundsEnabled,
   }) {
     return PlayerProfile(
       name: name ?? this.name,
+      petName: petName ?? this.petName,
       age: age ?? this.age,
       onboardingDone: onboardingDone ?? this.onboardingDone,
       availableBalance: availableBalance ?? this.availableBalance,
@@ -281,6 +312,12 @@ class PlayerProfile {
       lastAllowanceWeek: lastAllowanceWeek ?? this.lastAllowanceWeek,
       dailyTaskDoneDay: dailyTaskDoneDay ?? this.dailyTaskDoneDay,
       inventory: inventory ?? this.inventory,
+      starterBodyKey: clearStarterBody
+          ? null
+          : (starterBodyKey ?? this.starterBodyKey),
+      starterHeadKey: clearStarterHead
+          ? null
+          : (starterHeadKey ?? this.starterHeadKey),
       periodIndex: periodIndex ?? this.periodIndex,
       periodPhase: periodPhase ?? this.periodPhase,
       periodIncomeAmount: periodIncomeAmount ?? this.periodIncomeAmount,
@@ -298,62 +335,75 @@ class PlayerProfile {
       periodHistory: periodHistory ?? this.periodHistory,
       dayEndIntroShown: dayEndIntroShown ?? this.dayEndIntroShown,
       periodCareUses: periodCareUses ?? this.periodCareUses,
+      growthPoints: growthPoints ?? this.growthPoints,
+      transactionHistory: transactionHistory ?? this.transactionHistory,
       parkCompletedIds: parkCompletedIds ?? this.parkCompletedIds,
       periodPracticeCompletedIds:
           periodPracticeCompletedIds ?? this.periodPracticeCompletedIds,
       boostedItemKeys: boostedItemKeys ?? this.boostedItemKeys,
       seenMessageIds: seenMessageIds ?? this.seenMessageIds,
-      equippedBodyKey:
-          clearEquippedBody ? null : (equippedBodyKey ?? this.equippedBodyKey),
-      equippedHeadKey:
-          clearEquippedHead ? null : (equippedHeadKey ?? this.equippedHeadKey),
+      equippedBodyKey: clearEquippedBody
+          ? null
+          : (equippedBodyKey ?? this.equippedBodyKey),
+      equippedHeadKey: clearEquippedHead
+          ? null
+          : (equippedHeadKey ?? this.equippedHeadKey),
       practiceTipShown: practiceTipShown ?? this.practiceTipShown,
       completedGoalTitles: completedGoalTitles ?? this.completedGoalTitles,
+      animationsEnabled: animationsEnabled ?? this.animationsEnabled,
+      soundsEnabled: soundsEnabled ?? this.soundsEnabled,
     );
   }
 
   Map<String, Object?> toJson() => {
-        'name': name,
-        'age': age,
-        'onboardingDone': onboardingDone,
-        'availableBalance': availableBalance,
-        'savedBalance': savedBalance,
-        'goalTitle': goalTitle,
-        'goalPrice': goalPrice,
-        'goalImageAsset': goalImageAsset,
-        'streakDays': streakDays,
-        'lastOpenDay': lastOpenDay,
-        'satiety': satiety,
-        'mood': mood,
-        'lastStatsAt': lastStatsAt,
-        'lastAllowanceWeek': lastAllowanceWeek,
-        'dailyTaskDoneDay': dailyTaskDoneDay,
-        'inventory': inventory,
-        'periodIndex': periodIndex,
-        'periodPhase': periodPhaseToName(periodPhase),
-        'periodIncomeAmount': periodIncomeAmount,
-        'periodIncomeLabel': periodIncomeLabel,
-        'periodIncomeGranted': periodIncomeGranted,
-        'periodOpeningBalance': periodOpeningBalance,
-        'plan': plan?.toJson(),
-        'spentNecessary': spentNecessary,
-        'spentWants': spentWants,
-        'factSavings': factSavings,
-        'periodTaskDone': periodTaskDone,
-        'periodTaskRewardGranted': periodTaskRewardGranted,
-        'lastPeriodSummary': lastPeriodSummary,
-        'periodHistory': periodHistory,
-        'dayEndIntroShown': dayEndIntroShown,
-        'periodCareUses': periodCareUses,
-        'parkCompletedIds': parkCompletedIds,
-        'periodPracticeCompletedIds': periodPracticeCompletedIds,
-        'boostedItemKeys': boostedItemKeys,
-        'seenMessageIds': seenMessageIds,
-        'equippedBodyKey': equippedBodyKey,
-        'equippedHeadKey': equippedHeadKey,
-        'practiceTipShown': practiceTipShown,
-        'completedGoalTitles': completedGoalTitles,
-      };
+    'name': name,
+    'petName': petName,
+    'age': age,
+    'onboardingDone': onboardingDone,
+    'availableBalance': availableBalance,
+    'savedBalance': savedBalance,
+    'goalTitle': goalTitle,
+    'goalPrice': goalPrice,
+    'goalImageAsset': goalImageAsset,
+    'streakDays': streakDays,
+    'lastOpenDay': lastOpenDay,
+    'satiety': satiety,
+    'mood': mood,
+    'lastStatsAt': lastStatsAt,
+    'lastAllowanceWeek': lastAllowanceWeek,
+    'dailyTaskDoneDay': dailyTaskDoneDay,
+    'inventory': inventory,
+    'starterBodyKey': starterBodyKey,
+    'starterHeadKey': starterHeadKey,
+    'periodIndex': periodIndex,
+    'periodPhase': periodPhaseToName(periodPhase),
+    'periodIncomeAmount': periodIncomeAmount,
+    'periodIncomeLabel': periodIncomeLabel,
+    'periodIncomeGranted': periodIncomeGranted,
+    'periodOpeningBalance': periodOpeningBalance,
+    'plan': plan?.toJson(),
+    'spentNecessary': spentNecessary,
+    'spentWants': spentWants,
+    'factSavings': factSavings,
+    'periodTaskDone': periodTaskDone,
+    'periodTaskRewardGranted': periodTaskRewardGranted,
+    'lastPeriodSummary': lastPeriodSummary,
+    'periodHistory': periodHistory,
+    'dayEndIntroShown': dayEndIntroShown,
+    'periodCareUses': periodCareUses,
+    'growthPoints': growthPoints,
+    'transactionHistory': transactionHistory,
+    'parkCompletedIds': parkCompletedIds,
+    'periodPracticeCompletedIds': periodPracticeCompletedIds,
+    'boostedItemKeys': boostedItemKeys,
+    'seenMessageIds': seenMessageIds,
+    'equippedBodyKey': equippedBodyKey,
+    'equippedHeadKey': equippedHeadKey,
+    'practiceTipShown': practiceTipShown,
+    'completedGoalTitles': completedGoalTitles,
+    'animationsEnabled': animationsEnabled,
+    'soundsEnabled': soundsEnabled,
+  };
 
   factory PlayerProfile.fromJson(Map<String, Object?> json) {
     final rawInv = json['inventory'];
@@ -407,6 +457,7 @@ class PlayerProfile {
 
     return PlayerProfile(
       name: json['name'] as String? ?? '',
+      petName: json['petName'] as String? ?? 'Finzo',
       age: json['age'] as int? ?? 10,
       onboardingDone: onboardingDone,
       availableBalance: json['availableBalance'] as int? ?? 0,
@@ -423,6 +474,8 @@ class PlayerProfile {
       lastAllowanceWeek: json['lastAllowanceWeek'] as String? ?? '',
       dailyTaskDoneDay: json['dailyTaskDoneDay'] as String? ?? '',
       inventory: inventory,
+      starterBodyKey: _nullableString(json['starterBodyKey']),
+      starterHeadKey: _nullableString(json['starterHeadKey']),
       periodIndex: periodIndex,
       periodPhase: phase,
       periodIncomeAmount: (json['periodIncomeAmount'] as num?)?.toInt() ?? 0,
@@ -441,17 +494,24 @@ class PlayerProfile {
       periodHistory: stringList('periodHistory'),
       dayEndIntroShown: json['dayEndIntroShown'] as bool? ?? false,
       periodCareUses: (json['periodCareUses'] as num?)?.toInt() ?? 0,
+      growthPoints:
+          (json['growthPoints'] as num?)?.toInt() ??
+          (periodIndex >= 5 ? 12 : (periodIndex >= 3 ? 6 : 0)),
+      transactionHistory: stringList('transactionHistory'),
       parkCompletedIds: parkIds,
       // Профили до дневного прогресса показывают уже закрытые задания
       // завершёнными только в текущем дне; на следующем они начнутся заново.
-      periodPracticeCompletedIds:
-          periodPracticeIds.isNotEmpty ? periodPracticeIds : parkIds,
+      periodPracticeCompletedIds: periodPracticeIds.isNotEmpty
+          ? periodPracticeIds
+          : parkIds,
       boostedItemKeys: stringList('boostedItemKeys'),
       seenMessageIds: stringList('seenMessageIds'),
       equippedBodyKey: _nullableString(json['equippedBodyKey']),
       equippedHeadKey: _nullableString(json['equippedHeadKey']),
       practiceTipShown: json['practiceTipShown'] as bool? ?? false,
       completedGoalTitles: stringList('completedGoalTitles'),
+      animationsEnabled: json['animationsEnabled'] as bool? ?? true,
+      soundsEnabled: json['soundsEnabled'] as bool? ?? false,
     );
   }
 }

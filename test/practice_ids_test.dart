@@ -32,7 +32,7 @@ void main() {
       ),
       store: _Mem(),
     );
-    await c.markParkExerciseDone(PracticeCatalog.lunch);
+    expect(await c.markParkExerciseDone(PracticeCatalog.lunch), isTrue);
     expect(c.profile.parkCompletedIds, contains('park_bike'));
     expect(c.profile.parkCompletedIds, contains(PracticeCatalog.lunch));
     expect(
@@ -40,27 +40,37 @@ void main() {
       equals({PracticeCatalog.lunch}),
     );
     expect(c.profile.periodPracticeCompletedIds, {PracticeCatalog.lunch});
-  });
-
-  test('practice progress resets for the next game day but keeps history',
-      () async {
-    final c = GameController(
-      profile: PlayerProfile.fresh().copyWith(
-        onboardingDone: true,
-        availableBalance: 200,
-        periodIndex: 1,
-        periodPhase: PeriodPhase.results,
-        periodIncomeGranted: true,
-        periodIncomeAmount: EconomyRules.periodIncome,
-        parkCompletedIds: const [PracticeCatalog.lunch],
-        periodPracticeCompletedIds: const [PracticeCatalog.lunch],
-      ),
-      store: _Mem(),
+    expect(c.profile.availableBalance, 200 + EconomyRules.taskReward);
+    expect(
+      c.profile.transactionHistory.single,
+      contains('+${EconomyRules.taskReward} ₽'),
     );
 
-    expect(await c.startNextPeriod(), isTrue);
-    expect(c.profile.periodPracticeCompletedIds, isEmpty);
-    expect(c.profile.parkCompletedIds, contains(PracticeCatalog.lunch));
-    expect(PracticeCatalog.levelForPeriod(c.profile.periodIndex), 2);
+    expect(await c.markParkExerciseDone(PracticeCatalog.lunch), isFalse);
+    expect(c.profile.availableBalance, 200 + EconomyRules.taskReward);
   });
+
+  test(
+    'practice progress resets for the next game day but keeps history',
+    () async {
+      final c = GameController(
+        profile: PlayerProfile.fresh().copyWith(
+          onboardingDone: true,
+          availableBalance: 200,
+          periodIndex: 1,
+          periodPhase: PeriodPhase.results,
+          periodIncomeGranted: true,
+          periodIncomeAmount: EconomyRules.periodIncome,
+          parkCompletedIds: const [PracticeCatalog.lunch],
+          periodPracticeCompletedIds: const [PracticeCatalog.lunch],
+        ),
+        store: _Mem(),
+      );
+
+      expect(await c.startNextPeriod(), isTrue);
+      expect(c.profile.periodPracticeCompletedIds, isEmpty);
+      expect(c.profile.parkCompletedIds, contains(PracticeCatalog.lunch));
+      expect(PracticeCatalog.levelForPeriod(c.profile.periodIndex), 2);
+    },
+  );
 }
