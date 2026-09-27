@@ -20,12 +20,14 @@ class HousePage extends StatefulWidget {
     super.key,
     required this.controller,
     this.onOpenStreet,
+    this.onOpenMessages,
     this.onOpenBook,
     this.onOpenResults,
   });
 
   final GameController controller;
   final VoidCallback? onOpenStreet;
+  final VoidCallback? onOpenMessages;
   final VoidCallback? onOpenBook;
   final VoidCallback? onOpenResults;
 
@@ -766,6 +768,14 @@ class _HousePageState extends State<HousePage> {
           height: 44,
           semanticsLabel: 'Улица',
           onTap: () => widget.onOpenStreet?.call(),
+        ),
+        SvgHitArea(
+          left: 331.5,
+          top: 388.5,
+          width: 44,
+          height: 44,
+          semanticsLabel: 'Сообщения',
+          onTap: () => widget.onOpenMessages?.call(),
         ),
         SvgHitArea(
           left: 331.5,
