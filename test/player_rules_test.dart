@@ -59,6 +59,18 @@ void main() {
     });
   });
 
+  group('Рост Finzo', () {
+    test('первые пять игровых дней открывают три видимые стадии', () {
+      expect(PlayerProfile.fresh().copyWith(periodIndex: 1).growthStage,
+          PetGrowthStage.little);
+      expect(PlayerProfile.fresh().copyWith(periodIndex: 3).growthStage,
+          PetGrowthStage.growing);
+      final adult = PlayerProfile.fresh().copyWith(periodIndex: 5);
+      expect(adult.growthStage, PetGrowthStage.confident);
+      expect(adult.growthVisualScale, 1);
+    });
+  });
+
   group('Economy', () {
     test('один доход периода меньше суммы всех товаров', () {
       expect(EconomyRules.periodIncome, 420);

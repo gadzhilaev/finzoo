@@ -187,6 +187,13 @@ class PlayerProfile {
     return PetGrowthStage.little;
   }
 
+  /// Визуальный рост сохраняет одну и ту же композицию одежды и аксессуаров.
+  double get growthVisualScale => switch (growthStage) {
+        PetGrowthStage.little => 0.82,
+        PetGrowthStage.growing => 0.91,
+        PetGrowthStage.confident => 1.0,
+      };
+
   /// Всё, что можно распределить в плане (без копилки).
   int get distributableBudget => availableBalance;
 

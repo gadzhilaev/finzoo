@@ -42,12 +42,19 @@ class FinzoAvatar extends StatelessWidget {
     final body = WardrobeCatalog.byKey(previewBodyKey ?? profile.equippedBodyKey);
     final head = WardrobeCatalog.byKey(previewHeadKey ?? profile.equippedHeadKey);
 
-    final child = FittedBox(
-      fit: fit,
-      child: SizedBox(
-        width: WardrobeCatalog.canvasW,
-        height: WardrobeCatalog.canvasH,
-        child: _compose(body: body, head: head),
+    final child = Align(
+      alignment: Alignment.bottomCenter,
+      child: Transform.scale(
+        scale: profile.growthVisualScale,
+        alignment: Alignment.bottomCenter,
+        child: FittedBox(
+          fit: fit,
+          child: SizedBox(
+            width: WardrobeCatalog.canvasW,
+            height: WardrobeCatalog.canvasH,
+            child: _compose(body: body, head: head),
+          ),
+        ),
       ),
     );
 
