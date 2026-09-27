@@ -50,6 +50,14 @@ class SavingsMoveResult {
   final int moved;
 }
 
+/// Результат получения накопленной цели.
+class GoalClaimResult {
+  const GoalClaimResult({required this.ok, this.message = ''});
+
+  final bool ok;
+  final String message;
+}
+
 /// Живое состояние игрока: период, бюджет, покупки, накопления.
 class GameController extends ChangeNotifier {
   GameController({
@@ -213,6 +221,7 @@ class GameController extends ChangeNotifier {
       factSavings: 0,
       periodTaskDone: false,
       periodTaskRewardGranted: false,
+      periodOpeningBalance: 0,
       clearPlan: true,
       lastPeriodSummary: '',
     );
@@ -356,6 +365,101 @@ class GameController extends ChangeNotifier {
           'Снято $amount ₽. Накоплено теперь ${profile.savedBalance} ₽, '
           'до цели дальше.',
     );
+  }
+
+  /// Забрать полностью накопленную цель. Деньги из копилки расходуются на
+  /// цель, а игрок сразу может выбрать следующую.
+  Future<GoalClaimResult> claimCompletedGoal() async {
+    if (!profile.isGoalComplete) {
+      return const GoalClaimResult(
+        ok: false,
+        message: 'Сначала накопи всю сумму на цель.',
+      );
+    }
+    final title = profile.goalTitle;
+    profile = profile.copyWith(
+      savedBalance: 0,
+      goalTitle: '',
+      goalPrice: 0,
+      goalImageAsset: '',
+      completedGoalTitles: [...profile.completedGoalTitles, title],
+    );
+    await _persist();
+    return GoalClaimResult(
+      ok: true,
+      message: 'Цель «$title» получена! Теперь можно выбрать новую.',
+    );
+  }
+
+  /// Выбрать следующую цель после онбординга или получения предыдущей.
+  Future<void> chooseGoal({
+    required String title,
+    required int price,
+    required String imageAsset,
+  }) async {
+    profile = profile.copyWith(
+      goalTitle: title.trim(),
+      goalPrice: price,
+      goalImageAsset: imageAsset,
+      savedBalance: 0,
+    );
+    await _persist();
+  }
+
+  /// Сброс профиля используется только из раздела взрослого после
+  /// подтверждения. Хранилище очищается вместе с состоянием в памяти.
+  Future<void> resetProfile() async {
+    await _store.clear();
+    profile = PlayerProfile.fresh();
+    notifyListeners();
+  }
+
+  /// Демо-профиль для показа всех основных состояний приложения без ручного
+  /// прохождения пяти игровых дней. Загружается только по явному действию
+  /// взрослого и может быть сброшен на том же экране.
+  Future<void> loadDemoProfile() async {
+    profile = PlayerProfile.fresh().copyWith(
+      name: 'Демо',
+      age: 10,
+      onboardingDone: true,
+      availableBalance: 560,
+      savedBalance: 200,
+      goalTitle: 'Наушники',
+      goalPrice: 300,
+      goalImageAsset: 'assets/images/goals/headphones.png',
+      streakDays: 5,
+      lastOpenDay: PlayerRules.dayKey(_now()),
+      satiety: 82,
+      mood: 78,
+      lastStatsAt: _now().toIso8601String(),
+      periodIndex: 5,
+      periodPhase: PeriodPhase.playing,
+      periodIncomeGranted: true,
+      periodIncomeAmount: EconomyRules.periodIncome,
+      periodIncomeLabel: EconomyRules.periodIncomeLabel,
+      periodOpeningBalance: 140,
+      plan: const BudgetPlan(necessary: 160, wants: 100, savings: 80),
+      inventory: const {'k0': 2, 'k3': 1, 'c0': 1, 'c4': 1, 's0': 1},
+      equippedBodyKey: 'c0',
+      equippedHeadKey: 'c4',
+      boostedItemKeys: const ['c0', 'c4'],
+      parkCompletedIds: const [
+        'practice_lunch',
+        'practice_day_plan',
+        'practice_dream_save',
+        'practice_plan_change',
+        'practice_deal',
+        'practice_receipt',
+      ],
+      periodPracticeCompletedIds: const ['practice_lunch', 'practice_day_plan'],
+      completedGoalTitles: const ['Удочка'],
+      periodHistory: const [
+        'День 4. Нужное закрыто, и копилка пополнилась — хороший день. Остаток 140 ₽ переносится дальше.',
+        'День 3. Нужное для Finzo закрыто. В копилку можно отложить в другой раз. Остаток 90 ₽ переносится дальше.',
+        'День 2. В копилку отложили, а про еду и уход сегодня не заботились. Завтра вспомни про нужное. Остаток 60 ₽ переносится дальше.',
+      ],
+    );
+    await _persist();
   }
 
   Future<bool> buyHouseItem({
@@ -614,6 +718,7 @@ class GameController extends ChangeNotifier {
     profile = profile.copyWith(
       periodPhase: PeriodPhase.results,
       lastPeriodSummary: summary,
+      periodHistory: [summary, ...profile.periodHistory].take(30).toList(),
     );
     await _persist();
     return true;
@@ -627,6 +732,7 @@ class GameController extends ChangeNotifier {
       periodIndex: profile.periodIndex + 1,
       periodPhase: PeriodPhase.planning,
       periodIncomeGranted: false,
+      periodOpeningBalance: profile.availableBalance,
       periodIncomeAmount: 0,
       periodIncomeLabel: '',
       clearPlan: true,

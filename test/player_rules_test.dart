@@ -164,6 +164,31 @@ void main() {
       expect(c.profile.savedBalance, 60);
     });
 
+    test('полная цель получается и освобождает выбор следующей', () async {
+      final c = await _playingController(balance: 300);
+      c.profile = c.profile.copyWith(
+        goalTitle: 'Наушники',
+        goalPrice: 100,
+        goalImageAsset: 'assets/images/goals/headphones.png',
+      );
+      expect((await c.saveTowardGoal(100)).ok, isTrue);
+      expect(c.profile.isGoalComplete, isTrue);
+
+      final claimed = await c.claimCompletedGoal();
+      expect(claimed.ok, isTrue);
+      expect(c.profile.goalTitle, isEmpty);
+      expect(c.profile.savedBalance, 0);
+      expect(c.profile.completedGoalTitles, contains('Наушники'));
+
+      await c.chooseGoal(
+        title: 'Удочка',
+        price: 400,
+        imageAsset: 'assets/images/goals/fishing.png',
+      );
+      expect(c.profile.goalTitle, 'Удочка');
+      expect(c.profile.goalPrice, 400);
+    });
+
     test('конец периода и следующий: остаток + один новый доход', () async {
       final c = await _playingController();
       await c.buyHouseItem(category: HouseItemCategory.kitchen, index: 4);
@@ -182,6 +207,17 @@ void main() {
       expect(c.profile.periodIncomeGranted, isTrue);
       expect(c.profile.plan, isNull);
       expect(c.profile.periodTaskDone, isFalse);
+      expect(c.profile.periodHistory, hasLength(1));
+    });
+
+    test('демо-профиль открывает пятый день и все практики в истории', () async {
+      final c = GameController(profile: PlayerProfile.fresh(), store: _MemoryStore());
+      await c.loadDemoProfile();
+      expect(c.profile.onboardingDone, isTrue);
+      expect(c.profile.periodIndex, 5);
+      expect(c.profile.growthStage, PetGrowthStage.confident);
+      expect(c.profile.periodHistory, isNotEmpty);
+      expect(c.profile.parkCompletedIds, hasLength(6));
     });
 
     test('сохранение профиля переживает перезапуск', () async {
