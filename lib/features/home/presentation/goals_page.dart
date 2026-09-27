@@ -43,7 +43,7 @@ class GoalsPage extends StatefulWidget {
   /// Координаты из SVG: карточка origin (10|201, 217+row*199).
   static const goals = <GoalOption>[
     GoalOption(
-      price: '15.000 ₽',
+      price: '800 ₽',
       title: 'Велосипед',
       imageAsset: AppAssets.goalBicycle,
       imageLeft: 43.5,
@@ -54,7 +54,7 @@ class GoalsPage extends StatefulWidget {
       priceWidth: 69,
     ),
     GoalOption(
-      price: '5000 ₽',
+      price: '300 ₽',
       title: 'Наушники',
       imageAsset: AppAssets.goalHeadphones,
       imageLeft: 52,
@@ -65,7 +65,7 @@ class GoalsPage extends StatefulWidget {
       priceWidth: 65,
     ),
     GoalOption(
-      price: '60.000 ₽',
+      price: '1200 ₽',
       title: 'Плейстейшн',
       imageAsset: AppAssets.goalPlaystation,
       imageLeft: 52.5,
@@ -76,7 +76,7 @@ class GoalsPage extends StatefulWidget {
       priceWidth: 79,
     ),
     GoalOption(
-      price: '60.000 ₽',
+      price: '1500 ₽',
       title: 'Лодка',
       imageAsset: AppAssets.goalBoat,
       imageLeft: 43.5,
@@ -87,7 +87,7 @@ class GoalsPage extends StatefulWidget {
       priceWidth: 79,
     ),
     GoalOption(
-      price: '10.000 ₽',
+      price: '500 ₽',
       title: 'Теннисная\nракетка',
       imageAsset: AppAssets.goalTennis,
       imageLeft: 52,
@@ -98,7 +98,7 @@ class GoalsPage extends StatefulWidget {
       priceWidth: 79,
     ),
     GoalOption(
-      price: '6000 ₽',
+      price: '400 ₽',
       title: 'Удочка',
       imageAsset: AppAssets.goalFishing,
       imageLeft: 43.5,
