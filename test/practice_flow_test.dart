@@ -61,7 +61,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Чай'));
     await tester.pump();
-    await tester.tap(find.text('Готово'));
+    await tester.tap(find.text('Подать обед'));
     await tester.pump();
     expect(find.textContaining('Потратил'), findsOneWidget);
     expect(c.profile.parkCompletedIds, contains(PracticeCatalog.lunch));

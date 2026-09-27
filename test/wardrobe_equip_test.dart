@@ -1,4 +1,3 @@
-import 'package:finzoo/core/profile/economy.dart';
 import 'package:finzoo/core/profile/game_controller.dart';
 import 'package:finzoo/core/profile/house_catalog.dart';
 import 'package:finzoo/core/profile/player_profile.dart';
