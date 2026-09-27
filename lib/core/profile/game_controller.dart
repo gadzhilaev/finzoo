@@ -65,11 +65,72 @@ class GameController extends ChangeNotifier {
   PlayerProfile profile;
 
   static Future<GameController> bootstrap() async {
+    const shot = String.fromEnvironment('UI_SHOT');
+    if (shot.startsWith('wardrobe')) {
+      // Отдельная QA-сессия: не трогаем finzoo_player_profile_v1.
+      return GameController(
+        profile: wardrobeShotProfile(shot),
+        store: _EphemeralProfileStore(),
+      );
+    }
     final store = PlayerProfileStore();
     final loaded = await store.load();
     final controller = GameController(profile: loaded, store: store);
     await controller.onAppOpen();
     return controller;
+  }
+
+  /// Профиль для `--dart-define=UI_SHOT=wardrobe_*` (экипировка / диалоги).
+  @visibleForTesting
+  static PlayerProfile wardrobeShotProfile(String shot) {
+    final inv = <String, int>{
+      for (var i = 0; i < 8; i++) 'c$i': 1,
+    };
+    var body = 'c0'; // свитер
+    var head = 'c3'; // очки
+    if (shot.contains('tee_bow') || shot.contains('tee+bow')) {
+      body = 'c1';
+      head = 'c4';
+    } else if (shot.contains('suit_hat') || shot.contains('suit+hat')) {
+      body = 'c7';
+      head = 'c6';
+    } else if (shot.contains('hoodie_hat')) {
+      body = 'c5';
+      head = 'c6';
+    } else if (shot.contains('dress_bow')) {
+      body = 'c2';
+      head = 'c4';
+    } else if (shot.contains('goggles_only')) {
+      body = '';
+      head = 'c3';
+    } else if (shot.contains('none')) {
+      body = '';
+      head = '';
+    }
+    // dialog_* — вещь не надета, чтобы открыть «Купить?» / «Надеть?»
+    final forDialog = shot.contains('dialog_');
+    return PlayerProfile.fresh().copyWith(
+      name: 'QA',
+      age: 10,
+      onboardingDone: true,
+      availableBalance: forDialog && shot.contains('buy') ? 500 : 200,
+      savedBalance: 50,
+      goalTitle: 'Велосипед',
+      goalPrice: 3000,
+      satiety: 90,
+      mood: 80,
+      periodIndex: 1,
+      periodPhase: PeriodPhase.playing,
+      periodIncomeGranted: true,
+      periodIncomeAmount: EconomyRules.periodIncome,
+      plan: const BudgetPlan(necessary: 100, wants: 200, savings: 50),
+      inventory: inv,
+      equippedBodyKey: forDialog ? null : (body.isEmpty ? null : body),
+      equippedHeadKey: forDialog ? null : (head.isEmpty ? null : head),
+      clearEquippedBody: forDialog || body.isEmpty,
+      clearEquippedHead: forDialog || head.isEmpty,
+      boostedItemKeys: const ['c0', 'c1', 'c3', 'c4', 'c6'],
+    );
   }
 
   Future<void> _persist() async {
@@ -580,6 +641,17 @@ class GameController extends ChangeNotifier {
         '($planned ₽). Можно купить, если хватает денег — '
         'вечером увидишь сравнение.';
   }
+}
+
+/// In-memory store for UI_SHOT wardrobe sessions (не пишет в SharedPreferences).
+class _EphemeralProfileStore extends PlayerProfileStore {
+  PlayerProfile? _p;
+
+  @override
+  Future<PlayerProfile> load() async => _p ?? PlayerProfile.fresh();
+
+  @override
+  Future<void> save(PlayerProfile profile) async => _p = profile;
 }
 
 extension _FirstOrNull<E> on Iterable<E> {

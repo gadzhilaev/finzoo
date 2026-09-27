@@ -46,10 +46,14 @@ class _HousePageState extends State<HousePage> {
   void initState() {
     super.initState();
     const shot = String.fromEnvironment('UI_SHOT');
+    if (shot.startsWith('wardrobe')) {
+      _category = HouseItemCategory.clothes;
+    }
     if (shot == 'available' ||
         shot == 'saved' ||
         shot == 'sleep' ||
-        shot == 'savings') {
+        shot == 'savings' ||
+        shot.startsWith('wardrobe_dialog_')) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         if (shot == 'available') {
@@ -60,9 +64,55 @@ class _HousePageState extends State<HousePage> {
           await showSavingsDialog(context, widget.controller);
         } else if (shot == 'sleep') {
           await _onSleepTap();
+        } else if (shot.startsWith('wardrobe_dialog_')) {
+          await _openWardrobeShotDialog(shot);
         }
       });
     }
+  }
+
+  Future<void> _openWardrobeShotDialog(String shot) async {
+    // wardrobe_dialog_buy_c3 / wear_c3 / unequip_c3 / bought_c3
+    final m = RegExp(r'c(\d+)').firstMatch(shot);
+    final index = int.tryParse(m?.group(1) ?? '') ?? 3;
+    final wardrobe = WardrobeCatalog.byIndex(index);
+    final asset = wardrobe.thumbAsset;
+    if (shot.contains('unequip')) {
+      await _showUnequipDialog(wardrobe: wardrobe);
+      return;
+    }
+    if (shot.contains('bought')) {
+      await _showHouseDialog(
+        title: 'Куплено!',
+        body: '${wardrobe.title} теперь твоя. Надеть сейчас?',
+        asset: asset,
+        confirmLabel: 'Надеть сейчас',
+        showCancel: true,
+        cancelLabel: 'Позже',
+        previewItemKey: wardrobe.shopKey,
+      );
+      return;
+    }
+    if (shot.contains('wear')) {
+      await _showHouseDialog(
+        title: 'Надеть?',
+        body: '${wardrobe.title}\nНадеть бесплатно.',
+        asset: asset,
+        confirmLabel: 'Надеть',
+        showCancel: true,
+        previewItemKey: wardrobe.shopKey,
+      );
+      return;
+    }
+    // buy (default)
+    await _showHouseDialog(
+      title: 'Купить?',
+      body: '${wardrobe.title}\nКатегория: Желания\nЦена: 40 ₽',
+      asset: asset,
+      confirmLabel: 'Купить',
+      showCancel: true,
+      previewItemKey: wardrobe.shopKey,
+    );
   }
 
   void _openAvailableSheet() {

@@ -76,8 +76,11 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
         shot == 'available' ||
         shot == 'saved' ||
         shot == 'sleep' ||
-        shot == 'savings') {
+        shot == 'savings' ||
+        (shot.startsWith('wardrobe') && !shot.contains('street'))) {
       _step = _WelcomeStep.house;
+    } else if (shot.startsWith('wardrobe') && shot.contains('street')) {
+      _step = _WelcomeStep.street;
     } else if (shot.startsWith('play_')) {
       // play_practice_lunch / play_park_bike → сразу задание
       _step = _WelcomeStep.games;
