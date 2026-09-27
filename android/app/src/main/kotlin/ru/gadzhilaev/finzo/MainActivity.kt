@@ -1,4 +1,4 @@
-package com.example.finzoo
+package ru.gadzhilaev.finzo
 
 import io.flutter.embedding.android.FlutterActivity
 
