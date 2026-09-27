@@ -21,6 +21,7 @@ import '../../home/presentation/street_page.dart';
 import '../../onboarding/presentation/age_page.dart';
 import '../../onboarding/presentation/intro_screens.dart';
 import '../../onboarding/presentation/name_page.dart';
+import '../../onboarding/presentation/pet_setup_page.dart';
 import '../../onboarding/presentation/outro_video_page.dart';
 import '../../onboarding/presentation/widgets/onboarding_canvas.dart';
 import '../../onboarding/presentation/widgets/onboarding_decor.dart';
@@ -29,6 +30,7 @@ enum _WelcomeStep {
   play,
   age,
   name,
+  petSetup,
   tips,
   video,
   home,
@@ -58,6 +60,8 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   int _tipIndex = 0;
   late int _age;
   late String _name;
+  late String _petName;
+  int _starterLook = 0;
   String? _parkFocusId;
   bool _parkSkipIntro = false;
   bool _bookStartToc = false;
@@ -74,6 +78,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
     final p = _game.profile;
     _age = p.age;
     _name = p.name;
+    _petName = p.petName;
     const shot = String.fromEnvironment('UI_SHOT');
     if (shot == 'house' ||
         shot == 'available' ||
@@ -87,7 +92,9 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
     } else if (shot.startsWith('play_')) {
       // play_practice_lunch / play_park_bike → сразу задание
       _step = _WelcomeStep.games;
-      _parkFocusId = PracticeCatalog.resolveOpenId(shot.substring('play_'.length));
+      _parkFocusId = PracticeCatalog.resolveOpenId(
+        shot.substring('play_'.length),
+      );
       _parkSkipIntro = true;
     } else if (shot == 'games' ||
         shot.startsWith('park_') ||
@@ -154,7 +161,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _goToTips([String? name]) async {
+  Future<void> _goToPetSetup([String? name]) async {
     if (_step != _WelcomeStep.name) return;
     final nextName = (name ?? _name).trim();
     if (nextName.isEmpty) return;
@@ -162,11 +169,22 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _name = nextName;
-      _tipIndex = 0;
-      _step = _WelcomeStep.tips;
+      _step = _WelcomeStep.petSetup;
     });
     // Не ждём диск — иначе UI может «зависнуть» на SharedPreferences.
     unawaited(_game.setIdentity(name: nextName, age: _age));
+  }
+
+  Future<void> _goToTips(String petName, StarterLook look) async {
+    _petName = petName.trim().isEmpty ? 'Finzo' : petName.trim();
+    _starterLook = starterLooks.indexOf(look);
+    _tipIndex = 0;
+    await _game.setPetIdentity(
+      petName: _petName,
+      starterBodyKey: look.bodyKey,
+      starterHeadKey: look.headKey,
+    );
+    if (mounted) setState(() => _step = _WelcomeStep.tips);
   }
 
   void _ageBack() {
@@ -210,6 +228,9 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
       goalTitle: goal.title.replaceAll('\n', ' '),
       goalPrice: price,
       goalImageAsset: goal.imageAsset,
+      petName: _petName,
+      starterBodyKey: starterLooks[_starterLook].bodyKey,
+      starterHeadKey: starterLooks[_starterLook].headKey,
     );
     if (!mounted) return;
     setState(() => _step = _WelcomeStep.budget);
@@ -231,10 +252,10 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   }
 
   void _goToGames() => setState(() {
-        _parkFocusId = null;
-        _parkSkipIntro = false;
-        _step = _WelcomeStep.games;
-      });
+    _parkFocusId = null;
+    _parkSkipIntro = false;
+    _step = _WelcomeStep.games;
+  });
 
   void _goToMessages() => setState(() => _step = _WelcomeStep.messages);
 
@@ -264,7 +285,8 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   void _goToGoalPicker() => setState(() => _step = _WelcomeStep.goals);
 
   Future<void> _chooseNextGoal(GoalOption goal) async {
-    final price = int.tryParse(goal.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+    final price =
+        int.tryParse(goal.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
     await _game.chooseGoal(
       title: goal.title.replaceAll('\n', ' '),
       price: price,
@@ -273,13 +295,47 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
     if (mounted) _goToStreetOnly();
   }
 
-  void _goToAdult() => setState(() => _step = _WelcomeStep.adult);
-
+  Future<void> _goToAdult() async {
+    final answer = TextEditingController();
+    final passed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Раздел для взрослого'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Решите пример: 8 + 7 ='),
+            const SizedBox(height: 10),
+            TextField(
+              controller: answer,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Назад'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, answer.text.trim() == '15'),
+            child: const Text('Открыть'),
+          ),
+        ],
+      ),
+    );
+    answer.dispose();
+    if (passed == true && mounted) setState(() => _step = _WelcomeStep.adult);
+  }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 550),
+      duration: _game.profile.animationsEnabled
+          ? const Duration(milliseconds: 550)
+          : Duration.zero,
       switchInCurve: Curves.easeInOutCubic,
       switchOutCurve: Curves.easeInOutCubic,
       child: switch (_step) {
@@ -289,6 +345,14 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           onBack: _tipBack,
           onSkip: _goToVideo,
           onNext: _tipNext,
+        ),
+        _WelcomeStep.petSetup => PetSetupPage(
+          key: const ValueKey('pet-setup'),
+          playerName: _name,
+          initialPetName: _petName,
+          initialLook: _starterLook,
+          onBack: () => setState(() => _step = _WelcomeStep.name),
+          onDone: _goToTips,
         ),
         _WelcomeStep.video => OutroVideoPage(
           key: const ValueKey('video'),
@@ -308,6 +372,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           onOpenTask: _goToTask,
           onOpenResults: _goToResults,
           onChooseNextGoal: _goToGoalPicker,
+          onOpenHelp: _goToBook,
         ),
         _WelcomeStep.budget => BudgetPlanPage(
           key: const ValueKey('budget'),
@@ -377,7 +442,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           onOpenHouse: _goToHouse,
           onOpenGames: _goToGames,
           onOpenBudget: _goToBudget,
-          onOpenAdult: _goToAdult,
+          onOpenAdult: () => unawaited(_goToAdult()),
         ),
         _ => _buildProfileSteps(),
       },
@@ -420,7 +485,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           key: const ValueKey('name-step'),
           initialName: _name,
           onChanged: (name) => _name = name,
-          onNext: (name) => unawaited(_goToTips(name)),
+          onNext: (name) => unawaited(_goToPetSetup(name)),
         ),
         _ => const SizedBox.shrink(),
       },

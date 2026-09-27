@@ -79,17 +79,22 @@ class AdultPage extends StatelessWidget {
           onPressed: onBack,
           icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: Text('Для взрослого',
-            style: AppFonts.rubik(
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-                color: const Color(0xFF1B6943))),
+        title: Text(
+          'Для взрослого',
+          style: AppFonts.rubik(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            color: const Color(0xFF1B6943),
+          ),
+        ),
       ),
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, _) {
           final p = controller.profile;
-          final practices = PracticeCatalog.completedIds(p.parkCompletedIds).length;
+          final practices = PracticeCatalog.completedIds(
+            p.parkCompletedIds,
+          ).length;
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
             children: [
@@ -113,7 +118,10 @@ class AdultPage extends StatelessWidget {
                     const SizedBox(height: 10),
                     _GrowthLine(stage: p.growthStage),
                     const SizedBox(height: 6),
-                    Text('Этапы: 1–2, 3–4 и 5+ игровых дней.', style: _hint),
+                    Text(
+                      'Очки роста: ${p.growthPoints}. Нужное даёт 2, план без превышения — 1, накопления — 1.',
+                      style: _hint,
+                    ),
                   ],
                 ),
               ),
@@ -129,7 +137,10 @@ class AdultPage extends StatelessWidget {
               _Card(
                 title: 'История игровых дней',
                 child: p.periodHistory.isEmpty
-                    ? Text('Заверши первый игровой день — здесь появится итог.', style: _body)
+                    ? Text(
+                        'Заверши первый игровой день — здесь появится итог.',
+                        style: _body,
+                      )
                     : Column(
                         children: [
                           for (final item in p.periodHistory)
@@ -140,13 +151,65 @@ class AdultPage extends StatelessWidget {
                         ],
                       ),
               ),
+              _Card(
+                title: 'Последние операции',
+                child: p.transactionHistory.isEmpty
+                    ? Text(
+                        'Покупки и движения копилки появятся здесь.',
+                        style: _body,
+                      )
+                    : Column(
+                        children: [
+                          for (final item in p.transactionHistory.take(12))
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Text('• $item', style: _body),
+                            ),
+                        ],
+                      ),
+              ),
+              _Card(
+                title: 'Настройки доступности',
+                child: Column(
+                  children: [
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Анимации', style: _body),
+                      subtitle: Text(
+                        'Плавные переходы между экранами',
+                        style: _hint,
+                      ),
+                      value: p.animationsEnabled,
+                      onChanged: (value) => controller.setAccessibility(
+                        animationsEnabled: value,
+                        soundsEnabled: p.soundsEnabled,
+                      ),
+                    ),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Звуки', style: _body),
+                      subtitle: Text(
+                        'Сохранится для будущих звуковых подсказок',
+                        style: _hint,
+                      ),
+                      value: p.soundsEnabled,
+                      onChanged: (value) => controller.setAccessibility(
+                        animationsEnabled: p.animationsEnabled,
+                        soundsEnabled: value,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               _Card(title: 'Словарь', child: const _Glossary()),
               const SizedBox(height: 8),
               FilledButton.icon(
                 onPressed: () => _confirmDemo(context),
                 icon: const Icon(Icons.science_outlined),
-                label: Text('Загрузить демо-профиль',
-                    style: AppFonts.rubik(fontWeight: FontWeight.w700)),
+                label: Text(
+                  'Загрузить демо-профиль',
+                  style: AppFonts.rubik(fontWeight: FontWeight.w700),
+                ),
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF4B946A),
                   minimumSize: const Size.fromHeight(48),
@@ -156,8 +219,10 @@ class AdultPage extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: () => _confirmReset(context),
                 icon: const Icon(Icons.restart_alt_rounded),
-                label: Text('Сбросить профиль',
-                    style: AppFonts.rubik(fontWeight: FontWeight.w700)),
+                label: Text(
+                  'Сбросить профиль',
+                  style: AppFonts.rubik(fontWeight: FontWeight.w700),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFB33A21),
                   side: const BorderSide(color: Color(0xFFB33A21)),
@@ -195,19 +260,22 @@ class _Card extends StatelessWidget {
   final Widget child;
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFEF7E6),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF1B6943)),
-        ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: _emphasis),
-          const SizedBox(height: 8),
-          child,
-        ]),
-      );
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFEF7E6),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: const Color(0xFF1B6943)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: _emphasis),
+        const SizedBox(height: 8),
+        child,
+      ],
+    ),
+  );
 }
 
 class _GrowthLine extends StatelessWidget {
@@ -216,15 +284,24 @@ class _GrowthLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = stage.index;
-    return Row(children: [
-      for (var i = 0; i < 3; i++) ...[
-        Expanded(child: Container(height: 8, decoration: BoxDecoration(
-          color: i <= active ? const Color(0xFF4B946A) : const Color(0xFFE8E0D0),
-          borderRadius: BorderRadius.circular(10),
-        ))),
-        if (i < 2) const SizedBox(width: 6),
+    return Row(
+      children: [
+        for (var i = 0; i < 3; i++) ...[
+          Expanded(
+            child: Container(
+              height: 8,
+              decoration: BoxDecoration(
+                color: i <= active
+                    ? const Color(0xFF4B946A)
+                    : const Color(0xFFE8E0D0),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          if (i < 2) const SizedBox(width: 6),
+        ],
       ],
-    ]);
+    );
   }
 }
 
@@ -232,11 +309,11 @@ class _Glossary extends StatelessWidget {
   const _Glossary();
   @override
   Widget build(BuildContext context) => Text(
-        'Бюджет — план, на что пойдут деньги.\n\n'
-        'Необходимое — еда, уход и важные вещи.\n\n'
-        'Желания — покупки, без которых можно подождать.\n\n'
-        'Накопления — деньги, которые откладывают на цель.\n\n'
-        'Чек — список того, что купили и сколько это стоило.',
-        style: _body,
-      );
+    'Бюджет — план, на что пойдут деньги.\n\n'
+    'Необходимое — еда, уход и важные вещи.\n\n'
+    'Желания — покупки, без которых можно подождать.\n\n'
+    'Накопления — деньги, которые откладывают на цель.\n\n'
+    'Чек — список того, что купили и сколько это стоило.',
+    style: _body,
+  );
 }

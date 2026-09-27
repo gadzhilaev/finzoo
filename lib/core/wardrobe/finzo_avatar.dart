@@ -39,8 +39,12 @@ class FinzoAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final body = WardrobeCatalog.byKey(previewBodyKey ?? profile.equippedBodyKey);
-    final head = WardrobeCatalog.byKey(previewHeadKey ?? profile.equippedHeadKey);
+    final body = WardrobeCatalog.byKey(
+      previewBodyKey ?? profile.equippedBodyKey ?? profile.starterBodyKey,
+    );
+    final head = WardrobeCatalog.byKey(
+      previewHeadKey ?? profile.equippedHeadKey ?? profile.starterHeadKey,
+    );
 
     final child = Align(
       alignment: Alignment.bottomCenter,
@@ -71,10 +75,7 @@ class FinzoAvatar extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: Transform.translate(
-        offset: Offset(dx, 0),
-        child: child,
-      ),
+      child: Transform.translate(offset: Offset(dx, 0), child: child),
     );
   }
 
@@ -112,8 +113,7 @@ class FinzoAvatar extends StatelessWidget {
       );
     }
 
-    if (headItem.accessoryLayerReady &&
-        headItem.accessoryLayerAsset != null) {
+    if (headItem.accessoryLayerReady && headItem.accessoryLayerAsset != null) {
       return Stack(
         fit: StackFit.expand,
         clipBehavior: Clip.none,
@@ -149,12 +149,14 @@ class _GogglesSourceClipper extends CustomClipper<Path> {
     const source = Rect.fromLTWH(4, 59, 94, 37);
     final sx = size.width / WardrobeCatalog.canvasW;
     final sy = size.height / WardrobeCatalog.canvasH;
-    return Path()..addRect(Rect.fromLTWH(
-      source.left * sx,
-      source.top * sy,
-      source.width * sx,
-      source.height * sy,
-    ));
+    return Path()..addRect(
+      Rect.fromLTWH(
+        source.left * sx,
+        source.top * sy,
+        source.width * sx,
+        source.height * sy,
+      ),
+    );
   }
 
   @override

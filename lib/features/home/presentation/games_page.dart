@@ -83,7 +83,7 @@ class _GamesPageState extends State<GamesPage> {
           side: const BorderSide(color: Color(0xFF1B6943), width: 2),
         ),
         title: Text(
-          'Учебные монеты',
+          'Награды за практику',
           style: AppFonts.rubik(
             fontWeight: FontWeight.w700,
             fontSize: 18,
@@ -91,7 +91,8 @@ class _GamesPageState extends State<GamesPage> {
           ),
         ),
         content: Text(
-          'Здесь учебные монеты — твои накопления останутся на месте.',
+          'Числа внутри заданий учебные: они не списываются с твоего баланса. '
+          'За первое прохождение каждого задания Finzo добавит 20 ₽ к доступным деньгам.',
           style: AppFonts.rubik(
             fontWeight: FontWeight.w500,
             fontSize: 14,
@@ -159,7 +160,7 @@ class _GamesPageState extends State<GamesPage> {
                         onPressed: () => _showPracticeTip(first: false),
                         icon: const Icon(Icons.info_outline_rounded),
                         color: const Color(0xFFDF9548),
-                        tooltip: 'Про учебные монеты',
+                        tooltip: 'О наградах за практику',
                       ),
                     ],
                   ),
@@ -176,8 +177,10 @@ class _GamesPageState extends State<GamesPage> {
                   ),
                   const SizedBox(height: 10),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5EC),
                       borderRadius: BorderRadius.circular(12),
@@ -245,19 +248,33 @@ class _PracticeDayCompleteCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.workspace_premium_rounded,
-              color: Color(0xFF1B6943), size: 30),
+          const Icon(
+            Icons.workspace_premium_rounded,
+            color: Color(0xFF1B6943),
+            size: 30,
+          ),
           const SizedBox(height: 4),
-          Text('Отличная практика!',
-              style: AppFonts.rubik(fontWeight: FontWeight.w700, fontSize: 16,
-                  color: const Color(0xFF1B6943))),
+          Text(
+            'Отличная практика!',
+            style: AppFonts.rubik(
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: const Color(0xFF1B6943),
+            ),
+          ),
           const SizedBox(height: 4),
-          Text('Ты потренировал бюджет, накопления и покупки. '
-              'На следующем игровом дне откроется уровень $nextLevel: '
-              'меньше свободных монет и больше условий.',
-              textAlign: TextAlign.center,
-              style: AppFonts.rubik(fontWeight: FontWeight.w500, fontSize: 12,
-                  height: 1.3, color: const Color(0xFF4A4643))),
+          Text(
+            'Ты потренировал бюджет, накопления и покупки. '
+            'На следующем игровом дне откроется уровень $nextLevel: '
+            'меньше свободных монет и больше условий.',
+            textAlign: TextAlign.center,
+            style: AppFonts.rubik(
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+              height: 1.3,
+              color: const Color(0xFF4A4643),
+            ),
+          ),
           if (onBack != null) ...[
             const SizedBox(height: 10),
             TextButton.icon(

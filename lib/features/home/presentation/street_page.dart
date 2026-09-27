@@ -24,6 +24,7 @@ class StreetPage extends StatelessWidget {
     this.onOpenTask,
     this.onOpenResults,
     this.onChooseNextGoal,
+    this.onOpenHelp,
   });
 
   final GameController controller;
@@ -34,6 +35,7 @@ class StreetPage extends StatelessWidget {
   final VoidCallback? onOpenTask;
   final VoidCallback? onOpenResults;
   final VoidCallback? onChooseNextGoal;
+  final VoidCallback? onOpenHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +84,38 @@ class StreetPage extends StatelessWidget {
           onOpenGames: onOpenGames,
           onOpenTask: onOpenTask,
           onOpenResults: onOpenResults,
+        ),
+        Positioned(
+          left: 14,
+          top: 106,
+          child: Semantics(
+            button: true,
+            label: 'Помощь',
+            child: Material(
+              color: Colors.white,
+              shape: const CircleBorder(
+                side: BorderSide(color: Color(0xFF1B6943), width: 1.5),
+              ),
+              child: InkWell(
+                onTap: onOpenHelp,
+                customBorder: const CircleBorder(),
+                child: const SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: Text(
+                      '?',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1B6943),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
       hits: [
@@ -211,7 +245,9 @@ class _StreetBottomPanel extends StatelessWidget {
         final p = controller.profile;
         final phase = p.periodPhase;
         final done = PracticeCatalog.completedIds(p.periodPracticeCompletedIds);
-        final exercise = PracticeCatalog.nextIncomplete(p.periodPracticeCompletedIds);
+        final exercise = PracticeCatalog.nextIncomplete(
+          p.periodPracticeCompletedIds,
+        );
         final taskDone = p.periodTaskDone || done.isNotEmpty;
 
         // Ближе к панели показателей (top 528 + ~56 ≈ 592).
@@ -309,8 +345,10 @@ class _StreetBottomPanel extends StatelessWidget {
               const Spacer(),
               if (taskDone)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4B946A).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
