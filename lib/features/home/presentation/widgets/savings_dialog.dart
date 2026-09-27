@@ -12,7 +12,13 @@ Future<void> showSavingsDialog(
   BuildContext context,
   GameController controller, {
   bool startWithdraw = false,
+  VoidCallback? onChooseNextGoal,
 }) async {
+  if (controller.profile.isGoalComplete) {
+    final choseNext = await _showGoalCompleteDialog(context, controller);
+    if (choseNext && context.mounted) onChooseNextGoal?.call();
+    return;
+  }
   final result = await showDialog<SavingsMoveResult>(
     context: context,
     builder: (ctx) => SavingsDialog(
@@ -21,6 +27,11 @@ Future<void> showSavingsDialog(
     ),
   );
   if (result == null || !context.mounted) return;
+  if (result.ok && controller.profile.isGoalComplete) {
+    final choseNext = await _showGoalCompleteDialog(context, controller);
+    if (choseNext && context.mounted) onChooseNextGoal?.call();
+    return;
+  }
   await showDialog<void>(
     context: context,
     builder: (c2) => Dialog(
@@ -79,6 +90,70 @@ Future<void> showSavingsDialog(
       ),
     ),
   );
+}
+
+Future<bool> _showGoalCompleteDialog(
+  BuildContext context,
+  GameController controller,
+) async {
+  final title = controller.profile.goalTitle;
+  final result = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => Dialog(
+      backgroundColor: const Color(0xFFFEF7E6),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Color(0xFF1B6943), width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.celebration_rounded,
+                color: Color(0xFFDF9548), size: 50),
+            const SizedBox(height: 10),
+            Text('Цель достигнута!',
+                style: AppFonts.rubik(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
+                  color: const Color(0xFF1B6943),
+                )),
+            const SizedBox(height: 8),
+            Text('Ты накопил(а) на «$title». Получи цель и выбери следующую.',
+                textAlign: TextAlign.center,
+                style: AppFonts.rubik(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  height: 1.35,
+                  color: const Color(0xFF4A4643),
+                )),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  final claimed = await controller.claimCompletedGoal();
+                  if (ctx.mounted && claimed.ok) Navigator.pop(ctx, true);
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF4B946A),
+                  minimumSize: const Size.fromHeight(46),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Получить и выбрать цель',
+                    style: AppFonts.rubik(
+                        fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  return result ?? false;
 }
 
 Future<void> showAvailableBottomSheet(

@@ -36,9 +36,11 @@ class GoalOption {
 
 /// Экран «На что ты хочешь накопить» — 1:1 с макетом `4 экран.svg`.
 class GoalsPage extends StatefulWidget {
-  const GoalsPage({super.key, this.onGoalConfirmed});
+  const GoalsPage({super.key, this.onGoalConfirmed, this.title, this.onBack});
 
   final ValueChanged<GoalOption>? onGoalConfirmed;
+  final String? title;
+  final VoidCallback? onBack;
 
   /// Координаты из SVG: карточка origin (10|201, 217+row*199).
   static const goals = <GoalOption>[
@@ -181,7 +183,7 @@ class _GoalsPageState extends State<GoalsPage> {
                           left: 24,
                           right: 24,
                           child: Text(
-                            'На что ты хочешь накопить?',
+                            widget.title ?? 'На что ты хочешь накопить?',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.rubik(
                               fontWeight: FontWeight.w700,
@@ -192,6 +194,16 @@ class _GoalsPageState extends State<GoalsPage> {
                             ),
                           ),
                         ),
+                        if (widget.onBack != null)
+                          Positioned(
+                            left: 18,
+                            top: 110,
+                            child: IconButton(
+                              onPressed: widget.onBack,
+                              icon: const Icon(Icons.arrow_back_rounded),
+                              color: AppColors.green,
+                            ),
+                          ),
                         for (var i = 0; i < GoalsPage.goals.length; i++)
                           Positioned(
                             left: i.isEven

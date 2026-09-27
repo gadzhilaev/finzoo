@@ -8,6 +8,7 @@ import '../../../core/assets/app_assets.dart';
 import '../../../core/profile/budget_plan.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../home/presentation/book_page.dart';
+import '../../home/presentation/adult_page.dart';
 import '../../home/presentation/budget_plan_page.dart';
 import '../../home/presentation/financial_task_page.dart';
 import '../../home/presentation/games_page.dart';
@@ -39,6 +40,8 @@ enum _WelcomeStep {
   budget,
   task,
   results,
+  goals,
+  adult,
 }
 
 class WelcomePage extends StatefulWidget {
@@ -258,6 +261,20 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
 
   void _goToResults() => setState(() => _step = _WelcomeStep.results);
 
+  void _goToGoalPicker() => setState(() => _step = _WelcomeStep.goals);
+
+  Future<void> _chooseNextGoal(GoalOption goal) async {
+    final price = int.tryParse(goal.price.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+    await _game.chooseGoal(
+      title: goal.title.replaceAll('\n', ' '),
+      price: price,
+      imageAsset: goal.imageAsset,
+    );
+    if (mounted) _goToStreetOnly();
+  }
+
+  void _goToAdult() => setState(() => _step = _WelcomeStep.adult);
+
 
   @override
   Widget build(BuildContext context) {
@@ -290,6 +307,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           onOpenBudget: _goToBudget,
           onOpenTask: _goToTask,
           onOpenResults: _goToResults,
+          onChooseNextGoal: _goToGoalPicker,
         ),
         _WelcomeStep.budget => BudgetPlanPage(
           key: const ValueKey('budget'),
@@ -308,6 +326,18 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           key: const ValueKey('results'),
           controller: _game,
           onNextPeriod: () => setState(() => _step = _WelcomeStep.budget),
+        ),
+        _WelcomeStep.goals => GoalsPage(
+          key: const ValueKey('goals'),
+          title: 'Выбери новую цель',
+          onBack: _goToStreetOnly,
+          onGoalConfirmed: _chooseNextGoal,
+        ),
+        _WelcomeStep.adult => AdultPage(
+          key: const ValueKey('adult'),
+          controller: _game,
+          onBack: _goToStreetOnly,
+          onResetDone: () => setState(() => _step = _WelcomeStep.play),
         ),
         _WelcomeStep.house => HousePage(
           key: const ValueKey('house'),
@@ -347,6 +377,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           onOpenHouse: _goToHouse,
           onOpenGames: _goToGames,
           onOpenBudget: _goToBudget,
+          onOpenAdult: _goToAdult,
         ),
         _ => _buildProfileSteps(),
       },

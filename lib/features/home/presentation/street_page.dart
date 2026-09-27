@@ -23,6 +23,7 @@ class StreetPage extends StatelessWidget {
     this.onOpenBudget,
     this.onOpenTask,
     this.onOpenResults,
+    this.onChooseNextGoal,
   });
 
   final GameController controller;
@@ -32,6 +33,7 @@ class StreetPage extends StatelessWidget {
   final VoidCallback? onOpenBudget;
   final VoidCallback? onOpenTask;
   final VoidCallback? onOpenResults;
+  final VoidCallback? onChooseNextGoal;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +51,11 @@ class StreetPage extends StatelessWidget {
         ),
         _StreetGoalSavingsCard(
           controller: controller,
-          onOpenSavings: () => showSavingsDialog(context, controller),
+          onOpenSavings: () => showSavingsDialog(
+            context,
+            controller,
+            onChooseNextGoal: onChooseNextGoal,
+          ),
         ),
         ListenableBuilder(
           listenable: controller,
@@ -410,4 +416,3 @@ class _PrimaryBtn extends StatelessWidget {
     );
   }
 }
-

@@ -34,6 +34,7 @@ class MessagesPage extends StatefulWidget {
     this.onOpenHouse,
     this.onOpenGames,
     this.onOpenBudget,
+    this.onOpenAdult,
   });
 
   final GameController controller;
@@ -42,6 +43,7 @@ class MessagesPage extends StatefulWidget {
   final VoidCallback? onOpenHouse;
   final VoidCallback? onOpenGames;
   final VoidCallback? onOpenBudget;
+  final VoidCallback? onOpenAdult;
 
   @override
   State<MessagesPage> createState() => _MessagesPageState();
@@ -179,8 +181,9 @@ class _MessagesPageState extends State<MessagesPage> {
                     ),
                   ),
                   IconButton(
-                    onPressed: widget.onOpenBook,
-                    icon: const Icon(Icons.menu_book_rounded),
+                    onPressed: widget.onOpenAdult,
+                    tooltip: 'Для взрослого',
+                    icon: const Icon(Icons.admin_panel_settings_outlined),
                     color: const Color(0xFF1B6943),
                   ),
                 ],
