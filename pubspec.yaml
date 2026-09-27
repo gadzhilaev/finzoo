@@ -19,6 +19,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_native_splash: ^2.4.8
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -30,6 +31,7 @@ flutter:
     - assets/images/house_inv/
     - assets/images/house_inv_clothes/
     - assets/images/house_inv_shower/
+    - assets/images/wardrobe/
     - assets/videos/
   fonts:
     - family: Rubik
@@ -45,8 +47,20 @@ flutter:
 
 flutter_native_splash:
   color: "#FEFCF4"
+  image: assets/images/splash_logo.png
   android: true
   ios: true
   web: false
   android_12:
     color: "#FEFCF4"
+    image: assets/images/splash_logo.png
+    icon_background_color: "#FEFCF4"
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/app_icon.png
+  adaptive_icon_background: "#FFFAEE"
+  adaptive_icon_foreground: assets/images/app_icon.png
+  remove_alpha_ios: true
+  background_color_ios: "#FFFAEE"
