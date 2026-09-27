@@ -9,7 +9,7 @@ import 'wardrobe_catalog.dart';
 /// Единый способ для дома и улицы:
 /// — ничего: [WardrobeCatalog.baseAsset];
 /// — только одежда / только аксессуар: целый исходный SVG вещи;
-/// — оба слота: целый SVG одежды + векторный слой аксессуара.
+/// — оба слота: целый SVG одежды + слой аксессуара.
 ///
 /// Горизонталь: ось туловища ([WardrobeCatalog.bodyAnchorX]), не bbox с хвостом.
 /// Не складывает две полные белки и не использует растровые вырезки.
@@ -87,6 +87,24 @@ class FinzoAvatar extends StatelessWidget {
     final bodyItem = body!;
     final headItem = head!;
 
+    // В исходнике очков оправа не отделена от меха отдельными path. Вместо
+    // самодельной круглой оправы используем точно тот же участок исходного
+    // SVG: прямоугольник покрывает только лицо и очки, не добавляя вторую
+    // белку или часть одежды поверх комплекта.
+    if (headItem.shopKey == 'c3') {
+      return Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
+        children: [
+          _svg(bodyItem.fullAsset),
+          ClipPath(
+            clipper: const _GogglesSourceClipper(),
+            child: _svg(headItem.fullAsset),
+          ),
+        ],
+      );
+    }
+
     if (headItem.accessoryLayerReady &&
         headItem.accessoryLayerAsset != null) {
       return Stack(
@@ -113,4 +131,25 @@ class FinzoAvatar extends StatelessWidget {
       alignment: Alignment.center,
     );
   }
+}
+
+/// Область исходной оправы `Group 102.svg` на полотне 151×177.
+class _GogglesSourceClipper extends CustomClipper<Path> {
+  const _GogglesSourceClipper();
+
+  @override
+  Path getClip(Size size) {
+    const source = Rect.fromLTWH(4, 59, 94, 37);
+    final sx = size.width / WardrobeCatalog.canvasW;
+    final sy = size.height / WardrobeCatalog.canvasH;
+    return Path()..addRect(Rect.fromLTWH(
+      source.left * sx,
+      source.top * sy,
+      source.width * sx,
+      source.height * sy,
+    ));
+  }
+
+  @override
+  bool shouldReclip(covariant _GogglesSourceClipper oldClipper) => false;
 }
