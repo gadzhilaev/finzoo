@@ -220,13 +220,17 @@ Future<void> showAvailableBottomSheet(
                   ),
                 ),
                 const SizedBox(height: 14),
+                if (p.periodIndex > 1) ...[
+                  _MoneyLine(
+                    label: 'Осталось со вчера',
+                    value: '${p.carryoverAvailable} ₽',
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 _MoneyLine(
-                  label: 'Осталось со вчера',
-                  value: '${p.carryoverAvailable} ₽',
-                ),
-                const SizedBox(height: 8),
-                _MoneyLine(
-                  label: 'Получено сегодня',
+                  label: p.periodIndex > 1
+                      ? 'Получено сегодня'
+                      : 'Получено на день',
                   value: '$income ₽',
                   hint: incomeLabel,
                 ),
