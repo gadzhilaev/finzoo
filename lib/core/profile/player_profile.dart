@@ -208,10 +208,10 @@ class PlayerProfile {
     return PetGrowthStage.little;
   }
 
-  /// Визуальный рост сохраняет одну и ту же композицию одежды и аксессуаров.
+  /// Визуальный рост: сильнее разница стадий, чтобы на демо было видно.
   double get growthVisualScale => switch (growthStage) {
-    PetGrowthStage.little => 0.82,
-    PetGrowthStage.growing => 0.91,
+    PetGrowthStage.little => 0.72,
+    PetGrowthStage.growing => 0.88,
     PetGrowthStage.confident => 1.0,
   };
 

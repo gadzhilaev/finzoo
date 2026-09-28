@@ -168,7 +168,7 @@ class _GogglesSourceClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant _GogglesSourceClipper oldClipper) => false;
 }
 
-/// Короткая подпись стадии, которую ребёнок видит рядом с питомцем.
+/// Подпись стадии роста: цвет, сегменты и тап → обучение.
 class FinzoGrowthChip extends StatelessWidget {
   const FinzoGrowthChip({super.key, required this.profile, this.onTap});
 
@@ -178,37 +178,59 @@ class FinzoGrowthChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stage = profile.growthStage;
-    final icon = switch (stage) {
-      PetGrowthStage.little => Icons.looks_one_rounded,
-      PetGrowthStage.growing => Icons.looks_two_rounded,
-      PetGrowthStage.confident => Icons.looks_3_rounded,
+    final accent = switch (stage) {
+      PetGrowthStage.little => const Color(0xFFDF9548),
+      PetGrowthStage.growing => const Color(0xFF4B946A),
+      PetGrowthStage.confident => const Color(0xFF1B6943),
+    };
+    final filled = switch (stage) {
+      PetGrowthStage.little => 1,
+      PetGrowthStage.growing => 2,
+      PetGrowthStage.confident => 3,
     };
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFEF7E6),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF1B6943), width: 1.2),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: const Color(0xFF1B6943)),
-              const SizedBox(width: 3),
-              Text(
-                stage.title.replaceFirst(' Finzo', ''),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1B6943),
+        borderRadius: BorderRadius.circular(14),
+        child: Semantics(
+          button: true,
+          label: 'Уровень ${stage.title}. Открыть подсказку',
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 36),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF7E6),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: accent, width: 1.6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 1; i <= 3; i++) ...[
+                  if (i > 1) const SizedBox(width: 3),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: i <= filled
+                          ? accent
+                          : accent.withValues(alpha: 0.22),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 7),
+                Text(
+                  stage.title.replaceFirst(' Finzo', ''),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
