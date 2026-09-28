@@ -18,6 +18,7 @@ class HubHudOverlay extends StatelessWidget {
     this.coverHeaderLabels = true,
     this.showStreetHeaderIcons = false,
     this.onCompleteTask,
+    this.onOpenAdult,
     this.satietyPercentLeft = 148,
     this.moodPercentLeft = 325,
     this.statsPercentTop = 548,
@@ -34,6 +35,9 @@ class HubHudOverlay extends StatelessWidget {
   /// Улица: логотип и огонь рисуем оверлеем (в SVG вырезаны).
   final bool showStreetHeaderIcons;
   final VoidCallback? onCompleteTask;
+
+  /// Долгое нажатие на имя → раздел для взрослого (с примером в welcome).
+  final VoidCallback? onOpenAdult;
 
   final double satietyPercentLeft;
   final double moodPercentLeft;
@@ -91,52 +95,60 @@ class HubHudOverlay extends StatelessWidget {
             if (showStreetHeaderIcons)
               Positioned(
                 left: 14,
-                top: 65.4,
+                top: 58,
                 width: 200,
-                height: 27,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset(
-                      AppAssets.streetLogo,
-                      width: 24.32,
-                      height: 26.96,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(width: headerGap),
-                    Expanded(
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppFonts.rubik(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                          height: 1,
-                          color: AppColors.green,
+                height: 40,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onLongPress: onOpenAdult,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        AppAssets.streetLogo,
+                        width: 24.32,
+                        height: 26.96,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(width: headerGap),
+                      Expanded(
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppFonts.rubik(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            height: 1,
+                            color: AppColors.green,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               )
             else
               Positioned(
                 left: 50,
-                top: 65.4,
+                top: 58,
                 width: 165,
-                height: 27,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppFonts.rubik(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                      height: 1,
-                      color: AppColors.green,
+                height: 40,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onLongPress: onOpenAdult,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppFonts.rubik(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        height: 1,
+                        color: AppColors.green,
+                      ),
                     ),
                   ),
                 ),

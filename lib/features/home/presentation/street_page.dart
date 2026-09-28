@@ -7,7 +7,9 @@ import '../../../core/theme/app_fonts.dart';
 import '../../../core/wardrobe/finzo_avatar.dart';
 import 'growth_guide_page.dart';
 import 'practice/practice_catalog.dart';
+import 'widgets/day_history_sheet.dart';
 import 'widgets/hub_hud_overlay.dart';
+import 'widgets/money_tips_sheet.dart';
 import 'widgets/pet_stats_panel.dart';
 import 'widgets/savings_dialog.dart';
 import 'widgets/street_sky_layer.dart';
@@ -25,6 +27,7 @@ class StreetPage extends StatelessWidget {
     this.onOpenTask,
     this.onOpenResults,
     this.onChooseNextGoal,
+    this.onOpenAdult,
   });
 
   final GameController controller;
@@ -35,6 +38,7 @@ class StreetPage extends StatelessWidget {
   final VoidCallback? onOpenTask;
   final VoidCallback? onOpenResults;
   final VoidCallback? onChooseNextGoal;
+  final VoidCallback? onOpenAdult;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +53,7 @@ class StreetPage extends StatelessWidget {
           balanceTop: 221,
           coverHeaderLabels: false,
           showStreetHeaderIcons: true,
+          onOpenAdult: onOpenAdult,
         ),
         _StreetGoalSavingsCard(
           controller: controller,
@@ -105,26 +110,26 @@ class StreetPage extends StatelessWidget {
       ],
       hits: [
         SvgHitArea(
-          left: 17,
-          top: 447,
-          width: 45,
-          height: 45,
+          left: 14,
+          top: 444,
+          width: 52,
+          height: 52,
           semanticsLabel: 'Дом',
           onTap: () => onOpenHouse?.call(),
         ),
         SvgHitArea(
-          left: 328.5,
-          top: 387.5,
-          width: 44,
-          height: 44,
+          left: 324,
+          top: 383,
+          width: 52,
+          height: 52,
           semanticsLabel: 'Сообщения',
           onTap: () => onOpenMessages?.call(),
         ),
         SvgHitArea(
-          left: 328.5,
-          top: 447.5,
-          width: 44,
-          height: 44,
+          left: 324,
+          top: 443,
+          width: 52,
+          height: 52,
           semanticsLabel: 'Игры',
           onTap: () => onOpenGames?.call(),
         ),
@@ -246,6 +251,7 @@ class _StreetBottomPanel extends StatelessWidget {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: _panelBody(
+                context: context,
                 phase: phase,
                 dayIndex: p.periodIndex,
                 exerciseTitle: exercise.title,
@@ -259,6 +265,7 @@ class _StreetBottomPanel extends StatelessWidget {
   }
 
   Widget _panelBody({
+    required BuildContext context,
     required PeriodPhase phase,
     required int dayIndex,
     required String exerciseTitle,
@@ -288,6 +295,24 @@ class _StreetBottomPanel extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _PrimaryBtn(label: 'План бюджета', onTap: onOpenBudget),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _SecondaryBtn(
+                    label: 'Подсказки',
+                    onTap: () => showMoneyTipsSheet(context),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SecondaryBtn(
+                    label: 'История',
+                    onTap: () => showDayHistorySheet(context, controller),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       );
@@ -302,12 +327,17 @@ class _StreetBottomPanel extends StatelessWidget {
               'День $dayIndex закончился',
               style: AppFonts.rubik(
                 fontWeight: FontWeight.w700,
-                fontSize: 15,
+                fontSize: 16,
                 color: const Color(0xFF1B6943),
               ),
             ),
             const SizedBox(height: 10),
             _PrimaryBtn(label: 'Как прошёл день', onTap: onOpenResults),
+            const SizedBox(height: 8),
+            _SecondaryBtn(
+              label: 'История дня',
+              onTap: () => showDayHistorySheet(context, controller),
+            ),
           ],
         ),
       );
@@ -323,7 +353,7 @@ class _StreetBottomPanel extends StatelessWidget {
                 'День с Finzo · $dayIndex',
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w600,
-                  fontSize: 12,
+                  fontSize: 13,
                   color: const Color(0xFF5B4300),
                 ),
               ),
@@ -357,7 +387,7 @@ class _StreetBottomPanel extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppFonts.rubik(
               fontWeight: FontWeight.w700,
-              fontSize: 15,
+              fontSize: 16,
               color: const Color(0xFF1B6943),
             ),
           ),
@@ -368,7 +398,7 @@ class _StreetBottomPanel extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF1B6943),
                 side: const BorderSide(color: Color(0xFF1B6943), width: 1.5),
-                minimumSize: const Size.fromHeight(44),
+                minimumSize: const Size.fromHeight(48),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -377,12 +407,30 @@ class _StreetBottomPanel extends StatelessWidget {
                 'Ещё практика с Finzo',
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w700,
-                  fontSize: 14,
+                  fontSize: 15,
                 ),
               ),
             )
           else
             _PrimaryBtn(label: 'Открыть упражнение', onTap: onOpenTask),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _SecondaryBtn(
+                  label: 'Подсказки',
+                  onTap: () => showMoneyTipsSheet(context),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SecondaryBtn(
+                  label: 'История',
+                  onTap: () => showDayHistorySheet(context, controller),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -432,6 +480,41 @@ class _PrimaryBtn extends StatelessWidget {
                 fontSize: 15,
                 color: Colors.white,
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryBtn extends StatelessWidget {
+  const _SecondaryBtn({required this.label, this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFF1B6943), width: 1.4),
+          ),
+          child: Text(
+            label,
+            style: AppFonts.rubik(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: const Color(0xFF1B6943),
             ),
           ),
         ),

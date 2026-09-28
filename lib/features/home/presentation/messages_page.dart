@@ -185,6 +185,11 @@ class _MessagesPageState extends State<MessagesPage> {
                     tooltip: 'Для взрослого',
                     icon: const Icon(Icons.admin_panel_settings_outlined),
                     color: const Color(0xFF1B6943),
+                    iconSize: 28,
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
                   ),
                 ],
               ),

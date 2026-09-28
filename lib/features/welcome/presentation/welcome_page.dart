@@ -382,6 +382,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           onOpenTask: _goToTask,
           onOpenResults: _goToResults,
           onChooseNextGoal: _goToGoalPicker,
+          onOpenAdult: () => unawaited(_goToAdult()),
         ),
         _WelcomeStep.budget => BudgetPlanPage(
           key: const ValueKey('budget'),
@@ -421,6 +422,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           onOpenBook: _goToBook,
           onOpenResults: _goToResults,
           onChooseNextGoal: _goToGoalPicker,
+          onOpenAdult: () => unawaited(_goToAdult()),
         ),
         _WelcomeStep.book => BookPage(
           key: const ValueKey('book'),

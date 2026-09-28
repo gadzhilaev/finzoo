@@ -99,6 +99,14 @@ class AdultPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
             children: [
               _Card(
+                title: 'Как сюда попасть',
+                child: Text(
+                  'Долгое нажатие на имя ребёнка на улице или в доме, '
+                  'либо иконка щита в «Сообщениях». Далее пример 8 + 7.',
+                  style: _body,
+                ),
+              ),
+              _Card(
                 title: 'Профиль ребёнка',
                 child: Text(
                   '${p.name.isEmpty ? 'Игрок' : p.name}, ${p.age} лет\n'
