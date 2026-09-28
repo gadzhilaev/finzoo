@@ -1,0 +1,4 @@
+storePassword=<from private/finzoo/finzo-key.properties>
+keyPassword=<from private/finzoo/finzo-key.properties>
+keyAlias=finzo
+storeFile=upload-keystore.jks
