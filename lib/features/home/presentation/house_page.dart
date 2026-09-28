@@ -10,6 +10,7 @@ import '../../../core/theme/app_fonts.dart';
 import '../../../core/wardrobe/finzo_avatar.dart';
 import '../../../core/wardrobe/wardrobe_catalog.dart';
 import 'growth_guide_page.dart';
+import 'widgets/finzo_feedback.dart';
 import 'widgets/hub_hud_overlay.dart';
 import 'widgets/pet_stats_panel.dart';
 import 'widgets/savings_dialog.dart';
@@ -25,6 +26,7 @@ class HousePage extends StatefulWidget {
     this.onOpenBook,
     this.onOpenResults,
     this.onChooseNextGoal,
+    this.onOpenAdult,
   });
 
   final GameController controller;
@@ -33,6 +35,7 @@ class HousePage extends StatefulWidget {
   final VoidCallback? onOpenBook;
   final VoidCallback? onOpenResults;
   final VoidCallback? onChooseNextGoal;
+  final VoidCallback? onOpenAdult;
 
   @override
   State<HousePage> createState() => _HousePageState();
@@ -314,24 +317,24 @@ class _HousePageState extends State<HousePage> {
 
     if (widget.controller.profile.periodPhase != PeriodPhase.playing) {
       if (!mounted) return;
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Сначала план',
-        body: 'Подтверди план бюджета на улице — потом можно покупать.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: 'Покупка пока недоступна.',
+        why: 'День начинается с плана бюджета: нужное, желания и копилка.',
+        next: 'Открой улицу и нажми «План бюджета».',
       );
       return;
     }
 
     if (balance < shop.price) {
       if (!mounted) return;
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Не хватает монет',
-        body: 'Нужно ${shop.price} ₽. Сейчас доступно $balance ₽.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: '«${shop.title}» не куплена.',
+        why: 'Нужно ${shop.price} ₽, а доступно только $balance ₽.',
+        next: 'Заработай на упражнении или купи что-то дешевле.',
       );
       return;
     }
@@ -358,12 +361,12 @@ class _HousePageState extends State<HousePage> {
       quantity: 1,
     );
     if (!bought && mounted) {
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Не куплено',
-        body: 'Проверь баланс или план периода.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: 'Вещь не добавилась в шкаф.',
+        why: 'Баланс или план дня не позволяют эту покупку.',
+        next: 'Проверь «Доступно» и категории плана.',
       );
       return;
     }
@@ -396,24 +399,24 @@ class _HousePageState extends State<HousePage> {
 
     if (widget.controller.profile.periodPhase != PeriodPhase.playing) {
       if (!mounted) return;
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Сначала план',
-        body: 'Подтверди план бюджета на улице — потом можно покупать.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: 'Покупка пока недоступна.',
+        why: 'День начинается с плана бюджета: нужное, желания и копилка.',
+        next: 'Открой улицу и нажми «План бюджета».',
       );
       return;
     }
 
     if (maxBuy <= 0) {
       if (!mounted) return;
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Не хватает монет',
-        body: 'Нужно ${shop.price} ₽. Сейчас доступно $balance ₽.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: '«${shop.title}» не куплена.',
+        why: 'Нужно ${shop.price} ₽, а доступно только $balance ₽.',
+        next: 'Сделай упражнение или выбери товар дешевле.',
       );
       return;
     }
@@ -462,12 +465,12 @@ class _HousePageState extends State<HousePage> {
       quantity: category == HouseItemCategory.kitchen ? quantity : 1,
     );
     if (!bought && mounted) {
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Не куплено',
-        body: 'Проверь баланс или план периода.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: 'Покупка не прошла.',
+        why: 'Баланс или план дня не позволяют эту покупку.',
+        next: 'Проверь «Доступно» и категории плана.',
       );
     }
   }
@@ -496,12 +499,12 @@ class _HousePageState extends State<HousePage> {
       index: index,
     );
     if (!applied && mounted) {
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Не вышло',
-        body: 'Не удалось применить предмет. Попробуй ещё раз.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: 'Предмет не применился.',
+        why: 'Возможно, его уже нет в инвентаре.',
+        next: 'Купи ещё раз или выбери другой предмет.',
       );
     }
   }
@@ -514,12 +517,12 @@ class _HousePageState extends State<HousePage> {
 
     if (widget.controller.isFullyFed) {
       if (!mounted) return;
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Finzo сыт',
-        body: 'Сытость полная — еду пока применять нельзя.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: 'Еда не потратилась.',
+        why: 'Сытость уже полная — больше кормить не нужно.',
+        next: 'Загляни позже или займись уходом и целью.',
       );
       return;
     }
@@ -535,12 +538,12 @@ class _HousePageState extends State<HousePage> {
 
     final used = await widget.controller.useKitchenItem(index);
     if (!used && mounted && widget.controller.isFullyFed) {
-      await _showHouseDialog(
+      await showFinzoFeedback(
+        context,
         title: 'Finzo сыт',
-        body: 'Сытость полная — еду пока применять нельзя.',
-        asset: asset,
-        confirmLabel: 'Понятно',
-        showCancel: false,
+        what: 'Еда не потратилась.',
+        why: 'Сытость уже полная — больше кормить не нужно.',
+        next: 'Загляни позже или займись уходом и целью.',
       );
     }
   }
@@ -729,6 +732,7 @@ class _HousePageState extends State<HousePage> {
           balanceTop: 130,
           coverHeaderLabels: false,
           showStreetHeaderIcons: true,
+          onOpenAdult: widget.onOpenAdult,
         ),
         PetStatsPanel(
           controller: widget.controller,
@@ -793,26 +797,26 @@ class _HousePageState extends State<HousePage> {
       ],
       hits: [
         SvgHitArea(
-          left: 17.5,
-          top: 448.5,
-          width: 44,
-          height: 44,
+          left: 14,
+          top: 444,
+          width: 52,
+          height: 52,
           semanticsLabel: 'Улица',
           onTap: () => widget.onOpenStreet?.call(),
         ),
         SvgHitArea(
-          left: 331.5,
-          top: 388.5,
-          width: 44,
-          height: 44,
+          left: 327,
+          top: 384,
+          width: 52,
+          height: 52,
           semanticsLabel: 'Сообщения',
           onTap: () => widget.onOpenMessages?.call(),
         ),
         SvgHitArea(
-          left: 331.5,
-          top: 448.5,
-          width: 44,
-          height: 44,
+          left: 327,
+          top: 444,
+          width: 52,
+          height: 52,
           semanticsLabel: 'Книга',
           onTap: () => widget.onOpenBook?.call(),
         ),
@@ -833,26 +837,26 @@ class _HousePageState extends State<HousePage> {
           onTap: _openSavedSheet,
         ),
         SvgHitArea(
-          left: 12.5,
-          top: 607.5,
-          width: 70,
-          height: 42,
+          left: 10,
+          top: 604,
+          width: 76,
+          height: 48,
           semanticsLabel: 'Кухня',
           onTap: () => _selectCategory(HouseItemCategory.kitchen),
         ),
         SvgHitArea(
-          left: 88.5,
-          top: 607.5,
-          width: 70,
-          height: 42,
+          left: 86,
+          top: 604,
+          width: 76,
+          height: 48,
           semanticsLabel: 'Одежда',
           onTap: () => _selectCategory(HouseItemCategory.clothes),
         ),
         SvgHitArea(
-          left: 164.5,
-          top: 607.5,
-          width: 70,
-          height: 42,
+          left: 162,
+          top: 604,
+          width: 76,
+          height: 48,
           semanticsLabel: 'Душ',
           onTap: () => _selectCategory(HouseItemCategory.shower),
         ),
