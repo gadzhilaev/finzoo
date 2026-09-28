@@ -71,10 +71,12 @@ class _PetSetupPageState extends State<PetSetupPage> {
     );
     return Scaffold(
       backgroundColor: const Color(0xFFFEFCF4),
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: const Color(0xFFFEFCF4),
         foregroundColor: const Color(0xFF1B6943),
         elevation: 0,
+        toolbarHeight: 48,
         leading: IconButton(
           onPressed: widget.onBack,
           icon: const Icon(Icons.arrow_back_rounded),
@@ -91,11 +93,11 @@ class _PetSetupPageState extends State<PetSetupPage> {
       body: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 6, 18, 18),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Column(
             children: [
               Text('Как зовут твою белку?', style: _title),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               TextField(
                 controller: _name,
                 inputFormatters: [LengthLimitingTextInputFormatter(16)],
@@ -103,6 +105,11 @@ class _PetSetupPageState extends State<PetSetupPage> {
                 textAlign: TextAlign.center,
                 style: _title,
                 decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   hintText: 'Finzo',
                   filled: true,
                   fillColor: Colors.white,
@@ -112,85 +119,140 @@ class _PetSetupPageState extends State<PetSetupPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               SizedBox(
-                height: 138,
-                child: FinzoAvatar(profile: sample, width: 130, height: 138),
-              ),
-              Text(
-                'Выбери стартовый образ — позже одежду можно менять дома.',
-                textAlign: TextAlign.center,
-                style: _body,
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: GridView.builder(
-                  itemCount: starterLooks.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    childAspectRatio: .92,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
+                height: 108,
+                child: ClipRect(
+                  child: Center(
+                    child: FinzoAvatar(
+                      profile: sample,
+                      width: 100,
+                      height: 108,
+                      // Чуть правее bbox из‑за хвоста, но не до упора в центр оси.
+                      alignBodyAxis: true,
+                      bodyAxisFactor: 0.55,
+                    ),
                   ),
-                  itemBuilder: (_, index) {
-                    final look = starterLooks[index];
-                    final selected = _selected == index;
-                    final preview = PlayerProfile.fresh().copyWith(
-                      starterBodyKey: look.bodyKey,
-                      starterHeadKey: look.headKey,
-                    );
-                    return Semantics(
-                      button: true,
-                      selected: selected,
-                      label: 'Образ ${look.title}',
-                      child: InkWell(
-                        onTap: () => setState(() => _selected = index),
-                        borderRadius: BorderRadius.circular(14),
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? const Color(0xFFE8F5EC)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: selected
-                                  ? const Color(0xFF1B6943)
-                                  : const Color(0xFFB9D2C2),
-                              width: selected ? 2 : 1,
-                            ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 2, 4, 6),
+                child: Text(
+                  'Выбери стартовый образ — позже одежду можно менять дома.',
+                  textAlign: TextAlign.center,
+                  style: _body,
+                ),
+              ),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      const gap = 8.0;
+                      final cellW = (constraints.maxWidth - gap * 2) / 3;
+                      // Ниже, чем «растянуть на весь экран»: чуть выше квадрата.
+                      var cellH = cellW * 1.12;
+                      final gridH = cellH * 3 + gap * 2;
+                      if (gridH > constraints.maxHeight &&
+                          constraints.maxHeight > 0) {
+                        cellH = (constraints.maxHeight - gap * 2) / 3;
+                      }
+                      final ratio = cellW / cellH;
+                      return SizedBox(
+                        height: cellH * 3 + gap * 2,
+                        width: constraints.maxWidth,
+                        child: GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          itemCount: starterLooks.length,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: ratio,
+                            crossAxisSpacing: gap,
+                            mainAxisSpacing: gap,
                           ),
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: FinzoAvatar(
-                                  profile: preview,
-                                  width: 76,
-                                  height: 84,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
-                                child: Text(
-                                  look.title,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppFonts.rubik(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 11,
-                                    color: const Color(0xFF1B6943),
+                          itemBuilder: (_, index) {
+                            final look = starterLooks[index];
+                            final selected = _selected == index;
+                            final preview = PlayerProfile.fresh().copyWith(
+                              starterBodyKey: look.bodyKey,
+                              starterHeadKey: look.headKey,
+                            );
+                            final avatarH = (cellH - 26).clamp(44.0, 100.0);
+                            final avatarW = avatarH * (151 / 177);
+                            return Semantics(
+                              button: true,
+                              selected: selected,
+                              label: 'Образ ${look.title}',
+                              child: Material(
+                                color: selected
+                                    ? const Color(0xFFE8F5EC)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                child: InkWell(
+                                  onTap: () =>
+                                      setState(() => _selected = index),
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                        color: selected
+                                            ? const Color(0xFF1B6943)
+                                            : const Color(0xFFB9D2C2),
+                                        width: selected ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        2,
+                                        4,
+                                        2,
+                                        2,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Expanded(
+                                            child: ClipRect(
+                                              child: Center(
+                                                child: FinzoAvatar(
+                                                  profile: preview,
+                                                  width: avatarW,
+                                                  height: avatarH,
+                                                  alignBodyAxis: true,
+                                                  bodyAxisFactor: 0.55,
+                                                  fit: BoxFit.contain,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            look.title,
+                                            textAlign: TextAlign.center,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: AppFonts.rubik(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 10,
+                                              color: const Color(0xFF1B6943),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -200,7 +262,7 @@ class _PetSetupPageState extends State<PetSetupPage> {
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF4B946A),
-                    minimumSize: const Size.fromHeight(52),
+                    minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -224,12 +286,12 @@ class _PetSetupPageState extends State<PetSetupPage> {
 
 final _title = AppFonts.rubik(
   fontWeight: FontWeight.w700,
-  fontSize: 17,
+  fontSize: 16,
   color: const Color(0xFF1B6943),
 );
 final _body = AppFonts.rubik(
   fontWeight: FontWeight.w500,
-  fontSize: 13,
-  height: 1.3,
+  fontSize: 12,
+  height: 1.25,
   color: const Color(0xFF4A4643),
 );

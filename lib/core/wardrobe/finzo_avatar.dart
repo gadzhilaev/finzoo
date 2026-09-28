@@ -23,6 +23,7 @@ class FinzoAvatar extends StatelessWidget {
     this.previewHeadKey,
     this.fit = BoxFit.contain,
     this.alignBodyAxis = true,
+    this.bodyAxisFactor = 1.0,
   });
 
   final PlayerProfile profile;
@@ -36,6 +37,10 @@ class FinzoAvatar extends StatelessWidget {
 
   /// Сдвигать так, чтобы ось тела была в центре [width], хвост справа.
   final bool alignBodyAxis;
+
+  /// Доля сдвига по оси тела: `1` — полное центрирование туловища,
+  /// `0` — центр bbox. Для компактных карточек удобно ~0.5–0.6.
+  final double bodyAxisFactor;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +74,7 @@ class FinzoAvatar extends StatelessWidget {
     final dx = WardrobeCatalog.bodyAxisOffsetX(
       displayWidth: width,
       displayHeight: height,
-    );
+    ) * bodyAxisFactor.clamp(0.0, 1.0);
 
     // Без ClipRect: хвост может выйти за правый край бокса (сцена Clip.none).
     return SizedBox(
