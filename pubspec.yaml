@@ -45,15 +45,14 @@ flutter:
         - asset: assets/fonts/Rubik-Bold.ttf
           weight: 700
 
+# Только цвет фона: логотип показываем один раз в Dart SplashPage.
 flutter_native_splash:
   color: "#FEFCF4"
-  image: assets/images/splash_logo.png
   android: true
   ios: true
   web: false
   android_12:
     color: "#FEFCF4"
-    image: assets/images/splash_logo.png
     icon_background_color: "#FEFCF4"
 
 flutter_launcher_icons:
