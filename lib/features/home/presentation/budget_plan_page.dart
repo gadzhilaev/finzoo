@@ -6,6 +6,7 @@ import '../../../core/profile/budget_plan.dart';
 import '../../../core/profile/economy.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../../core/theme/app_fonts.dart';
+import 'widgets/money_tips_sheet.dart';
 
 /// Один экран плана бюджета: необходимое + желания + копилка.
 class BudgetPlanPage extends StatefulWidget {
@@ -110,7 +111,17 @@ class _BudgetPlanPageState extends State<BudgetPlanPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48),
+                  IconButton(
+                    onPressed: () => showMoneyTipsSheet(context),
+                    tooltip: 'Что значат категории',
+                    icon: const Icon(Icons.help_outline_rounded),
+                    color: const Color(0xFF1B6943),
+                    iconSize: 26,
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
+                  ),
                 ],
               ),
               Text(
@@ -118,7 +129,7 @@ class _BudgetPlanPageState extends State<BudgetPlanPage> {
                 textAlign: TextAlign.center,
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w500,
-                  fontSize: 13,
+                  fontSize: 14,
                   color: const Color(0xFF5B4300),
                 ),
               ),
