@@ -170,9 +170,10 @@ class _GogglesSourceClipper extends CustomClipper<Path> {
 
 /// Короткая подпись стадии, которую ребёнок видит рядом с питомцем.
 class FinzoGrowthChip extends StatelessWidget {
-  const FinzoGrowthChip({super.key, required this.profile});
+  const FinzoGrowthChip({super.key, required this.profile, this.onTap});
 
   final PlayerProfile profile;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -182,27 +183,34 @@ class FinzoGrowthChip extends StatelessWidget {
       PetGrowthStage.growing => Icons.looks_two_rounded,
       PetGrowthStage.confident => Icons.looks_3_rounded,
     };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF7E6),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1B6943), width: 1.2),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFF1B6943)),
-          const SizedBox(width: 3),
-          Text(
-            stage.title.replaceFirst(' Finzo', ''),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1B6943),
-            ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFEF7E6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF1B6943), width: 1.2),
           ),
-        ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: const Color(0xFF1B6943)),
+              const SizedBox(width: 3),
+              Text(
+                stage.title.replaceFirst(' Finzo', ''),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1B6943),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

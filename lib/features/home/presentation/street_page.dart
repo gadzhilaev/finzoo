@@ -5,6 +5,7 @@ import '../../../core/profile/budget_plan.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../../core/theme/app_fonts.dart';
 import '../../../core/wardrobe/finzo_avatar.dart';
+import 'growth_guide_page.dart';
 import 'practice/practice_catalog.dart';
 import 'widgets/hub_hud_overlay.dart';
 import 'widgets/pet_stats_panel.dart';
@@ -76,9 +77,18 @@ class StreetPage extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  left: 123,
+                  left: 118,
                   top: 299,
-                  child: FinzoGrowthChip(profile: controller.profile),
+                  width: 150,
+                  child: Center(
+                    child: FinzoGrowthChip(
+                      profile: controller.profile,
+                      onTap: () => GrowthGuidePage.open(
+                        context,
+                        controller.profile,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );

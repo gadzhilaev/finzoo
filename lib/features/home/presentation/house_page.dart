@@ -9,6 +9,7 @@ import '../../../core/profile/house_catalog.dart';
 import '../../../core/theme/app_fonts.dart';
 import '../../../core/wardrobe/finzo_avatar.dart';
 import '../../../core/wardrobe/wardrobe_catalog.dart';
+import 'growth_guide_page.dart';
 import 'widgets/hub_hud_overlay.dart';
 import 'widgets/pet_stats_panel.dart';
 import 'widgets/savings_dialog.dart';
@@ -755,9 +756,18 @@ class _HousePageState extends State<HousePage> {
                   ),
                 ),
                 Positioned(
-                  left: 125,
+                  left: 120,
                   top: 270,
-                  child: FinzoGrowthChip(profile: widget.controller.profile),
+                  width: 156,
+                  child: Center(
+                    child: FinzoGrowthChip(
+                      profile: widget.controller.profile,
+                      onTap: () => GrowthGuidePage.open(
+                        context,
+                        widget.controller.profile,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );
