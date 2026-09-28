@@ -112,16 +112,24 @@ class GoalsPage extends StatefulWidget {
     ),
   ];
 
-  /// Макет Figma: 393 × 943.
-  static const designWidth = 393.0;
-  static const designHeight = 943.0;
+  /// Внутренний макет карточки (координаты картинок/цен).
+  static const cardDesignW = 192.0;
+  static const cardDesignH = 226.0;
 
-  static const cardW = 192.0;
-  static const cardH = 226.0;
-  static const cardLeftEven = 10.0;
-  static const cardLeftOdd = 201.0;
-  static const cardTop0 = 217.0;
-  static const cardRowStep = 199.0;
+  static const designWidth = 393.0;
+  static const designHeight = 820.0;
+
+  /// Чуть компактнее; отрицательный gap съедает прозрачные поля SVG-рамки.
+  /// +15% к базовым 176.4×207.9.
+  static const cardW = 176.4;
+  static const cardH = 207.9;
+  static const cardGapX = -22.0;
+  static const cardGapY = -36.0;
+  static const cardLeftEven =
+      (designWidth - cardW * 2 - cardGapX) / 2;
+  static const cardLeftOdd = cardLeftEven + cardW + cardGapX;
+  static const cardTop0 = 168.0;
+  static const cardRowStep = cardH + cardGapY;
 
   @override
   State<GoalsPage> createState() => _GoalsPageState();
@@ -164,22 +172,23 @@ class _GoalsPageState extends State<GoalsPage> {
                     child: Stack(
                       clipBehavior: Clip.hardEdge,
                       children: [
-                        // Логотип по центру.
+                        // Логотип по центру — компактнее.
                         Positioned(
-                          top: 115,
+                          top: 96,
                           left: 0,
                           right: 0,
                           child: Center(
                             child: SvgPicture.asset(
                               AppAssets.logoIntro,
-                              width: 153,
-                              height: 45,
+                              width: 120,
+                              height: 35,
                               fit: BoxFit.contain,
+                              alignment: Alignment.center,
                             ),
                           ),
                         ),
                         Positioned(
-                          top: 186,
+                          top: 142,
                           left: 24,
                           right: 24,
                           child: Text(
@@ -187,7 +196,7 @@ class _GoalsPageState extends State<GoalsPage> {
                             textAlign: TextAlign.center,
                             style: GoogleFonts.rubik(
                               fontWeight: FontWeight.w700,
-                              fontSize: 21,
+                              fontSize: 20,
                               height: 1.1,
                               letterSpacing: -0.52,
                               color: AppColors.textPrimary,
@@ -196,8 +205,8 @@ class _GoalsPageState extends State<GoalsPage> {
                         ),
                         if (widget.onBack != null)
                           Positioned(
-                            left: 18,
-                            top: 110,
+                            left: 12,
+                            top: 90,
                             child: IconButton(
                               onPressed: widget.onBack,
                               icon: const Icon(Icons.arrow_back_rounded),
@@ -214,18 +223,26 @@ class _GoalsPageState extends State<GoalsPage> {
                                 (i ~/ 2) * GoalsPage.cardRowStep,
                             width: GoalsPage.cardW,
                             height: GoalsPage.cardH,
-                            child: _GoalCard(
-                              goal: GoalsPage.goals[i],
-                              selected: _selectedIndex == i,
-                              onTap: () => setState(() => _selectedIndex = i),
+                            child: FittedBox(
+                              fit: BoxFit.fill,
+                              child: SizedBox(
+                                width: GoalsPage.cardDesignW,
+                                height: GoalsPage.cardDesignH,
+                                child: _GoalCard(
+                                  goal: GoalsPage.goals[i],
+                                  selected: _selectedIndex == i,
+                                  onTap: () =>
+                                      setState(() => _selectedIndex = i),
+                                ),
+                              ),
                             ),
                           ),
                         // «Ок» — из макета (объём + текст).
                         Positioned(
-                          left: 244,
-                          top: 838,
-                          width: 120,
-                          height: 71.45,
+                          left: 252,
+                          top: 700,
+                          width: 108,
+                          height: 64,
                           child: _OkButton(
                             enabled: _selectedIndex != null,
                             onTap: _confirm,
@@ -342,8 +359,8 @@ class _OkButton extends StatelessWidget {
         opacity: enabled ? 1 : 0.45,
         child: SvgPicture.asset(
           AppAssets.okButton,
-          width: 120,
-          height: 71.45,
+          width: 108,
+          height: 64,
           fit: BoxFit.fill,
         ),
       ),
