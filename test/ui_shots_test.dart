@@ -1,8 +1,6 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:finzoo/core/profile/budget_plan.dart';
 import 'package:finzoo/core/profile/economy.dart';
@@ -18,6 +16,8 @@ import 'package:finzoo/features/home/presentation/practice/practice_catalog.dart
 import 'package:finzoo/features/home/presentation/practice/practice_tasks.dart';
 import 'package:finzoo/features/home/presentation/period_results_page.dart';
 import 'package:finzoo/features/home/presentation/widgets/savings_dialog.dart';
+
+import 'support/ui_shot_capture.dart';
 
 class _MemStore extends PlayerProfileStore {
   PlayerProfile? _p;
@@ -62,20 +62,15 @@ GameController _ctrl({
 }
 
 void main() {
-  final binding = TestWidgetsFlutterBinding.ensureInitialized();
-  binding.disableAnimations;
+  TestWidgetsFlutterBinding.ensureInitialized();
   final out = Directory('build/ui_shots')..createSync(recursive: true);
 
   Future<void> shot(WidgetTester tester, String name) async {
-    for (var i = 0; i < 12; i++) {
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byType(RepaintBoundary).first,
+    await captureUiShot(
+      tester,
+      path: '${out.path}/$name.png',
+      settlePumps: 12,
     );
-    final image = await boundary.toImage(pixelRatio: 2);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    File('${out.path}/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
   }
 
   Future<void> pumpPage(WidgetTester tester, Widget page) async {
@@ -93,6 +88,7 @@ void main() {
   // SVG-сцены (улица/дом) снимаем с симулятора — здесь только текстовые экраны.
 
   testWidgets('budget', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpPage(
       tester,
       BudgetPlanPage(
@@ -104,6 +100,7 @@ void main() {
   });
 
   testWidgets('task', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpPage(
       tester,
       FinancialTaskPage(controller: _ctrl(), onDone: () {}),
@@ -112,6 +109,7 @@ void main() {
   });
 
   testWidgets('results', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpPage(
       tester,
       PeriodResultsPage(
@@ -123,6 +121,7 @@ void main() {
   });
 
   testWidgets('savings dialog', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final c = _ctrl();
     await pumpPage(
       tester,
@@ -144,6 +143,7 @@ void main() {
   });
 
   testWidgets('practice hub and tasks', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final c = _ctrl();
     await pumpPage(tester, GamesPage(controller: c, onBack: () {}));
     await shot(tester, 'practice_hub');
@@ -157,6 +157,7 @@ void main() {
   });
 
   testWidgets('book pages 1 2 4 5 last', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final total = BookContent.flatPageCount;
     final shots = <int, String>{
       0: 'sim_book_p1',
@@ -166,7 +167,10 @@ void main() {
       total - 1: 'sim_book_plast',
     };
     for (final e in shots.entries) {
-      await pumpPage(tester, BookPage(startPage: e.key));
+      await pumpPage(
+        tester,
+        BookPage(startPage: e.key, animationsEnabled: false),
+      );
       await shot(tester, e.value);
     }
   });

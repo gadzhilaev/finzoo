@@ -1,15 +1,14 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:finzoo/features/home/presentation/book/book_content.dart';
 import 'package:finzoo/features/home/presentation/book_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/ui_shot_capture.dart';
+
 void main() {
-  final binding = TestWidgetsFlutterBinding.ensureInitialized();
-  binding.disableAnimations;
+  TestWidgetsFlutterBinding.ensureInitialized();
   final out = Directory('build/ui_shots')..createSync(recursive: true);
 
   Future<void> capture(WidgetTester tester, String name, int page) async {
@@ -18,22 +17,19 @@ void main() {
       RepaintBoundary(
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
-          home: BookPage(startPage: page),
+          home: BookPage(startPage: page, animationsEnabled: false),
         ),
       ),
     );
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byType(RepaintBoundary).first,
+    await captureUiShot(
+      tester,
+      path: '${out.path}/$name.png',
+      settlePumps: 20,
     );
-    final image = await boundary.toImage(pixelRatio: 2);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    File('${out.path}/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
   }
 
   testWidgets('capture book pages', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final total = BookContent.flatPageCount;
     await capture(tester, 'sim_book_p1', 0);
     await capture(tester, 'sim_book_p2', 1);

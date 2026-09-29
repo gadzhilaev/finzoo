@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:finzoo/core/profile/budget_plan.dart';
 import 'package:finzoo/core/profile/economy.dart';
@@ -9,8 +8,9 @@ import 'package:finzoo/core/profile/player_profile_store.dart';
 import 'package:finzoo/features/home/presentation/practice/practice_catalog.dart';
 import 'package:finzoo/features/home/presentation/practice/practice_tasks.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/ui_shot_capture.dart';
 
 /// Один кадр за прогон: --dart-define=SHOT_ID=practice_lunch
 void main() {
@@ -34,6 +34,8 @@ void main() {
     );
     final item = PracticeCatalog.byId(id)!;
     await tester.binding.setSurfaceSize(const Size(393, 852));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(
       RepaintBoundary(
         child: MaterialApp(
@@ -42,15 +44,13 @@ void main() {
         ),
       ),
     );
-    for (var i = 0; i < 12; i++) {
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byType(RepaintBoundary).first,
+    final file = await captureUiShot(
+      tester,
+      path: '${out.path}/$id.png',
+      pixelRatio: 1.5,
+      settlePumps: 12,
     );
-    final image = await boundary.toImage(pixelRatio: 1.5);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    File('${out.path}/$id.png').writeAsBytesSync(bytes!.buffer.asUint8List());
+    expect(file.existsSync(), isTrue);
   });
 }
 
