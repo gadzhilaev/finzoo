@@ -51,7 +51,7 @@ Future<void> showMoneyTipsSheet(BuildContext context) {
                 textAlign: TextAlign.center,
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w500,
-                  fontSize: 13,
+                  fontSize: 15,
                   color: BookStyle.body,
                 ),
               ),

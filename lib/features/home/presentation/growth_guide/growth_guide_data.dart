@@ -66,7 +66,7 @@ List<GrowthGuidePageData> buildGrowthGuidePages(String petName) {
         GrowthScoreRule(
           points: 2,
           title: 'Нужное',
-          text: 'Finz поел или получил необходимый уход',
+          text: 'Finzo поел или получил необходимый уход',
           icon: GrowthScoreIcon.care,
         ),
         GrowthScoreRule(

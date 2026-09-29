@@ -124,10 +124,27 @@ class BookLessonCard extends StatelessWidget {
                   '$number',
                   style: AppFonts.rubik(
                     fontWeight: FontWeight.w800,
-                    fontSize: 12 * s,
+                    fontSize: 13 * s,
                     height: 1,
                     color: Colors.white,
                   ),
+                ),
+              ),
+            ),
+            // Текстовая метка тона — не только цвет рамки.
+            Positioned(
+              right: 8 * s,
+              top: 6 * s,
+              child: Text(
+                switch (tone) {
+                  BookCardTone.danger => 'Риск',
+                  BookCardTone.safe => 'Ок',
+                  BookCardTone.mint => 'Совет',
+                },
+                style: AppFonts.rubik(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11 * s,
+                  color: titleColor,
                 ),
               ),
             ),

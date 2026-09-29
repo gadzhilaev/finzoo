@@ -117,8 +117,8 @@ class _StageNode extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppFonts.rubik(
               fontWeight: FontWeight.w800,
-              fontSize: 11,
-              color: BookStyle.green,
+              fontSize: 13,
+              color: selected ? BookStyle.green : BookStyle.counter,
             ),
           ),
         ],
@@ -142,7 +142,7 @@ class GrowthScoreRuleCard extends StatelessWidget {
   const GrowthScoreRuleCard({
     super.key,
     required this.rule,
-    this.petName = 'Finz',
+    this.petName = 'Finzo',
   });
 
   final GrowthScoreRule rule;
@@ -150,7 +150,9 @@ class GrowthScoreRuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = rule.text.replaceAll('Finz', petName);
+    final text = rule.text
+        .replaceAll('Finzo', petName)
+        .replaceAll('Finz', petName);
     final iconData = switch (rule.icon) {
       GrowthScoreIcon.care => Icons.restaurant_rounded,
       GrowthScoreIcon.plan => Icons.account_balance_wallet_outlined,
@@ -203,7 +205,7 @@ class GrowthScoreRuleCard extends StatelessWidget {
                   text,
                   style: AppFonts.rubik(
                     fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                    fontSize: 15,
                     height: 1.3,
                     color: BookStyle.body,
                   ),
@@ -288,7 +290,7 @@ class GrowthStageProgress extends StatelessWidget {
             '$clamped / $nextScore очков',
             style: AppFonts.rubik(
               fontWeight: FontWeight.w700,
-              fontSize: 13,
+              fontSize: 14,
               color: BookStyle.body,
             ),
           ),
@@ -392,7 +394,7 @@ class GrowthHintLine extends StatelessWidget {
       textAlign: TextAlign.center,
       style: AppFonts.rubik(
         fontWeight: FontWeight.w600,
-        fontSize: 13,
+        fontSize: 15,
         height: 1.3,
         color: BookStyle.orange,
       ),

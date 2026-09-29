@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/assets/app_assets.dart';
+import '../../../core/profile/economy.dart';
 import '../../../core/profile/player_profile.dart';
 import '../../../core/theme/app_fonts.dart';
 import '../../../core/wardrobe/finzo_avatar.dart';
@@ -688,7 +689,7 @@ class _SaveBody extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '300 / 2 000',
+                '160 / 800',
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
@@ -699,7 +700,7 @@ class _SaveBody extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: const LinearProgressIndicator(
-                  value: 300 / 2000,
+                  value: 160 / 800,
                   minHeight: 12,
                   backgroundColor: BookStyle.mint,
                   color: BookStyle.arrowGreen,
@@ -709,11 +710,18 @@ class _SaveBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Row(
+        Row(
           children: [
-            Expanded(child: _DayChip(label: 'Сегодня', amount: '+200')),
-            SizedBox(width: 8),
-            Expanded(child: _DayChip(label: 'Завтра', amount: '+300')),
+            Expanded(
+              child: _DayChip(
+                label: 'Карманные',
+                amount: '+${EconomyRules.periodIncome}',
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: _DayChip(label: 'В копилку', amount: '+80'),
+            ),
           ],
         ),
         const SizedBox(height: 12),

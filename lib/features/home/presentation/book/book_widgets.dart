@@ -5,7 +5,6 @@ import '../../../../core/assets/app_assets.dart';
 import '../../../../core/theme/app_fonts.dart';
 import '../../../../core/theme/finzo_book_tokens.dart';
 import 'book_lesson_card.dart';
-import 'book_page_layout.dart';
 
 /// Общие цвета книжки (алиасы на [FinzoBookTokens]).
 abstract final class BookStyle {
@@ -189,13 +188,17 @@ class BookTipCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 12,
-            height: 12,
-            margin: const EdgeInsets.only(top: 3),
-            decoration: const BoxDecoration(
-              color: BookStyle.green,
+            width: 16,
+            height: 16,
+            margin: const EdgeInsets.only(top: 2),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? BookStyle.green : BookStyle.green.withValues(alpha: 0.35),
               shape: BoxShape.circle,
             ),
+            child: selected
+                ? const Icon(Icons.check, size: 11, color: Colors.white)
+                : null,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -208,7 +211,7 @@ class BookTipCard extends StatelessWidget {
                     softWrap: true,
                     style: AppFonts.rubik(
                       fontWeight: FontWeight.w700,
-                      fontSize: 13,
+                      fontSize: 15,
                       height: 1.25,
                       color: BookStyle.green,
                     ),
@@ -220,7 +223,7 @@ class BookTipCard extends StatelessWidget {
                   softWrap: true,
                   style: AppFonts.rubik(
                     fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                    fontSize: 15,
                     height: 1.35,
                     color: BookStyle.body,
                   ),
@@ -245,367 +248,6 @@ class BookTipCard extends StatelessWidget {
 }
 
 /// Вырезка из полноэкранного SVG (393×852) без крошечных артефактов масштаба.
-class BookArtCrop extends StatelessWidget {
-  const BookArtCrop({
-    super.key,
-    required this.asset,
-    required this.src,
-    required this.height,
-    this.width,
-  });
-
-  final String asset;
-  final Rect src;
-  final double height;
-  final double? width;
-
-  @override
-  Widget build(BuildContext context) {
-    final w = width ?? height * (src.width / src.height);
-    return SizedBox(
-      width: w,
-      height: height,
-      child: ClipRect(
-        child: OverflowBox(
-          maxWidth: 393,
-          maxHeight: 852,
-          alignment: Alignment.topLeft,
-          child: Transform.translate(
-            offset: Offset(-src.left, -src.top),
-            child: SvgPicture.asset(
-              asset,
-              width: 393,
-              height: 852,
-              fit: BoxFit.fill,
-              allowDrawingOutsideViewBox: true,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Finzo-персонаж: целый SVG белки, без прямоугольного кропа сцены.
-class BookFinzoLoupe extends StatelessWidget {
-  const BookFinzoLoupe({super.key, required this.height, this.width});
-
-  final double height;
-  final double? width;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width ?? height * 0.95,
-      height: height,
-      child: ClipRect(
-        child: Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.hardEdge,
-          children: [
-            SvgPicture.asset(
-              AppAssets.squirrel2,
-              height: height * 0.9,
-              fit: BoxFit.contain,
-            ),
-            Positioned(
-              right: 0,
-              top: height * 0.08,
-              child: Icon(
-                Icons.search_rounded,
-                size: height * 0.32,
-                color: BookStyle.orange,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Конверт без непрозрачного прямоугольника из общей сцены.
-class BookLetterProp extends StatelessWidget {
-  const BookLetterProp({super.key, required this.height});
-
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: height * 0.85,
-      height: height,
-      child: CustomPaint(painter: _LetterPainter()),
-    );
-  }
-}
-
-class _LetterPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final stroke = Paint()
-      ..color = const Color(0xFF4B4A48)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    final fill = Paint()..color = const Color(0xFFFEFCF4);
-    final r = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        size.width * 0.08,
-        size.height * 0.28,
-        size.width * 0.84,
-        size.height * 0.45,
-      ),
-      const Radius.circular(10),
-    );
-    canvas.save();
-    canvas.translate(size.width * 0.5, size.height * 0.5);
-    canvas.rotate(-0.22);
-    canvas.translate(-size.width * 0.5, -size.height * 0.5);
-    canvas.drawRRect(r, fill);
-    canvas.drawRRect(r, stroke);
-    final path = Path()
-      ..moveTo(size.width * 0.18, size.height * 0.42)
-      ..lineTo(size.width * 0.5, size.height * 0.55)
-      ..lineTo(size.width * 0.82, size.height * 0.38);
-    canvas.drawPath(path, stroke);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-/// Сценка: отдельный layout-slot, всегда клипится, без watermark.
-class BookHeroScene extends StatelessWidget {
-  const BookHeroScene({
-    super.key,
-    required this.kind,
-    this.size = BookHeroSize.medium,
-  });
-
-  final BookSceneKind kind;
-  final BookHeroSize size;
-
-  @override
-  Widget build(BuildContext context) {
-    if (size == BookHeroSize.none) return const SizedBox.shrink();
-    final h = BookPageLayout.heroHeight(size);
-    return SizedBox(
-      height: h,
-      width: double.infinity,
-      child: ClipRect(
-        child: switch (kind) {
-          BookSceneKind.coverLoupe => _cover(h),
-          BookSceneKind.compareMessages => _simpleSquirrel(h),
-          BookSceneKind.phoneLock => _phoneLock(h),
-          BookSceneKind.inspectMessage => _inspect(h),
-          BookSceneKind.prize => _prop(h, AppAssets.goalHeadphones, 'цель'),
-          BookSceneKind.order => _prop(h, AppAssets.goalPlaystation, 'покупка'),
-          BookSceneKind.calm => _simpleSquirrel(h),
-          BookSceneKind.alert => _bang(h),
-          BookSceneKind.coins => _coins(h),
-          BookSceneKind.plan => _plan(h),
-        },
-      ),
-    );
-  }
-
-  Widget _cover(double h) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(flex: 5, child: BookFinzoLoupe(height: h * 0.95)),
-        Expanded(flex: 4, child: BookLetterProp(height: h * 0.72)),
-      ],
-    );
-  }
-
-  Widget _simpleSquirrel(double h) {
-    return Center(
-      child: SvgPicture.asset(
-        AppAssets.squirrel2,
-        height: h * 0.92,
-        fit: BoxFit.contain,
-      ),
-    );
-  }
-
-  Widget _phoneLock(double h) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          AppAssets.squirrel2,
-          height: h * 0.9,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(width: 10),
-        Container(
-          width: 56,
-          height: h * 0.82,
-          decoration: BoxDecoration(
-            color: const Color(0xFF2C2C2C),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: BookStyle.green, width: 1.5),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.lock_rounded, color: BookStyle.orange, size: h * 0.28),
-              Text(
-                '•••',
-                style: AppFonts.rubik(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _inspect(double h) {
-    return Row(
-      children: [
-        Expanded(child: BookFinzoLoupe(height: h * 0.95)),
-        BookLetterProp(height: h * 0.7),
-      ],
-    );
-  }
-
-  Widget _prop(double h, String image, String label) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          AppAssets.squirrel,
-          height: h * 0.88,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(width: 10),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(image, height: h * 0.48, fit: BoxFit.contain),
-            Text(
-              label,
-              style: AppFonts.rubik(
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                color: BookStyle.green,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _coins(double h) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          AppAssets.squirrel2,
-          height: h * 0.88,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(width: 8),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.savings_outlined,
-              size: h * 0.36,
-              color: BookStyle.orange,
-            ),
-            Text(
-              'остаток',
-              style: AppFonts.rubik(
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                color: BookStyle.green,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _plan(double h) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          AppAssets.squirrel,
-          height: h * 0.85,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(width: 8),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [_chip('нужное'), _chip('желания'), _chip('копилка')],
-        ),
-      ],
-    );
-  }
-
-  Widget _chip(String t) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: BookStyle.mint,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: BookStyle.green.withValues(alpha: 0.55)),
-      ),
-      child: Text(
-        t,
-        style: AppFonts.rubik(
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-          color: BookStyle.green,
-        ),
-      ),
-    );
-  }
-
-  Widget _bang(double h) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          AppAssets.squirrel2,
-          height: h * 0.85,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(width: 8),
-        Icon(
-          Icons.priority_high_rounded,
-          size: h * 0.45,
-          color: BookStyle.orange,
-        ),
-      ],
-    );
-  }
-}
-
-enum BookSceneKind {
-  coverLoupe,
-  compareMessages,
-  phoneLock,
-  inspectMessage,
-  prize,
-  order,
-  calm,
-  alert,
-  coins,
-  plan,
-}
-
 /// Две широкие кнопки: один SVG из макета, зеркало для влево.
 class BookArrowButton extends StatelessWidget {
   const BookArrowButton({
@@ -758,16 +400,34 @@ class BookQuizChoice extends StatelessWidget {
             borderRadius: BorderRadius.circular(_radius),
             border: Border.all(color: stroke, width: selected ? 2 : 1.2),
           ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: AppFonts.rubik(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              color: revealed
-                  ? stroke
-                  : (selected ? BookStyle.green : BookStyle.body),
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (revealed) ...[
+                Icon(
+                  danger ? Icons.close_rounded : Icons.check_rounded,
+                  size: 18,
+                  color: stroke,
+                ),
+                const SizedBox(width: 6),
+              ] else if (selected) ...[
+                Icon(Icons.touch_app_rounded, size: 16, color: BookStyle.green),
+                const SizedBox(width: 6),
+              ],
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: AppFonts.rubik(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: revealed
+                        ? stroke
+                        : (selected ? BookStyle.green : BookStyle.body),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

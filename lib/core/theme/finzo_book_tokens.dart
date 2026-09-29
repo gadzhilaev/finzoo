@@ -54,12 +54,13 @@ abstract final class FinzoBookTokens {
   static const double badgeOverflow = 11;
   static const double badgeLeftInset = 6; // 36.5 - 30.5
 
-  // --- typography (визуально по растеру макета) ---
+  // --- typography (читаемый body ≥ ~16 visual на chrome scale) ---
   static const double titleSize = 18;
-  static const double cardTitleSize = 13;
-  static const double cardBodySize = 11.5;
+  static const double cardTitleSize = 15;
+  /// Body карточек: после contentScale ≈ 0.94 даёт ~15–16 sp.
+  static const double cardBodySize = 16;
   static const double counterSize = 14;
-  static const double promptSize = 13;
+  static const double promptSize = 15;
 
   // --- nav ---
   static const double arrowWidth = 126;

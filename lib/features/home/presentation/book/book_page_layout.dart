@@ -123,21 +123,21 @@ abstract final class BookType {
 
   static TextStyle get body => AppFonts.rubik(
         fontWeight: FontWeight.w500,
-        fontSize: 13,
+        fontSize: 15,
         height: 1.35,
         color: FinzoBookTokens.body,
       );
 
   static TextStyle get hint => AppFonts.rubik(
         fontWeight: FontWeight.w500,
-        fontSize: 12,
+        fontSize: 13,
         height: 1.3,
         color: FinzoBookTokens.counter,
       );
 
   static TextStyle get callout => AppFonts.rubik(
         fontWeight: FontWeight.w600,
-        fontSize: 12,
+        fontSize: 14,
         height: 1.3,
         color: FinzoBookTokens.squirrelOrange,
       );
