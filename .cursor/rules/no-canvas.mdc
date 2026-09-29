@@ -1,0 +1,10 @@
+---
+description: Never create Cursor Canvas files for this project
+alwaysApply: true
+---
+
+# No canvases
+
+Never create, update, or suggest `.canvas.tsx` / Cursor Canvas artifacts for Finzo.
+
+Deliver audits, matrices, tables, and reports as normal chat markdown (or files the user explicitly asks for). Do not use the canvas skill.
