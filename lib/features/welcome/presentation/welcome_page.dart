@@ -294,8 +294,20 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
     if (passed == true && mounted) setState(() => _step = _WelcomeStep.adult);
   }
 
+  bool get _isProfileStep =>
+      _step == _WelcomeStep.play ||
+      _step == _WelcomeStep.age ||
+      _step == _WelcomeStep.name;
+
   @override
   Widget build(BuildContext context) {
+    // play/age/name must NOT sit under ListenableBuilder(_game):
+    // a notify during NameStep disposes TextEditingController mid-frame
+    // (AnimatedSwitcher + TextField) → overflow cascade.
+    if (_isProfileStep) {
+      return _buildProfileSteps();
+    }
+
     return ListenableBuilder(
       listenable: _game,
       builder: (context, _) {
@@ -309,17 +321,14 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
             switchInCurve: Curves.easeInOutCubic,
             switchOutCurve: Curves.easeInOutCubic,
             child: switch (_step) {
-              _WelcomeStep.tips => ListenableBuilder(
+              _WelcomeStep.tips => OnboardingTutorialPage(
                 key: const ValueKey('tips'),
-                listenable: _game,
-                builder: (context, _) => OnboardingTutorialPage(
-                  profile: _game.profile,
-                  petName: _petName,
-                  animationsEnabled: _game.profile.animationsEnabled,
-                  onExitBack: () =>
-                      setState(() => _step = _WelcomeStep.petSetup),
-                  onDone: _goToVideo,
-                ),
+                profile: _game.profile,
+                petName: _petName,
+                animationsEnabled: _game.profile.animationsEnabled,
+                onExitBack: () =>
+                    setState(() => _step = _WelcomeStep.petSetup),
+                onDone: _goToVideo,
               ),
               _WelcomeStep.petSetup => PetSetupPage(
                 key: const ValueKey('pet-setup'),
@@ -417,7 +426,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
                 onOpenBudget: _goToBudget,
                 onOpenAdult: () => unawaited(_goToAdult()),
               ),
-              _ => _buildProfileSteps(),
+              _ => const SizedBox.shrink(key: ValueKey('unreachable')),
             },
           ),
         );
