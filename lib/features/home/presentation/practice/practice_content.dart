@@ -79,10 +79,10 @@ abstract final class PracticeContent {
       imageAsset: 'assets/images/house_inv/item_5.png',
     ),
     PracticeGoods(
-      id: 'gum',
-      title: 'Жвачка',
+      id: 'icecream',
+      title: 'Мороженое',
       price: 10,
-      icon: Icons.bubble_chart_outlined,
+      icon: Icons.icecream_outlined,
       tag: 'десерт',
       group: 'extra',
       imageAsset: 'assets/images/house_inv/item_4.png',

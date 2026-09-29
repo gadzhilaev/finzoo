@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../../core/profile/player_rules.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/finzo_ui.dart';
 
 enum _MsgKind { petTip, lesson }
 
@@ -180,17 +181,7 @@ class _MessagesPageState extends State<MessagesPage> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: widget.onOpenAdult,
-                    tooltip: 'Для взрослого',
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
-                    color: const Color(0xFF1B6943),
-                    iconSize: 28,
-                    constraints: const BoxConstraints(
-                      minWidth: 48,
-                      minHeight: 48,
-                    ),
-                  ),
+                  FinzoAdultEntryButton(onTap: widget.onOpenAdult),
                 ],
               ),
               Text(
