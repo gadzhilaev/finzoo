@@ -59,6 +59,12 @@ abstract final class AppAssets {
   static const String messages = 'assets/images/messages.svg';
   static const String rubleMark = 'assets/images/ruble_mark.svg';
 
+  static const String iconAdult = 'assets/images/finzo_icons/adult.svg';
+  static const String iconAnimation = 'assets/images/finzo_icons/animation.svg';
+  static const String iconSound = 'assets/images/finzo_icons/sound.svg';
+  static const String iconDemo = 'assets/images/finzo_icons/demo.svg';
+  static const String iconReset = 'assets/images/finzo_icons/reset.svg';
+
   /// Слоты инвентаря на экране дома (из `Дом.svg`).
   static const List<String> houseInventory = [
     'assets/images/house_inv/item_0.png',
@@ -92,4 +98,61 @@ abstract final class AppAssets {
   ];
 
   static const List<String> introScreens = [intro1, intro2, intro3, intro4];
+
+  /// Урок «Безопасность» в основной книжке: PNG из `обучение.zip`
+  /// (растр 3× — flutter_svg ломает pattern/embedded image в SVG).
+  /// Исходные PNG из макета (с status bar / nav / digit) — не для runtime.
+  static const String bookSafety01Raw =
+      'assets/book/safety/png/book_page_01.png';
+  static const String bookSafety02Raw =
+      'assets/book/safety/png/book_page_02.png';
+  static const String bookSafety03Raw =
+      'assets/book/safety/png/book_page_03.png';
+  static const String bookSafety04Raw =
+      'assets/book/safety/png/book_page_04.png';
+  static const String bookSafety05Raw =
+      'assets/book/safety/png/book_page_05.png';
+  static const String bookSafety06Raw =
+      'assets/book/safety/png/book_page_06.png';
+
+  /// Runtime: без mock status bar, без nav SVG, без одиночного номера.
+  static const String bookSafety01 = 'assets/book/runtime/book_page_01.png';
+  static const String bookSafety02 = 'assets/book/runtime/book_page_02.png';
+  static const String bookSafety03 = 'assets/book/runtime/book_page_03.png';
+  static const String bookSafety04 = 'assets/book/runtime/book_page_04.png';
+  static const String bookSafety05 = 'assets/book/runtime/book_page_05.png';
+  static const String bookSafety06 = 'assets/book/runtime/book_page_06.png';
+
+  static const List<String> bookSafetyPages = [
+    bookSafety01,
+    bookSafety02,
+    bookSafety03,
+    bookSafety04,
+    bookSafety05,
+    bookSafety06,
+  ];
+
+  /// Исходные SVG дизайнера (рядом с PNG).
+  static const List<String> bookSafetySvgSources = [
+    'assets/book/safety/book_page_01.svg',
+    'assets/book/safety/book_page_02.svg',
+    'assets/book/safety/book_page_03.svg',
+    'assets/book/safety/book_page_04.svg',
+    'assets/book/safety/book_page_05.svg',
+    'assets/book/safety/book_page_06.svg',
+  ];
+
+  /// Сцены для Flutter-страниц (вырезки из макетов дизайнера).
+  static const String bookSceneStep1Hero =
+      'assets/book/scenes/step1_hero.png';
+  static const String bookSceneStep1DangerIcon =
+      'assets/book/scenes/step1_danger_icon.png';
+  static const String bookSceneStep1SafeIcon =
+      'assets/book/scenes/step1_safe_icon.png';
+  static const String bookSceneStep2Hero =
+      'assets/book/scenes/step2_hero.png';
+  static const String bookSceneStep3Hero =
+      'assets/book/scenes/step3_hero.png';
+  static const String bookSceneSafetyIntro =
+      'assets/book/scenes/safety_intro_hero.png';
 }

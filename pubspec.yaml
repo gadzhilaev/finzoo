@@ -32,6 +32,13 @@ flutter:
     - assets/images/house_inv_clothes/
     - assets/images/house_inv_shower/
     - assets/images/wardrobe/
+    - assets/images/finzo_icons/
+    - assets/book/safety/
+    - assets/book/safety/png/
+    - assets/book/scenes/
+    - assets/book/designer/
+    - assets/book/runtime/
+    - assets/book/chrome/
     - assets/videos/
   fonts:
     - family: Rubik
