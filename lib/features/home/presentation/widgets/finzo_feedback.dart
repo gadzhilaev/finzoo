@@ -2,6 +2,51 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_fonts.dart';
 
+/// Компактная заметка о состоянии Finzo (не модальный диалог).
+///
+/// Формат одной фразы: что изменилось + причина/действие ребёнка.
+void showFinzoStateNote(
+  BuildContext context, {
+  required String message,
+  IconData icon = Icons.pets_rounded,
+  Color accent = const Color(0xFF1B6943),
+}) {
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  if (messenger == null) return;
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      duration: const Duration(milliseconds: 3200),
+      backgroundColor: const Color(0xFFFEF7E6),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: accent, width: 1.5),
+      ),
+      content: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: accent, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: AppFonts.rubik(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                height: 1.3,
+                color: const Color(0xFF4A4643),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Единый фидбек: что случилось → почему → что дальше.
 Future<void> showFinzoFeedback(
   BuildContext context, {

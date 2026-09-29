@@ -297,6 +297,15 @@ class _HousePageState extends State<HousePage> {
     if (!mounted) return;
     if (!result.ok) return;
     _flashMoodIfNeeded(result);
+    if (result.firstBoost && result.moodGain > 0) {
+      showFinzoStateNote(
+        context,
+        icon: Icons.sentiment_satisfied_alt_rounded,
+        message:
+            'Настроение Finzo повысилось (+${result.moodGain.round()}): '
+            'ты надел «${shop.title}».',
+      );
+    }
   }
 
   void _flashMoodIfNeeded(EquipClothesResult result) {
@@ -385,6 +394,15 @@ class _HousePageState extends State<HousePage> {
       final result = await widget.controller.equipClothes(index);
       if (!mounted) return;
       _flashMoodIfNeeded(result);
+      if (result.firstBoost && result.moodGain > 0) {
+        showFinzoStateNote(
+          context,
+          icon: Icons.sentiment_satisfied_alt_rounded,
+          message:
+              'Настроение Finzo повысилось (+${result.moodGain.round()}): '
+              'ты купил и надел «${shop.title}».',
+        );
+      }
     }
   }
 
@@ -494,17 +512,42 @@ class _HousePageState extends State<HousePage> {
     );
     if (ok != true) return;
 
+    final beforeMood = widget.controller.profile.mood;
+    final beforeSatiety = widget.controller.profile.satiety;
     final applied = await widget.controller.useWearableOrCare(
       category: category,
       index: index,
     );
-    if (!applied && mounted) {
+    if (!mounted) return;
+    if (!applied) {
       await showFinzoFeedback(
         context,
         title: 'Не вышло',
         what: 'Предмет не применился.',
         why: 'Возможно, его уже нет в инвентаре.',
         next: 'Купи ещё раз или выбери другой предмет.',
+      );
+      return;
+    }
+    final moodGain =
+        (widget.controller.profile.mood - beforeMood).clamp(0, 100);
+    final satietyGain =
+        (widget.controller.profile.satiety - beforeSatiety).clamp(0, 100);
+    if (moodGain > 0) {
+      showFinzoStateNote(
+        context,
+        icon: Icons.sentiment_satisfied_alt_rounded,
+        message:
+            'Настроение Finzo повысилось (+${moodGain.round()}): '
+            'ты использовал «${shop.title}».',
+      );
+    } else if (satietyGain > 0) {
+      showFinzoStateNote(
+        context,
+        icon: Icons.restaurant_rounded,
+        message:
+            'Сытость Finzo выросла (+${satietyGain.round()}): '
+            'ты использовал «${shop.title}».',
       );
     }
   }
@@ -536,14 +579,47 @@ class _HousePageState extends State<HousePage> {
     );
     if (ok != true) return;
 
+    final beforeSatiety = widget.controller.profile.satiety;
+    final beforeMood = widget.controller.profile.mood;
     final used = await widget.controller.useKitchenItem(index);
-    if (!used && mounted && widget.controller.isFullyFed) {
+    if (!mounted) return;
+    if (!used && widget.controller.isFullyFed) {
       await showFinzoFeedback(
         context,
         title: 'Finzo сыт',
         what: 'Еда не потратилась.',
         why: 'Сытость уже полная — больше кормить не нужно.',
         next: 'Загляни позже или займись уходом и целью.',
+      );
+      return;
+    }
+    if (!used) return;
+    final satietyGain =
+        (widget.controller.profile.satiety - beforeSatiety).clamp(0, 100);
+    final moodGain =
+        (widget.controller.profile.mood - beforeMood).clamp(0, 100);
+    if (satietyGain > 0 && moodGain > 0) {
+      showFinzoStateNote(
+        context,
+        icon: Icons.restaurant_rounded,
+        message:
+            'Сытость и настроение Finzo выросли: ты дал «${shop.title}».',
+      );
+    } else if (satietyGain > 0) {
+      showFinzoStateNote(
+        context,
+        icon: Icons.restaurant_rounded,
+        message:
+            'Сытость Finzo выросла (+${satietyGain.round()}): '
+            'ты дал «${shop.title}».',
+      );
+    } else if (moodGain > 0) {
+      showFinzoStateNote(
+        context,
+        icon: Icons.sentiment_satisfied_alt_rounded,
+        message:
+            'Настроение Finzo повысилось (+${moodGain.round()}): '
+            'ты дал «${shop.title}».',
       );
     }
   }

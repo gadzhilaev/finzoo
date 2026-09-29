@@ -183,4 +183,36 @@ abstract final class PlayerRules {
     }
     return points;
   }
+
+  /// Коротко: сколько очков роста дали и за какие решения дня.
+  static String growthGainExplanation({
+    required int gain,
+    required int planNecessary,
+    required int planWants,
+    required int planSavings,
+    required int spentNecessary,
+    required int spentWants,
+    required int factSavings,
+    required int careUses,
+  }) {
+    if (gain <= 0) {
+      return 'Очки роста сегодня не добавились: мало заботы о нужном, '
+          'плане или копилке.';
+    }
+    final parts = <String>[];
+    if (spentNecessary > 0 || careUses > 0) {
+      parts.add('ты закрыл нужное (еда или уход)');
+    }
+    final followsPlan =
+        (planNecessary == 0 || spentNecessary <= planNecessary) &&
+        (planWants == 0 || spentWants <= planWants);
+    if (followsPlan) {
+      parts.add('траты уложились в план');
+    }
+    if (factSavings > 0 && (planSavings == 0 || factSavings >= planSavings)) {
+      parts.add('ты пополнил копилку');
+    }
+    final why = parts.isEmpty ? 'решения дня' : parts.join(', ');
+    return 'Рост Finzo +$gain: $why.';
+  }
 }
