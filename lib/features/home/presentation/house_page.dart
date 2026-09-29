@@ -747,7 +747,7 @@ class _HousePageState extends State<HousePage> {
             return Stack(
               children: [
                 Positioned(
-                  left: 120,
+                  left: 106,
                   top: 288,
                   width: 156,
                   height: 182,
@@ -760,17 +760,24 @@ class _HousePageState extends State<HousePage> {
                   ),
                 ),
                 Positioned(
-                  left: 120,
-                  top: 270,
-                  width: 156,
-                  child: Center(
-                    child: FinzoGrowthChip(
-                      profile: widget.controller.profile,
-                      onTap: () => GrowthGuidePage.open(
-                        context,
-                        widget.controller.profile,
+                  left: 0,
+                  right: 0,
+                  top: 256,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PetNameBadge(
+                        name: widget.controller.profile.petName,
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      FinzoGrowthChip(
+                        profile: widget.controller.profile,
+                        onTap: () => GrowthGuidePage.open(
+                          context,
+                          widget.controller.profile,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -806,7 +813,7 @@ class _HousePageState extends State<HousePage> {
         ),
         SvgHitArea(
           left: 327,
-          top: 384,
+          top: 383,
           width: 52,
           height: 52,
           semanticsLabel: 'Сообщения',
@@ -814,7 +821,7 @@ class _HousePageState extends State<HousePage> {
         ),
         SvgHitArea(
           left: 327,
-          top: 444,
+          top: 443,
           width: 52,
           height: 52,
           semanticsLabel: 'Книга',

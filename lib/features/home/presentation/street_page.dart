@@ -69,7 +69,7 @@ class StreetPage extends StatelessWidget {
             return Stack(
               children: [
                 Positioned(
-                  left: 118,
+                  left: 104,
                   top: 318,
                   width: 150,
                   height: 175,
@@ -82,17 +82,24 @@ class StreetPage extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  left: 118,
-                  top: 299,
-                  width: 150,
-                  child: Center(
-                    child: FinzoGrowthChip(
-                      profile: controller.profile,
-                      onTap: () => GrowthGuidePage.open(
-                        context,
-                        controller.profile,
+                  left: 0,
+                  right: 0,
+                  top: 286,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PetNameBadge(
+                        name: controller.profile.petName,
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      FinzoGrowthChip(
+                        profile: controller.profile,
+                        onTap: () => GrowthGuidePage.open(
+                          context,
+                          controller.profile,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
