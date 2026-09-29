@@ -10,10 +10,6 @@ abstract final class AppAssets {
   static const String playBlob = 'assets/images/play_blob.svg';
   static const String playTriangle = 'assets/images/play_triangle.svg';
   static const String strelka = 'assets/images/strelka.svg';
-  static const String intro1 = 'assets/images/intro_1.svg';
-  static const String intro2 = 'assets/images/intro_2.svg';
-  static const String intro3 = 'assets/images/intro_3.svg';
-  static const String intro4 = 'assets/images/intro_4.svg';
   static const String introOutroVideo = 'assets/videos/intro_outro.mp4';
 
   /// Картинки целей накопления — заменяй файлы в `assets/images/goals/`.
@@ -38,22 +34,8 @@ abstract final class AppAssets {
   static const String houseClothes = 'assets/images/house_clothes.svg';
   static const String houseShower = 'assets/images/house_shower.svg';
   static const String book = 'assets/images/book.svg';
-  static const String bookTitle = 'assets/images/book_icons/book_title.svg';
-  static const String bookCurve = 'assets/images/book_icons/book_curve.svg';
-  static const String bookLetter = 'assets/images/book_icons/book_letter.svg';
-  static const String bookLeaf = 'assets/images/book_icons/book_leaf.svg';
-  static const String bookCards = 'assets/images/book_icons/book_cards.svg';
   static const String bookArrowRight =
       'assets/images/book_icons/book_arrow_right.svg';
-  static const String bookSceneLetter =
-      'assets/images/book_icons/scene_letter.svg';
-  static const String bookSceneCurve =
-      'assets/images/book_icons/scene_curve.svg';
-  static const String bookSceneLeaf = 'assets/images/book_icons/scene_leaf.svg';
-  static const String bookSceneCards =
-      'assets/images/book_icons/scene_cards.svg';
-  static const String bookSceneFinzoLoupe =
-      'assets/images/book_icons/scene_finzo_loupe.svg';
   static const String games = 'assets/images/games.svg';
   static const String gamesBg = 'assets/images/games_bg.png';
   static const String messages = 'assets/images/messages.svg';
@@ -97,8 +79,6 @@ abstract final class AppAssets {
     'assets/images/house_inv_shower/item_3.png',
   ];
 
-  static const List<String> introScreens = [intro1, intro2, intro3, intro4];
-
   /// Урок «Безопасность» в основной книжке: PNG из `обучение.zip`
   /// (растр 3× — flutter_svg ломает pattern/embedded image в SVG).
   /// Исходные PNG из макета (с status bar / nav / digit) — не для runtime.
@@ -141,18 +121,4 @@ abstract final class AppAssets {
     'assets/book/safety/book_page_05.svg',
     'assets/book/safety/book_page_06.svg',
   ];
-
-  /// Сцены для Flutter-страниц (вырезки из макетов дизайнера).
-  static const String bookSceneStep1Hero =
-      'assets/book/scenes/step1_hero.png';
-  static const String bookSceneStep1DangerIcon =
-      'assets/book/scenes/step1_danger_icon.png';
-  static const String bookSceneStep1SafeIcon =
-      'assets/book/scenes/step1_safe_icon.png';
-  static const String bookSceneStep2Hero =
-      'assets/book/scenes/step2_hero.png';
-  static const String bookSceneStep3Hero =
-      'assets/book/scenes/step3_hero.png';
-  static const String bookSceneSafetyIntro =
-      'assets/book/scenes/safety_intro_hero.png';
 }

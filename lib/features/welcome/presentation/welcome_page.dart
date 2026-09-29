@@ -65,7 +65,6 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   _WelcomeStep? _messagesReturnStep;
   String? _parkFocusId;
   bool _parkSkipIntro = false;
-  bool _bookStartToc = false;
   int? _bookStartPage;
 
   final GlobalKey _decorKey = GlobalKey();
@@ -110,7 +109,8 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
         shot.startsWith('book_')) {
       _step = _WelcomeStep.book;
       if (shot == 'book_toc') {
-        _bookStartToc = true;
+        // Оглавления больше нет — начинаем с первой страницы.
+        _bookStartPage = 0;
       } else if (shot == 'book_rule') {
         _bookStartPage = 1;
       } else if (shot == 'book_last') {
@@ -296,125 +296,131 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: _game.profile.animationsEnabled
-          ? const Duration(milliseconds: 550)
-          : Duration.zero,
-      switchInCurve: Curves.easeInOutCubic,
-      switchOutCurve: Curves.easeInOutCubic,
-      child: switch (_step) {
-        _WelcomeStep.tips => ListenableBuilder(
-          key: const ValueKey('tips'),
-          listenable: _game,
-          builder: (context, _) => OnboardingTutorialPage(
-            profile: _game.profile,
-            petName: _petName,
-            animationsEnabled: _game.profile.animationsEnabled,
-            onExitBack: () => setState(() => _step = _WelcomeStep.petSetup),
-            onDone: _goToVideo,
+    return ListenableBuilder(
+      listenable: _game,
+      builder: (context, _) {
+        final animate = _game.profile.animationsEnabled;
+        return TickerMode(
+          enabled: animate,
+          child: AnimatedSwitcher(
+            duration: animate
+                ? const Duration(milliseconds: 550)
+                : Duration.zero,
+            switchInCurve: Curves.easeInOutCubic,
+            switchOutCurve: Curves.easeInOutCubic,
+            child: switch (_step) {
+              _WelcomeStep.tips => ListenableBuilder(
+                key: const ValueKey('tips'),
+                listenable: _game,
+                builder: (context, _) => OnboardingTutorialPage(
+                  profile: _game.profile,
+                  petName: _petName,
+                  animationsEnabled: _game.profile.animationsEnabled,
+                  onExitBack: () =>
+                      setState(() => _step = _WelcomeStep.petSetup),
+                  onDone: _goToVideo,
+                ),
+              ),
+              _WelcomeStep.petSetup => PetSetupPage(
+                key: const ValueKey('pet-setup'),
+                playerName: _name,
+                initialPetName: _petName,
+                initialLook: _starterLook,
+                onBack: () => setState(() => _step = _WelcomeStep.name),
+                onDone: _goToTips,
+              ),
+              _WelcomeStep.video => OutroVideoPage(
+                key: const ValueKey('video'),
+                onFinished: _goToHome,
+              ),
+              _WelcomeStep.home => GoalsPage(
+                key: const ValueKey('home'),
+                onGoalConfirmed: _goToStreet,
+              ),
+              _WelcomeStep.street => StreetPage(
+                key: const ValueKey('street'),
+                controller: _game,
+                onOpenHouse: _goToHouse,
+                onOpenMessages: () => _goToMessagesFrom(_WelcomeStep.street),
+                onOpenGames: _goToGames,
+                onOpenBudget: _goToBudget,
+                onOpenTask: _goToTask,
+                onOpenResults: _goToResults,
+                onChooseNextGoal: _goToGoalPicker,
+                onOpenAdult: () => unawaited(_goToAdult()),
+              ),
+              _WelcomeStep.budget => BudgetPlanPage(
+                key: const ValueKey('budget'),
+                controller: _game,
+                onConfirmed: _goToStreetOnly,
+                onBack: _game.profile.canPlayPeriod
+                    ? () => setState(() => _step = _WelcomeStep.street)
+                    : null,
+              ),
+              _WelcomeStep.task => FinancialTaskPage(
+                key: const ValueKey('task'),
+                controller: _game,
+                onDone: _goToStreetOnly,
+              ),
+              _WelcomeStep.results => PeriodResultsPage(
+                key: const ValueKey('results'),
+                controller: _game,
+                onNextPeriod: () =>
+                    setState(() => _step = _WelcomeStep.budget),
+              ),
+              _WelcomeStep.goals => GoalsPage(
+                key: const ValueKey('goals'),
+                title: 'Выбери новую цель',
+                onBack: _goToStreetOnly,
+                onGoalConfirmed: _chooseNextGoal,
+              ),
+              _WelcomeStep.adult => AdultPage(
+                key: const ValueKey('adult'),
+                controller: _game,
+                onBack: _goToStreetOnly,
+                onResetDone: () => setState(() => _step = _WelcomeStep.play),
+              ),
+              _WelcomeStep.house => HousePage(
+                key: const ValueKey('house'),
+                controller: _game,
+                onOpenStreet: _goToStreetOnly,
+                onOpenMessages: () => _goToMessagesFrom(_WelcomeStep.house),
+                onOpenBook: _goToBook,
+                onOpenResults: _goToResults,
+                onChooseNextGoal: _goToGoalPicker,
+                onOpenAdult: () => unawaited(_goToAdult()),
+              ),
+              _WelcomeStep.book => BookPage(
+                key: const ValueKey('book'),
+                onOpenHouse: _goToHouse,
+                startPage: _bookStartPage,
+                animationsEnabled: _game.profile.animationsEnabled,
+              ),
+              _WelcomeStep.games => GamesPage(
+                key: const ValueKey('games'),
+                controller: _game,
+                onBack: () {
+                  _clearParkFocus();
+                  _goToStreetOnly();
+                },
+                autoOpenExerciseId: _parkFocusId,
+                skipIntro: _parkSkipIntro,
+                onAutoOpenConsumed: _clearParkFocus,
+              ),
+              _WelcomeStep.messages => MessagesPage(
+                key: const ValueKey('messages'),
+                controller: _game,
+                onBack: _leaveMessages,
+                onOpenBook: _goToBook,
+                onOpenHouse: _goToHouse,
+                onOpenGames: _goToGames,
+                onOpenBudget: _goToBudget,
+                onOpenAdult: () => unawaited(_goToAdult()),
+              ),
+              _ => _buildProfileSteps(),
+            },
           ),
-        ),
-        _WelcomeStep.petSetup => PetSetupPage(
-          key: const ValueKey('pet-setup'),
-          playerName: _name,
-          initialPetName: _petName,
-          initialLook: _starterLook,
-          onBack: () => setState(() => _step = _WelcomeStep.name),
-          onDone: _goToTips,
-        ),
-        _WelcomeStep.video => OutroVideoPage(
-          key: const ValueKey('video'),
-          onFinished: _goToHome,
-        ),
-        _WelcomeStep.home => GoalsPage(
-          key: const ValueKey('home'),
-          onGoalConfirmed: _goToStreet,
-        ),
-        _WelcomeStep.street => StreetPage(
-          key: const ValueKey('street'),
-          controller: _game,
-          onOpenHouse: _goToHouse,
-          onOpenMessages: () => _goToMessagesFrom(_WelcomeStep.street),
-          onOpenGames: _goToGames,
-          onOpenBudget: _goToBudget,
-          onOpenTask: _goToTask,
-          onOpenResults: _goToResults,
-          onChooseNextGoal: _goToGoalPicker,
-          onOpenAdult: () => unawaited(_goToAdult()),
-        ),
-        _WelcomeStep.budget => BudgetPlanPage(
-          key: const ValueKey('budget'),
-          controller: _game,
-          onConfirmed: _goToStreetOnly,
-          onBack: _game.profile.canPlayPeriod
-              ? () => setState(() => _step = _WelcomeStep.street)
-              : null,
-        ),
-        _WelcomeStep.task => FinancialTaskPage(
-          key: const ValueKey('task'),
-          controller: _game,
-          onDone: _goToStreetOnly,
-        ),
-        _WelcomeStep.results => PeriodResultsPage(
-          key: const ValueKey('results'),
-          controller: _game,
-          onNextPeriod: () => setState(() => _step = _WelcomeStep.budget),
-        ),
-        _WelcomeStep.goals => GoalsPage(
-          key: const ValueKey('goals'),
-          title: 'Выбери новую цель',
-          onBack: _goToStreetOnly,
-          onGoalConfirmed: _chooseNextGoal,
-        ),
-        _WelcomeStep.adult => AdultPage(
-          key: const ValueKey('adult'),
-          controller: _game,
-          onBack: _goToStreetOnly,
-          onResetDone: () => setState(() => _step = _WelcomeStep.play),
-        ),
-        _WelcomeStep.house => HousePage(
-          key: const ValueKey('house'),
-          controller: _game,
-          onOpenStreet: _goToStreetOnly,
-          onOpenMessages: () => _goToMessagesFrom(_WelcomeStep.house),
-          onOpenBook: _goToBook,
-          onOpenResults: _goToResults,
-          onChooseNextGoal: _goToGoalPicker,
-          onOpenAdult: () => unawaited(_goToAdult()),
-        ),
-        _WelcomeStep.book => BookPage(
-          key: const ValueKey('book'),
-          onOpenHouse: _goToHouse,
-          startAtToc: _bookStartToc,
-          startPage: _bookStartPage,
-          onOpenParkGame: (id) => setState(() {
-            _parkFocusId = PracticeCatalog.resolveOpenId(id);
-            _parkSkipIntro = false;
-            _step = _WelcomeStep.games;
-          }),
-        ),
-        _WelcomeStep.games => GamesPage(
-          key: const ValueKey('games'),
-          controller: _game,
-          onBack: () {
-            _clearParkFocus();
-            _goToStreetOnly();
-          },
-          autoOpenExerciseId: _parkFocusId,
-          skipIntro: _parkSkipIntro,
-          onAutoOpenConsumed: _clearParkFocus,
-        ),
-        _WelcomeStep.messages => MessagesPage(
-          key: const ValueKey('messages'),
-          controller: _game,
-          onBack: _leaveMessages,
-          onOpenBook: _goToBook,
-          onOpenHouse: _goToHouse,
-          onOpenGames: _goToGames,
-          onOpenBudget: _goToBudget,
-          onOpenAdult: () => unawaited(_goToAdult()),
-        ),
-        _ => _buildProfileSteps(),
+        );
       },
     );
   }
@@ -424,7 +430,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
 
     return OnboardingCanvas(
       key: const ValueKey('profile-steps'),
-      decor: TickerMode(enabled: true, child: OnboardingDecor(key: _decorKey)),
+      decor: OnboardingDecor(key: _decorKey),
       onBack: switch (_step) {
         _WelcomeStep.age => _ageBack,
         _WelcomeStep.name => _nameBack,
