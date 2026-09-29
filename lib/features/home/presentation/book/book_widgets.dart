@@ -3,17 +3,77 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/assets/app_assets.dart';
 import '../../../../core/theme/app_fonts.dart';
+import '../../../../core/theme/finzo_book_tokens.dart';
+import 'book_lesson_card.dart';
+import 'book_page_layout.dart';
 
-/// Общие цвета книжки.
+/// Общие цвета книжки (алиасы на [FinzoBookTokens]).
 abstract final class BookStyle {
-  static const cream = Color(0xFFFEF7E6);
-  static const green = Color(0xFF1B6943);
-  static const arrowGreen = Color(0xFF4B946A);
+  static const pageCream = FinzoBookTokens.pageCream;
+  static const cream = FinzoBookTokens.notebookCream;
+  static const green = FinzoBookTokens.titleGreen;
+  static const greenDark = FinzoBookTokens.titleGreen;
+  static const arrowGreen = FinzoBookTokens.arrowGreen;
   static const arrowMuted = Color(0xFFA8C4B2);
-  static const mint = Color(0xFFEBF4EE);
-  static const orange = Color(0xFFDF9548);
-  static const body = Color(0xFF4A4643);
-  static const counter = Color(0xFF8A8070);
+  static const mint = FinzoBookTokens.mint;
+  static const orange = FinzoBookTokens.squirrelOrange;
+  static const body = FinzoBookTokens.body;
+  static const ink = FinzoBookTokens.ink;
+  static const inkSoft = FinzoBookTokens.inkSoft;
+  static const stroke = FinzoBookTokens.arrowGreen;
+  static const counter = FinzoBookTokens.counter;
+  static const quizDangerFill = FinzoBookTokens.dangerFill;
+  static const quizDangerStroke = FinzoBookTokens.dangerStroke;
+}
+
+/// Мятная info-карточка: заголовок + короткий текст.
+class BookInfoCard extends StatelessWidget {
+  const BookInfoCard({super.key, required this.body, this.title});
+
+  final String body;
+  final String? title;
+
+  @override
+  Widget build(BuildContext context) {
+    return BookTipCard(title: title, text: body);
+  }
+}
+
+/// Крупная зелёная CTA внизу страницы книжки.
+class BookPrimaryButton extends StatelessWidget {
+  const BookPrimaryButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: FilledButton(
+        onPressed: onTap,
+        style: FilledButton.styleFrom(
+          backgroundColor: BookStyle.arrowGreen,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppFonts.rubik(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Одна мятная плашка с несколькими пунктами (не отдельная карточка на каждую фразу).
@@ -238,26 +298,27 @@ class BookFinzoLoupe extends StatelessWidget {
     return SizedBox(
       width: width ?? height * 0.95,
       height: height,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          SvgPicture.asset(
-            AppAssets.squirrel2,
-            height: height * 0.92,
-            fit: BoxFit.contain,
-            allowDrawingOutsideViewBox: true,
-          ),
-          Positioned(
-            right: 0,
-            top: height * 0.08,
-            child: Icon(
-              Icons.search_rounded,
-              size: height * 0.38,
-              color: BookStyle.orange,
+      child: ClipRect(
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.hardEdge,
+          children: [
+            SvgPicture.asset(
+              AppAssets.squirrel2,
+              height: height * 0.9,
+              fit: BoxFit.contain,
             ),
-          ),
-        ],
+            Positioned(
+              right: 0,
+              top: height * 0.08,
+              child: Icon(
+                Icons.search_rounded,
+                size: height * 0.32,
+                color: BookStyle.orange,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -288,7 +349,12 @@ class _LetterPainter extends CustomPainter {
       ..strokeWidth = 2;
     final fill = Paint()..color = const Color(0xFFFEFCF4);
     final r = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.08, size.height * 0.28, size.width * 0.84, size.height * 0.45),
+      Rect.fromLTWH(
+        size.width * 0.08,
+        size.height * 0.28,
+        size.width * 0.84,
+        size.height * 0.45,
+      ),
       const Radius.circular(10),
     );
     canvas.save();
@@ -309,115 +375,57 @@ class _LetterPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Сценка: сверху персонаж/предмет, без пересечения с текстом страницы.
+/// Сценка: отдельный layout-slot, всегда клипится, без watermark.
 class BookHeroScene extends StatelessWidget {
   const BookHeroScene({
     super.key,
     required this.kind,
-    this.compact = false,
+    this.size = BookHeroSize.medium,
   });
 
   final BookSceneKind kind;
-  final bool compact;
+  final BookHeroSize size;
 
   @override
   Widget build(BuildContext context) {
-    final h = compact ? 120.0 : 168.0;
-    // Для карточек сообщений даём больше высоты — текст не режется.
-    final sceneH = kind == BookSceneKind.compareMessages ? h + 56 : h;
+    if (size == BookHeroSize.none) return const SizedBox.shrink();
+    final h = BookPageLayout.heroHeight(size);
     return SizedBox(
-      height: sceneH,
+      height: h,
       width: double.infinity,
-      child: switch (kind) {
-        BookSceneKind.coverLoupe => _cover(h),
-        BookSceneKind.compareMessages => _compare(sceneH),
-        BookSceneKind.phoneLock => _phoneLock(h),
-        BookSceneKind.inspectMessage => _inspect(h),
-        BookSceneKind.prize => _prop(h, AppAssets.goalHeadphones, 'цель'),
-        BookSceneKind.order => _prop(h, AppAssets.goalPlaystation, 'покупка'),
-        BookSceneKind.calm => _squirrelOnly(h, AppAssets.squirrel2),
-        BookSceneKind.alert => _bang(h),
-        BookSceneKind.coins => _coins(h),
-        BookSceneKind.plan => _plan(h),
-      },
+      child: ClipRect(
+        child: switch (kind) {
+          BookSceneKind.coverLoupe => _cover(h),
+          BookSceneKind.compareMessages => _simpleSquirrel(h),
+          BookSceneKind.phoneLock => _phoneLock(h),
+          BookSceneKind.inspectMessage => _inspect(h),
+          BookSceneKind.prize => _prop(h, AppAssets.goalHeadphones, 'цель'),
+          BookSceneKind.order => _prop(h, AppAssets.goalPlaystation, 'покупка'),
+          BookSceneKind.calm => _simpleSquirrel(h),
+          BookSceneKind.alert => _bang(h),
+          BookSceneKind.coins => _coins(h),
+          BookSceneKind.plan => _plan(h),
+        },
+      ),
     );
   }
 
   Widget _cover(double h) {
-    return Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(flex: 5, child: BookFinzoLoupe(height: h - 28)),
-              Expanded(flex: 4, child: BookLetterProp(height: h * 0.75)),
-            ],
-          ),
-        ),
-        Text(
-          'Проверяй, чтоб быть в плюсе!',
-          textAlign: TextAlign.center,
-          style: AppFonts.rubik(
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-            color: BookStyle.orange,
-          ),
-        ),
+        Expanded(flex: 5, child: BookFinzoLoupe(height: h * 0.95)),
+        Expanded(flex: 4, child: BookLetterProp(height: h * 0.72)),
       ],
     );
   }
 
-  Widget _compare(double h) {
-    // Карточки сообщений — полный текст, без обрезки в крошечном Expanded.
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          BookFinzoLoupe(height: (h * 0.45).clamp(48, 80)),
-          const SizedBox(height: 6),
-          _miniMsg('Магазин', 'Ваш заказ готов', ok: true),
-          const SizedBox(height: 6),
-          _miniMsg('«Магазин»', 'Пришлите код из SMS…', ok: false),
-        ],
-      ),
-    );
-  }
-
-  Widget _miniMsg(String from, String body, {required bool ok}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: ok ? BookStyle.mint : const Color(0xFFFFF3CD),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: ok ? BookStyle.green : BookStyle.orange,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            from,
-            softWrap: true,
-            style: AppFonts.rubik(
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-              color: ok ? BookStyle.green : BookStyle.orange,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            body,
-            softWrap: true,
-            style: AppFonts.rubik(
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-              height: 1.3,
-              color: BookStyle.body,
-            ),
-          ),
-        ],
+  Widget _simpleSquirrel(double h) {
+    return Center(
+      child: SvgPicture.asset(
+        AppAssets.squirrel2,
+        height: h * 0.92,
+        fit: BoxFit.contain,
       ),
     );
   }
@@ -428,28 +436,27 @@ class BookHeroScene extends StatelessWidget {
       children: [
         SvgPicture.asset(
           AppAssets.squirrel2,
-          height: h * 0.92,
+          height: h * 0.9,
           fit: BoxFit.contain,
         ),
         const SizedBox(width: 10),
         Container(
-          width: 72,
-          height: h * 0.85,
+          width: 56,
+          height: h * 0.82,
           decoration: BoxDecoration(
             color: const Color(0xFF2C2C2C),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: BookStyle.green, width: 2),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: BookStyle.green, width: 1.5),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.lock_rounded, color: BookStyle.orange, size: h * 0.28),
-              const SizedBox(height: 4),
               Text(
                 '•••',
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontSize: 14,
                   color: Colors.white,
                 ),
               ),
@@ -464,7 +471,7 @@ class BookHeroScene extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: BookFinzoLoupe(height: h * 0.95)),
-        BookLetterProp(height: h * 0.72),
+        BookLetterProp(height: h * 0.7),
       ],
     );
   }
@@ -475,19 +482,19 @@ class BookHeroScene extends StatelessWidget {
       children: [
         SvgPicture.asset(
           AppAssets.squirrel,
-          height: h * 0.9,
+          height: h * 0.88,
           fit: BoxFit.contain,
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(image, height: h * 0.55, fit: BoxFit.contain),
+            Image.asset(image, height: h * 0.48, fit: BoxFit.contain),
             Text(
               label,
               style: AppFonts.rubik(
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontSize: 11,
                 color: BookStyle.green,
               ),
             ),
@@ -497,23 +504,32 @@ class BookHeroScene extends StatelessWidget {
     );
   }
 
-  Widget _squirrelOnly(double h, String asset) {
-    return Center(
-      child: SvgPicture.asset(asset, height: h * 0.95, fit: BoxFit.contain),
-    );
-  }
-
   Widget _coins(double h) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(AppAssets.squirrel2, height: h * 0.88, fit: BoxFit.contain),
+        SvgPicture.asset(
+          AppAssets.squirrel2,
+          height: h * 0.88,
+          fit: BoxFit.contain,
+        ),
         const SizedBox(width: 8),
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.savings_outlined, size: h * 0.4, color: BookStyle.orange),
-            Text('остаток', style: AppFonts.rubik(fontWeight: FontWeight.w600, fontSize: 12, color: BookStyle.green)),
+            Icon(
+              Icons.savings_outlined,
+              size: h * 0.36,
+              color: BookStyle.orange,
+            ),
+            Text(
+              'остаток',
+              style: AppFonts.rubik(
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                color: BookStyle.green,
+              ),
+            ),
           ],
         ),
       ],
@@ -524,15 +540,15 @@ class BookHeroScene extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(AppAssets.squirrel, height: h * 0.85, fit: BoxFit.contain),
+        SvgPicture.asset(
+          AppAssets.squirrel,
+          height: h * 0.85,
+          fit: BoxFit.contain,
+        ),
         const SizedBox(width: 8),
         Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _chip('нужное'),
-            _chip('желания'),
-            _chip('копилка'),
-          ],
+          children: [_chip('нужное'), _chip('желания'), _chip('копилка')],
         ),
       ],
     );
@@ -540,17 +556,17 @@ class BookHeroScene extends StatelessWidget {
 
   Widget _chip(String t) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: BookStyle.mint,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: BookStyle.green),
+        border: Border.all(color: BookStyle.green.withValues(alpha: 0.55)),
       ),
       child: Text(
         t,
         style: AppFonts.rubik(
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
           color: BookStyle.green,
         ),
       ),
@@ -567,7 +583,11 @@ class BookHeroScene extends StatelessWidget {
           fit: BoxFit.contain,
         ),
         const SizedBox(width: 8),
-        Icon(Icons.priority_high_rounded, size: h * 0.55, color: BookStyle.orange),
+        Icon(
+          Icons.priority_high_rounded,
+          size: h * 0.45,
+          color: BookStyle.orange,
+        ),
       ],
     );
   }
@@ -603,27 +623,150 @@ class BookArrowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Один слой: enabled → arrowGreen, disabled → muted. Без наложения.
     final bg = enabled ? BookStyle.arrowGreen : BookStyle.arrowMuted;
-    final arrow = enabled ? Colors.white : const Color(0xFFF3F9F5);
+    final arrow = enabled ? Colors.white : const Color(0xFFE8F0EB);
 
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: size.width,
+        height: size.height,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(FinzoBookTokens.arrowRadius),
+        ),
+        child: Transform.flip(
+          flipX: !forward,
+          child: SvgPicture.asset(
+            AppAssets.bookArrowRight,
+            width: 50,
+            height: 28,
+            colorFilter: ColorFilter.mode(arrow, BlendMode.srcIn),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Нумерованная mint-карточка (обёртка над [BookLessonCard]).
+class BookNumberedCard extends StatelessWidget {
+  const BookNumberedCard({
+    super.key,
+    required this.number,
+    required this.title,
+    required this.text,
+    this.illustration,
+  });
+
+  final int number;
+  final String title;
+  final String text;
+  final Widget? illustration;
+
+  @override
+  Widget build(BuildContext context) {
+    return BookLessonCard(
+      number: number,
+      tone: BookCardTone.mint,
+      title: title,
+      text: text,
+      illustration: illustration,
+    );
+  }
+}
+
+/// Пара «опасно / безопасно» (обёртка над [BookLessonCard]).
+class BookToneCard extends StatelessWidget {
+  const BookToneCard({
+    super.key,
+    required this.danger,
+    required this.title,
+    required this.text,
+    this.number,
+    this.illustration,
+  });
+
+  final bool danger;
+  final String title;
+  final String text;
+  final int? number;
+  final Widget? illustration;
+
+  @override
+  Widget build(BuildContext context) {
+    return BookLessonCard(
+      number: number ?? (danger ? 1 : 2),
+      tone: danger ? BookCardTone.danger : BookCardTone.safe,
+      title: title,
+      text: text,
+      illustration: illustration,
+    );
+  }
+}
+
+/// Квиз-кнопка «Мошенник» / «Настоящий магазин» (референс обучение.zip).
+class BookQuizChoice extends StatelessWidget {
+  const BookQuizChoice({
+    super.key,
+    required this.label,
+    required this.danger,
+    required this.selected,
+    required this.onTap,
+    this.revealed = false,
+  });
+
+  final String label;
+  final bool danger;
+  final bool selected;
+  final VoidCallback onTap;
+
+  /// После «Проверить»: danger/safe цвет. До — нейтральный выбранный стиль.
+  final bool revealed;
+
+  static const _radius = 13.5; // FinzoBookTokens.cardRadius — «Книжка 4/5»
+
+  @override
+  Widget build(BuildContext context) {
+    final Color stroke;
+    final Color fill;
+    if (revealed) {
+      stroke = danger ? BookStyle.quizDangerStroke : BookStyle.green;
+      fill = danger ? BookStyle.quizDangerFill : BookStyle.mint;
+    } else if (selected) {
+      stroke = BookStyle.green;
+      fill = BookStyle.mint;
+    } else {
+      stroke = BookStyle.green.withValues(alpha: 0.35);
+      fill = Colors.white.withValues(alpha: 0.55);
+    }
     return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(11),
+      color: Colors.transparent,
       child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(11),
-        child: SizedBox(
-          width: size.width,
-          height: size.height,
-          child: Center(
-            child: Transform.flip(
-              flipX: !forward,
-              child: SvgPicture.asset(
-                AppAssets.bookArrowRight,
-                width: 50,
-                height: 28,
-                colorFilter: ColorFilter.mode(arrow, BlendMode.srcIn),
-              ),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(_radius),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 48),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          decoration: BoxDecoration(
+            color: fill,
+            borderRadius: BorderRadius.circular(_radius),
+            border: Border.all(color: stroke, width: selected ? 2 : 1.2),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: AppFonts.rubik(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: revealed
+                  ? stroke
+                  : (selected ? BookStyle.green : BookStyle.body),
             ),
           ),
         ),
