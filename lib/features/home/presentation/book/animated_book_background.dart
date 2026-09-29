@@ -37,7 +37,12 @@ class _BgSpec {
 /// LAYER 1 — декоративный фон из `assets/book/chrome/book_background.svg`
 /// (геометрия 1:1 с «Книжка 1 cтр.svg»). Один экземпляр на Book.
 class AnimatedBookBackground extends StatefulWidget {
-  const AnimatedBookBackground({super.key});
+  const AnimatedBookBackground({
+    super.key,
+    this.animationsEnabled = true,
+  });
+
+  final bool animationsEnabled;
 
   @override
   State<AnimatedBookBackground> createState() => _AnimatedBookBackgroundState();
@@ -175,7 +180,8 @@ class _AnimatedBookBackgroundState extends State<AnimatedBookBackground>
   }
 
   void _syncAnimation() {
-    final reduce = MediaQuery.disableAnimationsOf(context);
+    final reduce = MediaQuery.disableAnimationsOf(context) ||
+        !widget.animationsEnabled;
     if (reduce) {
       _controller.stop();
       _controller.value = 0;
@@ -187,6 +193,14 @@ class _AnimatedBookBackgroundState extends State<AnimatedBookBackground>
   }
 
   @override
+  void didUpdateWidget(covariant AnimatedBookBackground oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animationsEnabled != widget.animationsEnabled) {
+      _syncAnimation();
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -194,7 +208,8 @@ class _AnimatedBookBackgroundState extends State<AnimatedBookBackground>
 
   @override
   Widget build(BuildContext context) {
-    final reduce = MediaQuery.disableAnimationsOf(context);
+    final reduce = MediaQuery.disableAnimationsOf(context) ||
+        !widget.animationsEnabled;
     return LayoutBuilder(
       builder: (context, constraints) {
         final sx = constraints.maxWidth / DesignScale.designWidth;

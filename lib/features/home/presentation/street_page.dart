@@ -46,7 +46,12 @@ class StreetPage extends StatelessWidget {
       asset: AppAssets.street,
       backgroundColor: const Color(0xFFD7F9FF),
       overlays: [
-        const StreetSkyLayer(),
+        ListenableBuilder(
+          listenable: controller,
+          builder: (context, _) => StreetSkyLayer(
+            animationsEnabled: controller.profile.animationsEnabled,
+          ),
+        ),
         HubHudOverlay(
           controller: controller,
           showSavedCard: false,
@@ -510,7 +515,7 @@ class _SecondaryBtn extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          height: 44,
+          height: 48,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
@@ -520,7 +525,7 @@ class _SecondaryBtn extends StatelessWidget {
             label,
             style: AppFonts.rubik(
               fontWeight: FontWeight.w700,
-              fontSize: 13,
+              fontSize: 15,
               color: const Color(0xFF1B6943),
             ),
           ),

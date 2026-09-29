@@ -18,15 +18,13 @@ class BookPage extends StatefulWidget {
   const BookPage({
     super.key,
     this.onOpenHouse,
-    this.onOpenParkGame,
-    this.startAtToc = false,
     this.startPage,
+    this.animationsEnabled = true,
   });
 
   final VoidCallback? onOpenHouse;
-  final void Function(String parkSpotId)? onOpenParkGame;
-  final bool startAtToc;
   final int? startPage;
+  final bool animationsEnabled;
 
   @override
   State<BookPage> createState() => _BookPageState();
@@ -84,7 +82,10 @@ class _BookPageState extends State<BookPage> {
         children: [
           Positioned.fill(
             child: IgnorePointer(
-              child: AnimatedBookBackground(key: _bgKey),
+              child: AnimatedBookBackground(
+                key: _bgKey,
+                animationsEnabled: widget.animationsEnabled,
+              ),
             ),
           ),
           Positioned.fill(
@@ -110,6 +111,7 @@ class _BookPageState extends State<BookPage> {
                         _picked = null;
                         _checked = false;
                       }),
+                      animationsEnabled: widget.animationsEnabled,
                       content: _PageContent(
                         key: ValueKey<String>(screen.asset),
                         screen: screen,
@@ -141,6 +143,7 @@ class _BookChromeShell extends StatelessWidget {
     required this.content,
     this.onHome,
     this.onBook,
+    this.animationsEnabled = true,
   });
 
   final String pageLabel;
@@ -151,6 +154,7 @@ class _BookChromeShell extends StatelessWidget {
   final VoidCallback? onHome;
   final VoidCallback? onBook;
   final Widget content;
+  final bool animationsEnabled;
 
   static const double frameLeft = 11.5;
   static const double frameTop = 62.5;
@@ -201,7 +205,9 @@ class _BookChromeShell extends StatelessWidget {
           height: contentHeight,
           child: ClipRect(
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
+              duration: animationsEnabled
+                  ? const Duration(milliseconds: 180)
+                  : Duration.zero,
               switchInCurve: Curves.easeOut,
               switchOutCurve: Curves.easeIn,
               transitionBuilder: (child, anim) =>
@@ -472,15 +478,27 @@ class _FeedbackBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(FinzoBookTokens.cardRadius),
         border: Border.all(color: stroke),
       ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: AppFonts.rubik(
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-          height: 1.25,
-          color: FinzoBookTokens.ink,
-        ),
+      child: Row(
+        children: [
+          Icon(
+            ok ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            size: 20,
+            color: stroke,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              textAlign: TextAlign.left,
+              style: AppFonts.rubik(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                height: 1.25,
+                color: FinzoBookTokens.ink,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

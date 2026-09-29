@@ -7,7 +7,9 @@ import '../../../../core/assets/app_assets.dart';
 /// Облака из макета улицы: стартуют как в SVG и едут влево без пауз.
 /// Одинаковая скорость — дистанция между облаками как в макете.
 class StreetSkyLayer extends StatefulWidget {
-  const StreetSkyLayer({super.key});
+  const StreetSkyLayer({super.key, this.animationsEnabled = true});
+
+  final bool animationsEnabled;
 
   @override
   State<StreetSkyLayer> createState() => _StreetSkyLayerState();
@@ -47,7 +49,21 @@ class _StreetSkyLayerState extends State<StreetSkyLayer>
     super.initState();
     _ticker = createTicker((elapsed) {
       setState(() => _elapsed = elapsed);
-    })..start();
+    });
+    if (widget.animationsEnabled) {
+      _ticker.start();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant StreetSkyLayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animationsEnabled == widget.animationsEnabled) return;
+    if (widget.animationsEnabled) {
+      if (!_ticker.isActive) _ticker.start();
+    } else {
+      _ticker.stop();
+    }
   }
 
   @override
