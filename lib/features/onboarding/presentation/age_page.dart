@@ -71,15 +71,18 @@ class _ArrowButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Transform.rotate(
-          angle: flipped ? math.pi : 0,
-          child: SvgPicture.asset(
-            AppAssets.strelka,
-            width: 34,
-            height: 40,
-            fit: BoxFit.contain,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Center(
+          child: Transform.rotate(
+            angle: flipped ? math.pi : 0,
+            child: SvgPicture.asset(
+              AppAssets.strelka,
+              width: 34,
+              height: 40,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),

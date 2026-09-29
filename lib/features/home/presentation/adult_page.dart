@@ -4,7 +4,9 @@ import '../../../core/assets/app_assets.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../../core/profile/player_profile.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/finzo_hit_target.dart';
 import '../../../core/theme/finzo_ui.dart';
+import 'book/book_content.dart';
 import 'practice/practice_catalog.dart';
 
 /// Экран для взрослого: прогресс, настройки, демо и сброс — стиль Finzo.
@@ -62,8 +64,10 @@ class AdultPage extends StatelessWidget {
                   IconButton(
                     onPressed: onBack,
                     tooltip: 'Назад',
+                    style: FinzoHitTarget.iconButtonStyle(
+                      foregroundColor: FinzoUi.green,
+                    ),
                     icon: const Icon(Icons.arrow_back_rounded),
-                    color: FinzoUi.green,
                   ),
                   const FinzoOutlineIcon(AppAssets.iconAdult, size: 26),
                   const SizedBox(width: 8),
@@ -130,8 +134,8 @@ class AdultPage extends StatelessWidget {
                       _FinzoCard(
                         title: 'Прогресс',
                         child: Text(
-                          'Практика: $practices из 6 заданий\n'
-                          'Книга: 7 тем доступны в разделе «Книжка»\n'
+                          'Практика: $practices из ${PracticeCatalog.all.length} заданий\n'
+                          'Книга: ${BookContent.flatPageCount} экранов в разделе «Книжка»\n'
                           'Полученные цели: ${p.completedGoalTitles.isEmpty ? 'пока нет' : p.completedGoalTitles.join(', ')}',
                           style: _body,
                         ),
@@ -190,7 +194,10 @@ class AdultPage extends StatelessWidget {
                             FinzoSettingsRow(
                               iconAsset: AppAssets.iconSound,
                               title: 'Звуки',
-                              subtitle: 'Сохранится для будущих звуковых подсказок',
+                              subtitle:
+                                  'Сейчас в приложении нет звуковых эффектов. '
+                                  'Переключатель сохранён и применится, когда '
+                                  'звуки появятся.',
                               value: p.soundsEnabled,
                               animateToggle: p.animationsEnabled,
                               onChanged: (value) => controller.setAccessibility(

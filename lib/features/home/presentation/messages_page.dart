@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../../core/profile/player_rules.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/finzo_hit_target.dart';
 import '../../../core/theme/finzo_ui.dart';
 
 enum _MsgKind { petTip, lesson }
@@ -167,8 +168,10 @@ class _MessagesPageState extends State<MessagesPage> {
                 children: [
                   IconButton(
                     onPressed: widget.onBack,
+                    style: FinzoHitTarget.iconButtonStyle(
+                      foregroundColor: const Color(0xFF1B6943),
+                    ),
                     icon: const Icon(Icons.arrow_back_rounded),
-                    color: const Color(0xFF1B6943),
                   ),
                   Expanded(
                     child: Text(

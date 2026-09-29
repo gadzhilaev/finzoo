@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/assets/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/finzo_hit_target.dart';
 
 /// Цель накопления — картинка лежит в [imageAsset].
 class GoalOption {
@@ -209,8 +210,10 @@ class _GoalsPageState extends State<GoalsPage> {
                             top: 90,
                             child: IconButton(
                               onPressed: widget.onBack,
+                              style: FinzoHitTarget.iconButtonStyle(
+                                foregroundColor: AppColors.green,
+                              ),
                               icon: const Icon(Icons.arrow_back_rounded),
-                              color: AppColors.green,
                             ),
                           ),
                         for (var i = 0; i < GoalsPage.goals.length; i++)

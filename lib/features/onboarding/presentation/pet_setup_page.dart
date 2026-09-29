@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/profile/player_profile.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/finzo_hit_target.dart';
 import '../../../core/wardrobe/finzo_avatar.dart';
 
 /// Девять стартовых образов одного питомца. Это сохраняет узнаваемую белку
@@ -76,9 +77,12 @@ class _PetSetupPageState extends State<PetSetupPage> {
         backgroundColor: const Color(0xFFFEFCF4),
         foregroundColor: const Color(0xFF1B6943),
         elevation: 0,
-        toolbarHeight: 48,
+        toolbarHeight: 56,
         leading: IconButton(
           onPressed: widget.onBack,
+          style: FinzoHitTarget.iconButtonStyle(
+            foregroundColor: const Color(0xFF1B6943),
+          ),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(

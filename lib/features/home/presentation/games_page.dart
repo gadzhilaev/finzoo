@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/profile/game_controller.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/finzo_hit_target.dart';
 import 'practice/practice_catalog.dart';
 import 'practice/practice_tasks.dart';
 
@@ -176,8 +177,10 @@ class _GamesPageState extends State<GamesPage> {
                     children: [
                       IconButton(
                         onPressed: widget.onBack,
+                        style: FinzoHitTarget.iconButtonStyle(
+                          foregroundColor: const Color(0xFF1B6943),
+                        ),
                         icon: const Icon(Icons.arrow_back_rounded),
-                        color: const Color(0xFF1B6943),
                       ),
                       Expanded(
                         child: Text(
@@ -192,8 +195,10 @@ class _GamesPageState extends State<GamesPage> {
                       ),
                       IconButton(
                         onPressed: () => _showPracticeTip(first: false),
+                        style: FinzoHitTarget.iconButtonStyle(
+                          foregroundColor: const Color(0xFFDF9548),
+                        ),
                         icon: const Icon(Icons.info_outline_rounded),
-                        color: const Color(0xFFDF9548),
                         tooltip: 'О наградах за практику',
                       ),
                     ],
@@ -304,7 +309,7 @@ class _PracticeDayCompleteCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: AppFonts.rubik(
               fontWeight: FontWeight.w500,
-              fontSize: 12,
+              fontSize: 14,
               height: 1.3,
               color: const Color(0xFF4A4643),
             ),
@@ -388,7 +393,7 @@ class _PracticeCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.rubik(
                         fontWeight: FontWeight.w500,
-                        fontSize: 12,
+                        fontSize: 14,
                         height: 1.25,
                         color: const Color(0xFF4A4643),
                       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_fonts.dart';
+import '../../../../core/theme/finzo_hit_target.dart';
 
 class PracticeShell extends StatelessWidget {
   const PracticeShell({
@@ -32,8 +33,10 @@ class PracticeShell extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: onExit,
+                    style: FinzoHitTarget.iconButtonStyle(
+                      foregroundColor: const Color(0xFF1B6943),
+                    ),
                     icon: const Icon(Icons.close_rounded),
-                    color: const Color(0xFF1B6943),
                   ),
                   Expanded(
                     child: Text(
@@ -54,7 +57,7 @@ class PracticeShell extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w500,
-                  fontSize: 12,
+                  fontSize: 14,
                   color: const Color(0xFFDF9548),
                 ),
               ),
@@ -177,20 +180,20 @@ Widget practicePrimaryBtn(String label, VoidCallback? onTap) {
 
 TextStyle get practiceBody => AppFonts.rubik(
       fontWeight: FontWeight.w500,
-      fontSize: 14,
+      fontSize: 15,
       height: 1.35,
       color: const Color(0xFF4A4643),
     );
 
 TextStyle get practiceHead => AppFonts.rubik(
       fontWeight: FontWeight.w700,
-      fontSize: 15,
+      fontSize: 16,
       color: const Color(0xFF1B6943),
     );
 
 TextStyle get practiceHint => AppFonts.rubik(
       fontWeight: FontWeight.w600,
-      fontSize: 13,
+      fontSize: 14,
       color: const Color(0xFFDF9548),
     );
 
@@ -216,8 +219,8 @@ class FinzoMoodBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            happy ? Icons.pets : Icons.pets_outlined,
-            color: const Color(0xFF1B6943),
+            happy ? Icons.sentiment_satisfied_alt : Icons.sentiment_dissatisfied,
+            color: happy ? const Color(0xFF1B6943) : const Color(0xFFDF9548),
           ),
           const SizedBox(width: 8),
           Expanded(child: Text(text, style: practiceBody)),

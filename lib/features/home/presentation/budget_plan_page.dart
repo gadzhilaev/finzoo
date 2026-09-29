@@ -6,6 +6,7 @@ import '../../../core/profile/budget_plan.dart';
 import '../../../core/profile/economy.dart';
 import '../../../core/profile/game_controller.dart';
 import '../../../core/theme/app_fonts.dart';
+import '../../../core/theme/finzo_hit_target.dart';
 import 'widgets/money_tips_sheet.dart';
 
 /// Один экран плана бюджета: необходимое + желания + копилка.
@@ -97,8 +98,10 @@ class _BudgetPlanPageState extends State<BudgetPlanPage> {
                 children: [
                   IconButton(
                     onPressed: widget.onBack,
+                    style: FinzoHitTarget.iconButtonStyle(
+                      foregroundColor: const Color(0xFF1B6943),
+                    ),
                     icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                    color: const Color(0xFF1B6943),
                   ),
                   Expanded(
                     child: Text(
@@ -114,13 +117,10 @@ class _BudgetPlanPageState extends State<BudgetPlanPage> {
                   IconButton(
                     onPressed: () => showMoneyTipsSheet(context),
                     tooltip: 'Что значат категории',
-                    icon: const Icon(Icons.help_outline_rounded),
-                    color: const Color(0xFF1B6943),
-                    iconSize: 26,
-                    constraints: const BoxConstraints(
-                      minWidth: 48,
-                      minHeight: 48,
+                    style: FinzoHitTarget.iconButtonStyle(
+                      foregroundColor: const Color(0xFF1B6943),
                     ),
+                    icon: const Icon(Icons.help_outline_rounded, size: 26),
                   ),
                 ],
               ),

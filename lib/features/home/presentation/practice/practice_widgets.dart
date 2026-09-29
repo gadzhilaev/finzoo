@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_fonts.dart';
+import '../../../../core/theme/finzo_hit_target.dart';
 import 'practice_content.dart';
 import 'practice_shell.dart';
 
@@ -195,13 +196,17 @@ class PracticeAllocateRow extends StatelessWidget {
           Expanded(child: Text('$label: $value', style: practiceBody)),
           IconButton(
             onPressed: onMinus,
+            style: FinzoHitTarget.iconButtonStyle(
+              foregroundColor: const Color(0xFF1B6943),
+            ),
             icon: const Icon(Icons.remove_circle_outline),
-            color: const Color(0xFF1B6943),
           ),
           IconButton(
             onPressed: onPlus,
+            style: FinzoHitTarget.iconButtonStyle(
+              foregroundColor: const Color(0xFF1B6943),
+            ),
             icon: const Icon(Icons.add_circle_outline),
-            color: const Color(0xFF1B6943),
           ),
         ],
       ),
