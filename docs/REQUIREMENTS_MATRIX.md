@@ -74,7 +74,7 @@
 | RuStore черновик локально | DONE (docs/rustore/) |
 | Загрузка в консоль RuStore | NOT DONE (нет доступа) |
 | Физ. Android отчёт с фактом | NOT DONE (шаблон + чеклист готовы) |
-| Видео ≤3 мин (файл) | NOT DONE (сценарий `VIDEO_SCENARIO.md` готов) |
+| Видео ≤3 мин (файл) | NOT DONE |
 
 ## Продуктовые UNCLEAR
 

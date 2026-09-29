@@ -1,7 +1,7 @@
 # Finzo — сопроводительный документ сдачи
 
 Отдельный документ по §5 ТЗ (формат DOCX/PDF). Источники: README, `docs/*`, код.  
-**Физическое тестирование на Android — ожидает прогона** (см. раздел 11 и `ANDROID_PHYSICAL_CHECKLIST.md`).
+**Физическое тестирование на Android — ожидает прогона** (см. раздел 11 и `ANDROID_TEST_REPORT.md`).
 
 Версия приложения: `1.0.0+1` · Package: `ru.gadzhilaev.finzo`
 
@@ -83,9 +83,7 @@ flutter test      # завершается сам; screenshot-тесты чер�
 
 ### Физическое тестирование — ожидает прогона
 
-Шаблон: `docs/ANDROID_TEST_REPORT.md`.  
-Пошаговый чеклист одного прогона: `docs/ANDROID_PHYSICAL_CHECKLIST.md`  
-(REQ-H-003, A-005, A-006, A-007 physical, P-003, DOC-10).
+Шаблон: `docs/ANDROID_TEST_REPORT.md` (Прил. А + cold start / отклик).
 
 **Не утверждается**, что физический прогон уже выполнен.
 
@@ -120,6 +118,6 @@ Adult (Messages → взрослый **или** long-press имени) → `8+7`
 Матрица: `docs/REQUIREMENTS_MATRIX.md` (сверкать с актуальной реализацией).  
 Черновик RuStore: `docs/rustore/`.  
 Презентация: `docs/presentation/Finzo_presentation.pptx` / `.pdf`.  
-Видеосценарий: `docs/VIDEO_SCENARIO.md` (файл ролика — отдельно).
+Резервное видео ≤3 мин (§4.1) — файл отдельно, когда будет записан.
 
 Открытые позиции сдачи (не закрыты этим документом): физ. Android, cold start/response факты, live demo, видеофайл, GitHub access, release tag, продуктовое решение по звуку (U-007b).

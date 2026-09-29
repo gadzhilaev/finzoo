@@ -115,19 +115,20 @@ flutter build apk --release
 3. Бренд в ТЗ «Финни» vs продукт «Finzo».
 4. Физический прогон Android + отчёт эксперта — шаблон в `docs/ANDROID_TEST_REPORT.md`, факт прогона зависит от устройства.
 
-## Документация сдачи (§5)
+## Документация сдачи (§5 + §3.3 + §4)
 
-| Файл | Содержание |
-|------|------------|
-| `docs/FINZO_SUBMISSION.md` / `.docx` | Отдельный сводный документ (§5 формат DOCX) |
-| `docs/UX_ACCESSIBILITY.md` | UX/a11y обоснование (§5 п.8) |
-| `docs/LIMITATIONS.md` | Ограничения и план (§5 п.11) |
-| `docs/REQUIREMENTS_MATRIX.md` | Матрица §2.5 / 2.6 / Прил. А |
-| `docs/ECONOMY.md` | Формулы и числа |
-| `docs/CONTENT_MAP.md` | Карта контента |
-| `docs/LICENSES.md` | Лицензии ассетов/пакетов |
-| `docs/ANDROID_TEST_REPORT.md` | Шаблон отчёта физ. устройства |
-| `docs/ANDROID_PHYSICAL_CHECKLIST.md` | Чеклист одного физ. прогона |
-| `docs/VIDEO_SCENARIO.md` | Сценарий резервного видео ≤3 мин |
-| `docs/presentation/Finzo_presentation.pptx` / `.pdf` | Презентация §4 (PPTX + PDF) |
-| `docs/rustore/CARD.md` | Черновик карточки RuStore |
+| Файл | § ТЗ | Содержание |
+|------|------|------------|
+| `README.md` | §5.1–2 | Назначение, запуск, сборка APK |
+| `docs/FINZO_SUBMISSION.docx` (+ `.md`) | §5 формат | Отдельный сводный документ |
+| `docs/REQUIREMENTS_MATRIX.md` | §5.5 | Матрица требований |
+| `docs/ECONOMY.md` | §5.4·6 | Данные профиля / формулы экономики |
+| `docs/CONTENT_MAP.md` | §5.7 | Карта образовательного контента |
+| `docs/UX_ACCESSIBILITY.md` | §5.8 | UX/a11y и настройки |
+| `docs/ANDROID_TEST_REPORT.md` | §5.10 | Тест-кейсы + отчёт физ. устройства |
+| `docs/LIMITATIONS.md` | §5.11 | Ограничения и план |
+| `docs/LICENSES.md` | §5.12 | Лицензии |
+| `docs/presentation/Finzo_presentation.pptx` / `.pdf` | §4 | Презентация |
+| `docs/rustore/` | §3.3 | Черновик карточки RuStore |
+
+Архитектура, разрешения Android и удаление профиля — в README + `FINZO_SUBMISSION`.
