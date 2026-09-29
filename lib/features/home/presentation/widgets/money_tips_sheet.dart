@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../../core/assets/app_assets.dart';
 import '../../../../core/theme/app_fonts.dart';
+import '../book/book_widgets.dart';
 
-/// Подсказки «нужное / желания / копилка» — можно открыть в любой момент.
+/// Подсказки «нужное / желания / копилка» — стиль книжки «обучение».
 Future<void> showMoneyTipsSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: const Color(0xFFFEFCF4),
+    backgroundColor: BookStyle.cream,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
     builder: (ctx) {
       return SafeArea(
@@ -22,17 +25,24 @@ Future<void> showMoneyTipsSheet(BuildContext context) {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B6943).withValues(alpha: 0.25),
+                  color: BookStyle.green.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              SvgPicture.asset(
+                AppAssets.logoIntro,
+                width: 110,
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 10),
               Text(
                 'Три вида решений',
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w800,
                   fontSize: 20,
-                  color: const Color(0xFF1B6943),
+                  color: BookStyle.green,
                 ),
               ),
               const SizedBox(height: 6),
@@ -42,54 +52,21 @@ Future<void> showMoneyTipsSheet(BuildContext context) {
                 style: AppFonts.rubik(
                   fontWeight: FontWeight.w500,
                   fontSize: 13,
-                  color: const Color(0xFF4A4643),
+                  color: BookStyle.body,
                 ),
               ),
               const SizedBox(height: 14),
-              const _TipCard(
-                number: '1',
-                title: 'Нужное',
-                text:
-                    'Еда, уход, то без чего день не обойтись. Сначала закрываем это.',
-                color: Color(0xFF1B6943),
-              ),
-              const SizedBox(height: 8),
-              const _TipCard(
-                number: '2',
-                title: 'Желания',
-                text:
-                    'Игрушки, наряды и «хочу». Можно, если нужное уже в плане.',
-                color: Color(0xFFDF9548),
-              ),
-              const SizedBox(height: 8),
-              const _TipCard(
-                number: '3',
-                title: 'Копилка',
-                text:
-                    'Откладываем на цель. Чем регулярнее — тем быстрее мечта.',
-                color: Color(0xFF4B946A),
+              const BookTipGroup(
+                items: [
+                  (title: 'Нужное', text: 'еда и уход — сначала это'),
+                  (title: 'Желания', text: 'игрушки и наряды, если нужное в плане'),
+                  (title: 'Копилка', text: 'откладываем на цель регулярно'),
+                ],
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF4B946A),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Text(
-                    'Понятно',
-                    style: AppFonts.rubik(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+              BookPrimaryButton(
+                label: 'Понятно',
+                onTap: () => Navigator.pop(ctx),
               ),
             ],
           ),
@@ -97,76 +74,4 @@ Future<void> showMoneyTipsSheet(BuildContext context) {
       );
     },
   );
-}
-
-class _TipCard extends StatelessWidget {
-  const _TipCard({
-    required this.number,
-    required this.title,
-    required this.text,
-    required this.color,
-  });
-
-  final String number;
-  final String title;
-  final String text;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.45)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            child: Text(
-              number,
-              style: AppFonts.rubik(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppFonts.rubik(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  text,
-                  style: AppFonts.rubik(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                    height: 1.3,
-                    color: const Color(0xFF4A4643),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
