@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -30,95 +32,127 @@ class GamesPage extends StatefulWidget {
 class _GamesPageState extends State<GamesPage> {
   bool _autoOpened = false;
   bool _tipScheduled = false;
+  bool _tipVisible = false;
 
   @override
   void initState() {
     super.initState();
-    final raw = widget.autoOpenExerciseId;
-    if (raw != null && raw.isNotEmpty) {
-      final item = PracticeCatalog.byId(raw);
-      if (item != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || _autoOpened) return;
-          _autoOpened = true;
-          widget.onAutoOpenConsumed?.call();
-          _openTask(item);
-        });
-      }
-    }
-    if (!widget.skipIntro && !widget.controller.profile.practiceTipShown) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _tipScheduled) return;
-        _tipScheduled = true;
-        if (!widget.controller.profile.practiceTipShown) {
-          _showPracticeTip(first: true);
-        }
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_bootstrap());
+    });
   }
 
-  void _openTask(PracticeItem item) {
-    Navigator.of(context).push(
+  Future<void> _bootstrap() async {
+    if (!mounted) return;
+
+    // Подсказка только при входе в список практики, не при прямом запуске с улицы.
+    if (!widget.skipIntro &&
+        !widget.controller.profile.practiceTipShown &&
+        !_tipScheduled) {
+      _tipScheduled = true;
+      await _showPracticeTip(first: true);
+      if (!mounted) return;
+    }
+
+    final raw = widget.autoOpenExerciseId;
+    if (raw == null || raw.isEmpty || _autoOpened) return;
+    final item = PracticeCatalog.byId(raw);
+    if (item == null) return;
+    _autoOpened = true;
+    // После задания остаёмся на списке практик («К списку»), а не уходим на улицу.
+    await _openTask(item);
+  }
+
+  Future<void> _openTask(PracticeItem item) async {
+    if (!mounted) return;
+    // Нельзя опираться на context GamesPage в onDone: родитель может
+    // пересобрать дерево, пока задание открыто поверх навигатора.
+    await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) => buildPracticeTask(
+        builder: (taskContext) => buildPracticeTask(
           item: item,
           controller: widget.controller,
           onDone: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
+            if (taskContext.mounted) {
+              Navigator.of(taskContext).pop();
             }
           },
         ),
       ),
     );
+    widget.onAutoOpenConsumed?.call();
   }
 
   Future<void> _showPracticeTip({required bool first}) async {
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFFFEF7E6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFF1B6943), width: 2),
-        ),
-        title: Text(
-          'Награды за практику',
-          style: AppFonts.rubik(
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-            color: const Color(0xFF1B6943),
+    if (_tipVisible) return;
+    if (first && widget.controller.profile.practiceTipShown) return;
+    _tipVisible = true;
+    // Сразу помечаем, чтобы remount / повторный callback не открыл второй диалог.
+    if (first) await widget.controller.markPracticeTipShown();
+    if (!mounted) {
+      _tipVisible = false;
+      return;
+    }
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFFFEF7E6),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: Color(0xFF1B6943), width: 2),
           ),
-        ),
-        content: Text(
-          'Числа внутри заданий учебные: они не списываются с твоего баланса. '
-          'За первое прохождение каждого задания Finzo добавит 20 ₽ к доступным деньгам.',
-          style: AppFonts.rubik(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-            height: 1.3,
-            color: const Color(0xFF4A4643),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Понятно',
-              style: AppFonts.rubik(
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1B6943),
-              ),
+          title: Text(
+            'Награды за практику',
+            style: AppFonts.rubik(
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+              color: const Color(0xFF1B6943),
             ),
           ),
-        ],
-      ),
-    );
-    if (first) await widget.controller.markPracticeTipShown();
+          content: Text(
+            'Числа внутри заданий учебные: они не списываются с твоего баланса. '
+            'За первое прохождение каждого задания Finzo добавит 20 ₽ к доступным деньгам.',
+            style: AppFonts.rubik(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              height: 1.3,
+              color: const Color(0xFF4A4643),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Понятно',
+                style: AppFonts.rubik(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1B6943),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      _tipVisible = false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final launchingDirect =
+        widget.autoOpenExerciseId != null &&
+        widget.autoOpenExerciseId!.isNotEmpty &&
+        !_autoOpened;
+    if (launchingDirect) {
+      // Прямой запуск с улицы: не мелькаем списком до игрового окна.
+      return const Scaffold(
+        backgroundColor: Color(0xFFFEFCF4),
+        body: SizedBox.expand(),
+      );
+    }
+
     return ListenableBuilder(
       listenable: widget.controller,
       builder: (context, _) {
