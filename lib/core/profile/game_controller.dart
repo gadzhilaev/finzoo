@@ -84,6 +84,7 @@ class GameController extends ChangeNotifier {
     final store = PlayerProfileStore();
     final loaded = await store.load();
     final controller = GameController(profile: loaded, store: store);
+    await controller.ensureStarterOutfitOwned();
     await controller.onAppOpen();
     return controller;
   }
@@ -203,8 +204,51 @@ class GameController extends ChangeNotifier {
       petName: petName.trim().isEmpty ? 'Finzo' : petName.trim(),
       starterBodyKey: starterBodyKey,
       starterHeadKey: starterHeadKey,
+      clearStarterBody: starterBodyKey == null,
+      clearStarterHead: starterHeadKey == null,
     );
+    profile = _grantStarterOutfit(profile);
     await _persist();
+  }
+
+  /// Стартовый образ из настройки питомца — сразу в инвентаре и надет.
+  Future<void> ensureStarterOutfitOwned() async {
+    final next = _grantStarterOutfit(profile);
+    if (next.inventory.toString() == profile.inventory.toString() &&
+        next.equippedBodyKey == profile.equippedBodyKey &&
+        next.equippedHeadKey == profile.equippedHeadKey) {
+      return;
+    }
+    profile = next;
+    await _persist();
+  }
+
+  PlayerProfile _grantStarterOutfit(PlayerProfile p) {
+    final inv = Map<String, int>.from(p.inventory);
+    var changed = false;
+
+    void grant(String? key) {
+      if (key == null || key.isEmpty) return;
+      if ((inv[key] ?? 0) < 1) {
+        inv[key] = 1;
+        changed = true;
+      }
+    }
+
+    grant(p.starterBodyKey);
+    grant(p.starterHeadKey);
+
+    final body = p.equippedBodyKey ?? p.starterBodyKey;
+    final head = p.equippedHeadKey ?? p.starterHeadKey;
+    final bodyChanged = body != p.equippedBodyKey;
+    final headChanged = head != p.equippedHeadKey;
+    if (!changed && !bodyChanged && !headChanged) return p;
+
+    return p.copyWith(
+      inventory: inv,
+      equippedBodyKey: body,
+      equippedHeadKey: head,
+    );
   }
 
   Future<void> setAccessibility({
@@ -253,6 +297,7 @@ class GameController extends ChangeNotifier {
       clearPlan: true,
       lastPeriodSummary: '',
     );
+    profile = _grantStarterOutfit(profile);
     profile = PlayerRules.applyStreak(profile, now);
     profile = _grantPeriodIncome(profile);
     await _persist();

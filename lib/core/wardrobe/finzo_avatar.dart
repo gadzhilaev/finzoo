@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../profile/player_profile.dart';
+import '../theme/app_fonts.dart';
 import 'wardrobe_catalog.dart';
 
 /// Finzo с надетым комплектом (одежда + головной убор).
@@ -166,6 +167,49 @@ class _GogglesSourceClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(covariant _GogglesSourceClipper oldClipper) => false;
+}
+
+/// Подпись имени питомца: светлая плашка, чтобы не терялась на тёмном фоне.
+class PetNameBadge extends StatelessWidget {
+  const PetNameBadge({super.key, required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = name.trim().isEmpty ? 'Finzo' : name.trim();
+    return Semantics(
+      label: label,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFEFCF4),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF1B6943), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppFonts.rubik(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            height: 1.1,
+            color: const Color(0xFF1B6943),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Подпись стадии роста: цвет, сегменты и тап → обучение.
