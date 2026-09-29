@@ -19,12 +19,13 @@ import '../../home/presentation/practice/practice_catalog.dart';
 import '../../home/presentation/period_results_page.dart';
 import '../../home/presentation/street_page.dart';
 import '../../onboarding/presentation/age_page.dart';
-import '../../onboarding/presentation/intro_screens.dart';
 import '../../onboarding/presentation/name_page.dart';
+import '../../onboarding/presentation/onboarding_tutorial_page.dart';
 import '../../onboarding/presentation/pet_setup_page.dart';
 import '../../onboarding/presentation/outro_video_page.dart';
 import '../../onboarding/presentation/widgets/onboarding_canvas.dart';
 import '../../onboarding/presentation/widgets/onboarding_decor.dart';
+import '../../../core/theme/finzo_ui.dart';
 
 enum _WelcomeStep {
   play,
@@ -57,7 +58,6 @@ class WelcomePage extends StatefulWidget {
 
 class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   late _WelcomeStep _step;
-  int _tipIndex = 0;
   late int _age;
   late String _name;
   late String _petName;
@@ -155,7 +155,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   }
 
   void _goToName([int? age]) {
-    if (_step != _WelcomeStep.age && _step != _WelcomeStep.tips) return;
+    if (_step != _WelcomeStep.age) return;
     setState(() {
       if (age != null) _age = age;
       _step = _WelcomeStep.name;
@@ -179,7 +179,6 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   Future<void> _goToTips(String petName, StarterLook look) async {
     _petName = petName.trim().isEmpty ? 'Finzo' : petName.trim();
     _starterLook = starterLooks.indexOf(look);
-    _tipIndex = 0;
     await _game.setPetIdentity(
       petName: _petName,
       starterBodyKey: look.bodyKey,
@@ -194,22 +193,6 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
 
   void _nameBack() {
     setState(() => _step = _WelcomeStep.age);
-  }
-
-  void _tipBack() {
-    if (_tipIndex > 0) {
-      setState(() => _tipIndex -= 1);
-      return;
-    }
-    setState(() => _step = _WelcomeStep.name);
-  }
-
-  void _tipNext() {
-    if (_tipIndex < AppAssets.introScreens.length - 1) {
-      setState(() => _tipIndex += 1);
-      return;
-    }
-    _goToVideo();
   }
 
   void _goToVideo() {
@@ -271,13 +254,14 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
 
   void _goToBudget() => setState(() => _step = _WelcomeStep.budget);
 
+  /// С улицы: сразу в игровое окно упражнения, без списка и без intro.
   void _goToTask() {
     final next = PracticeCatalog.nextIncomplete(
       _game.profile.periodPracticeCompletedIds,
     );
     setState(() {
       _parkFocusId = next.id;
-      _parkSkipIntro = false;
+      _parkSkipIntro = true;
       _step = _WelcomeStep.games;
     });
   }
@@ -306,37 +290,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
   }
 
   Future<void> _goToAdult() async {
-    final answer = TextEditingController();
-    final passed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Раздел для взрослого'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Решите пример: 8 + 7 ='),
-            const SizedBox(height: 10),
-            TextField(
-              controller: answer,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Назад'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, answer.text.trim() == '15'),
-            child: const Text('Открыть'),
-          ),
-        ],
-      ),
-    );
-    answer.dispose();
+    final passed = await FinzoAdultGate.open(context);
     if (passed == true && mounted) setState(() => _step = _WelcomeStep.adult);
   }
 
@@ -349,12 +303,16 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
       switchInCurve: Curves.easeInOutCubic,
       switchOutCurve: Curves.easeInOutCubic,
       child: switch (_step) {
-        _WelcomeStep.tips => IntroScreens(
+        _WelcomeStep.tips => ListenableBuilder(
           key: const ValueKey('tips'),
-          index: _tipIndex,
-          onBack: _tipBack,
-          onSkip: _goToVideo,
-          onNext: _tipNext,
+          listenable: _game,
+          builder: (context, _) => OnboardingTutorialPage(
+            profile: _game.profile,
+            petName: _petName,
+            animationsEnabled: _game.profile.animationsEnabled,
+            onExitBack: () => setState(() => _step = _WelcomeStep.petSetup),
+            onDone: _goToVideo,
+          ),
         ),
         _WelcomeStep.petSetup => PetSetupPage(
           key: const ValueKey('pet-setup'),
@@ -436,7 +394,7 @@ class _WelcomePageState extends State<WelcomePage> with WidgetsBindingObserver {
           }),
         ),
         _WelcomeStep.games => GamesPage(
-          key: ValueKey('games-${_parkFocusId ?? 'map'}'),
+          key: const ValueKey('games'),
           controller: _game,
           onBack: () {
             _clearParkFocus();
