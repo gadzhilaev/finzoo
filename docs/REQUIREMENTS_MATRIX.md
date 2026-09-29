@@ -70,7 +70,7 @@
 | §5 п.8 UX/a11y | DONE (`docs/UX_ACCESSIBILITY.md`) |
 | §5 п.11 ограничения/план | DONE (`docs/LIMITATIONS.md`) |
 | §5 отдельный DOCX | DONE (`docs/FINZO_SUBMISSION.docx`) |
-| §4 презентация PPTX | DONE (`docs/presentation/Finzo_presentation.pptx`) |
+| §4 презентация PPTX/PDF | DONE (`docs/presentation/Finzo_presentation.pptx` + `.pdf`) |
 | RuStore черновик локально | DONE (docs/rustore/) |
 | Загрузка в консоль RuStore | NOT DONE (нет доступа) |
 | Физ. Android отчёт с фактом | NOT DONE (шаблон + чеклист готовы) |

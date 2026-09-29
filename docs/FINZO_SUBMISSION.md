@@ -119,7 +119,7 @@ Adult (Messages → взрослый **или** long-press имени) → `8+7`
 
 Матрица: `docs/REQUIREMENTS_MATRIX.md` (сверкать с актуальной реализацией).  
 Черновик RuStore: `docs/rustore/`.  
-Презентация: `docs/presentation/Finzo_presentation.pptx` (§4 п.1–9).  
+Презентация: `docs/presentation/Finzo_presentation.pptx` / `.pdf`.  
 Видеосценарий: `docs/VIDEO_SCENARIO.md` (файл ролика — отдельно).
 
 Открытые позиции сдачи (не закрыты этим документом): физ. Android, cold start/response факты, live demo, видеофайл, GitHub access, release tag, продуктовое решение по звуку (U-007b).

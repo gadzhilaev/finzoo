@@ -129,5 +129,5 @@ flutter build apk --release
 | `docs/ANDROID_TEST_REPORT.md` | Шаблон отчёта физ. устройства |
 | `docs/ANDROID_PHYSICAL_CHECKLIST.md` | Чеклист одного физ. прогона |
 | `docs/VIDEO_SCENARIO.md` | Сценарий резервного видео ≤3 мин |
-| `docs/presentation/Finzo_presentation.pptx` | Презентация §4 п.1–9 |
+| `docs/presentation/Finzo_presentation.pptx` / `.pdf` | Презентация §4 (PPTX + PDF) |
 | `docs/rustore/CARD.md` | Черновик карточки RuStore |
