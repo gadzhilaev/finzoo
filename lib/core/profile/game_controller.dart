@@ -777,10 +777,11 @@ class GameController extends ChangeNotifier {
         ? existing.toList()
         : [...existing, canonical];
     final today = {...profile.periodPracticeCompletedIds, canonical}.toList();
+    // Не трогаем periodTaskDone: это флаг отдельного «задания дня»
+    // (FinancialTask), а не практики.
     profile = profile.copyWith(
       parkCompletedIds: ids,
       periodPracticeCompletedIds: today,
-      periodTaskDone: true,
       availableBalance: isFirstCompletion
           ? profile.availableBalance + EconomyRules.taskReward
           : profile.availableBalance,

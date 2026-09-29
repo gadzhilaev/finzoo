@@ -49,8 +49,7 @@ void main() {
     expect(PracticeCatalog.resolveOpenId('park_bike'), PracticeCatalog.dayPlan);
   });
 
-  testWidgets('lunch: fix basket then finish without touching balance',
-      (tester) async {
+  testWidgets('lunch: first finish awards taskReward once', (tester) async {
     final c = _ctrl();
     final bal = c.profile.availableBalance;
     await _pump(
@@ -65,10 +64,15 @@ void main() {
     await tester.pump();
     expect(find.textContaining('Потратил'), findsOneWidget);
     expect(c.profile.parkCompletedIds, contains(PracticeCatalog.lunch));
-    expect(c.profile.availableBalance, bal);
+    expect(
+      c.profile.availableBalance,
+      bal + EconomyRules.taskReward,
+    );
+    // Учебные монеты задания не списываются — только разовая награда.
+    expect(c.profile.periodTaskDone, isFalse);
   });
 
-  testWidgets('day plan allows leftover', (tester) async {
+  testWidgets('day plan leftover awards taskReward', (tester) async {
     final c = _ctrl();
     await _pump(
       tester,
@@ -77,7 +81,10 @@ void main() {
     await tester.tap(find.text('Подтвердить план'));
     await tester.pump();
     expect(find.textContaining('Не распределено'), findsOneWidget);
-    expect(c.profile.availableBalance, 280);
+    expect(
+      c.profile.availableBalance,
+      280 + EconomyRules.taskReward,
+    );
   });
 
   testWidgets('receipt: wrong pay can be fixed', (tester) async {
