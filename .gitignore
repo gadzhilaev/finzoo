@@ -46,3 +46,24 @@ app.*.map.json
 
 # Handoff / ТЗ (локально, не в git)
 /tz/
+
+# AI agent instruction files (local only; do not commit these rules)
+AGENTS.md
+AGENTS.override.md
+CLAUDE.md
+GEMINI.md
+.cursorrules
+**/.cursor/rules/
+**/.claude/
+**/.codex/
+.windsurfrules
+**/.windsurf/rules/
+**/.github/copilot-instructions.md
+**/.github/instructions/
+**/.github/prompts/
+**/.clinerules/
+**/.roo/
+**/.continue/rules/
+**/.amazonq/rules/
+**/.junie/
+**/.openhands/
